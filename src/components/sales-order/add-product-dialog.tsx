@@ -35,7 +35,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedColor, setSelectedColor] = useState("White");
 
-  // Create Form State
   const [newProduct, setNewProduct] = useState({
     code: "",
     rate: "",
@@ -44,6 +43,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     name: "",
     type: ""
   });
+
+  const currentTotalQty = useMemo(() => {
+    return Object.values(quantities).reduce((acc, qty) => acc + (qty || 0), 0);
+  }, [quantities]);
 
   useEffect(() => {
     if (open && editProduct) {
@@ -78,6 +81,11 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const selectedProduct = useMemo(() => {
     return catalogItems.find(p => p.id === selectedProductId) || null;
   }, [selectedProductId, catalogItems]);
+
+  const currentTotalAmount = useMemo(() => {
+    if (!selectedProduct) return 0;
+    return currentTotalQty * selectedProduct.rate;
+  }, [currentTotalQty, selectedProduct]);
 
   const handleAdd = () => {
     if (!selectedProduct) return;
@@ -427,27 +435,44 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
         </div>
 
         {/* Footer Area - Fixed at bottom */}
-        <div className="p-5 border-t border-slate-200 bg-white flex items-center justify-end gap-3 flex-shrink-0 z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-          <Button variant="outline" onClick={handleClose} className="border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold h-11 px-6">Cancel</Button>
+        <div className="p-5 border-t border-slate-200 bg-white flex items-center justify-between gap-3 flex-shrink-0 z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-6 pl-2">
+            {viewMode === 'search' && selectedProduct && currentTotalQty > 0 && (
+              <>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-bold text-slate-500">Total Qty</span>
+                  <span className="text-base font-bold text-slate-900">{currentTotalQty}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-bold text-slate-500">Total Amount</span>
+                  <span className="text-base font-bold text-[#0453B8]">₹{currentTotalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={handleClose} className="border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold h-11 px-6">Cancel</Button>
 
-          {viewMode === 'search' ? (
-            <Button
-              variant="primary"
-              className="h-11 px-8"
-              disabled={!selectedProduct}
-              onClick={handleAdd}
-            >
-              {editProduct ? 'Update Order' : 'Add to Order'}
-            </Button>
-          ) : (
-            <Button 
-              variant="primary"
-              className="h-11 px-8" 
-              onClick={handleCreateProduct}
-            >
-              Create Product
-            </Button>
-          )}
+            {viewMode === 'search' ? (
+              <Button
+                variant="primary"
+                className="h-11 px-8"
+                disabled={!selectedProduct || currentTotalQty === 0}
+                onClick={handleAdd}
+              >
+                {editProduct ? 'Update Order' : 'Add to Order'}
+              </Button>
+            ) : (
+              <Button 
+                variant="primary"
+                className="h-11 px-8" 
+                onClick={handleCreateProduct}
+              >
+                Create Product
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

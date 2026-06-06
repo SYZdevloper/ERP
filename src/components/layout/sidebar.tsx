@@ -13,7 +13,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-4 py-4 space-y-1">
-        <Link href="#" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors">
+        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors">
           <LayoutDashboard className="w-5 h-5" />
           Dashboard
         </Link>
@@ -30,7 +30,7 @@ export function Sidebar() {
           </Link>
           
           <div className="pl-11 pr-2 py-1 space-y-1">
-            <Link href="#" className="flex items-center px-4 py-2 text-sm font-medium text-white bg-[#1a66c4] rounded-md">
+            <Link href="/sales-orders" className="flex items-center px-4 py-2 text-sm font-medium text-white bg-[#1a66c4] rounded-md">
               Orders
             </Link>
             <Link href="#" className="flex items-center px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 rounded-md transition-colors">

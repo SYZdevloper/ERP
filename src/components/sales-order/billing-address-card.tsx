@@ -4,7 +4,7 @@ import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export function BillingAddressCard() {
+export function BillingAddressCard({ isReadOnly = false }: { isReadOnly?: boolean }) {
   const { watch } = useFormContext<SalesOrder>();
   const buyerId = watch("buyerId");
   const selectedBuyer = MOCK_BUYERS.find(b => b.id === buyerId);

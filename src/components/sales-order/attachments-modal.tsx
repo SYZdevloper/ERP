@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Paperclip, FileText, Image as ImageIcon, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function AttachmentsModal() {
+export function AttachmentsModal({ isReadOnly = false }: { isReadOnly?: boolean }) {
   const { watch, setValue, getValues } = useFormContext<SalesOrder>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,12 +42,12 @@ export function AttachmentsModal() {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full mt-2 h-10 border-slate-200 text-slate-700 hover:bg-slate-50 flex justify-center items-center font-semibold bg-white shadow-sm rounded-lg">
           <Paperclip className="w-4 h-4 mr-2 text-slate-500" />
-          Attach Documents ({watch("attachments")?.length || 0})
+          {isReadOnly ? "View Documents" : "Attach Documents"} ({watch("attachments")?.length || 0})
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Attachments</DialogTitle>
+          <DialogTitle>{isReadOnly ? "Documents" : "Attachments"}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3 mt-2">
           {watch("attachments")?.map((file: any) => (
@@ -61,32 +61,38 @@ export function AttachmentsModal() {
                   <span className="text-xs text-slate-400">{Math.round(file.size / 1024)} KB</span>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
-                onClick={() => removeAttachment(file.id)}
-              >
-                <X className="w-3 h-3" />
-              </Button>
+              {!isReadOnly && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
+                  onClick={() => removeAttachment(file.id)}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
             </div>
           ))}
           
-          <input 
-            type="file" 
-            multiple 
-            className="hidden" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-          />
-          <Button 
-            variant="outline" 
-            className="w-full mt-2 border-dashed border-slate-300 text-blue-600 bg-blue-50/50 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add More Files
-          </Button>
+          {!isReadOnly && (
+            <>
+              <input 
+                type="file" 
+                multiple 
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+              />
+              <Button 
+                variant="outline" 
+                className="w-full mt-2 border-dashed border-slate-300 text-blue-600 bg-blue-50/50 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add More Files
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

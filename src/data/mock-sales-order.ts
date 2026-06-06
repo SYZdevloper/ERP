@@ -120,3 +120,41 @@ export const INITIAL_SALES_ORDER = {
   cgstRate: 9,
   sgstRate: 9,
 };
+
+export const EMPTY_SALES_ORDER = {
+  salesOrderNo: "SO-26-000126",
+  orderDate: new Date(),
+  status: "Draft" as const,
+  buyerId: "",
+  buyerPoNo: "",
+  poDate: new Date(),
+  deliveryDate: new Date(new Date().setDate(new Date().getDate() + 15)),
+  products: [],
+  attachments: [],
+  discountPercentage: 0,
+  cgstRate: 9,
+  sgstRate: 9,
+  internalNotes: "",
+};
+
+export interface SalesOrderListItem {
+  id: string;
+  soNo: string;
+  buyer: string;
+  style: string;
+  deliveryDate: string;
+  status: "Draft" | "Confirmed" | "Cancelled";
+  fabricPo: "Placed" | "Pending";
+  trimsPo: "Placed" | "Pending";
+  amount: number;
+}
+
+export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
+  { id: "1", soNo: "SO-2026-1015", buyer: "Zara", style: "Quilted Bomber Jacket", deliveryDate: "2026-06-17", status: "Confirmed", fabricPo: "Pending", trimsPo: "Pending", amount: 1250000 },
+  { id: "2", soNo: "SO-2026-1001", buyer: "H&M", style: "ZG-101 Crew Tee", deliveryDate: "2026-06-11", status: "Confirmed", fabricPo: "Placed", trimsPo: "Pending", amount: 450000 },
+  { id: "3", soNo: "SO-2026-1002", buyer: "Zara", style: "ZG-220 Slim Jean", deliveryDate: "2026-06-18", status: "Draft", fabricPo: "Placed", trimsPo: "Pending", amount: 890000 },
+  { id: "4", soNo: "SO-2026-1003", buyer: "Levi's", style: "ZG-305 Polo", deliveryDate: "2026-06-24", status: "Draft", fabricPo: "Placed", trimsPo: "Pending", amount: 320000 },
+  { id: "5", soNo: "SO-2026-1004", buyer: "Uniqlo", style: "ZG-410 Chino", deliveryDate: "2026-07-04", status: "Confirmed", fabricPo: "Placed", trimsPo: "Placed", amount: 675000 },
+  { id: "6", soNo: "SO-2026-1005", buyer: "Marks & Spencer", style: "ZG-512 Hoodie", deliveryDate: "2026-06-04", status: "Confirmed", fabricPo: "Placed", trimsPo: "Placed", amount: 1100000 },
+  { id: "7", soNo: "SO-2026-1008", buyer: "Zara", style: "ZG-305 Polo", deliveryDate: "2026-06-28", status: "Cancelled", fabricPo: "Placed", trimsPo: "Placed", amount: 250000 },
+];

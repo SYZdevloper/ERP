@@ -6,9 +6,10 @@ interface OrderHeaderProps {
   salesOrderNo: string;
   orderDate: Date;
   status: string;
+  isReadOnly?: boolean;
 }
 
-export function OrderHeader({ salesOrderNo, orderDate, status }: OrderHeaderProps) {
+export function OrderHeader({ salesOrderNo, orderDate, status, isReadOnly = false }: OrderHeaderProps) {
   return (
     <div className="flex flex-col mb-6">
       <div className="flex items-center justify-between">
@@ -18,8 +19,8 @@ export function OrderHeader({ salesOrderNo, orderDate, status }: OrderHeaderProp
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">New Sales Order</h1>
-            <p className="text-xs text-slate-500">Create a new sales order in simple steps</p>
+            <h1 className="text-xl font-semibold text-slate-900">{isReadOnly ? "View Sales Order" : "Sales Order"}</h1>
+            <p className="text-xs text-slate-500">{isReadOnly ? "View order details" : "Create or edit sales order in simple steps"}</p>
           </div>
         </div>
 
@@ -46,18 +47,20 @@ export function OrderHeader({ salesOrderNo, orderDate, status }: OrderHeaderProp
             <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">{status}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="bg-white border-slate-200 text-blue-600 hover:bg-slate-50 font-medium h-10">
-              Save Draft
-            </Button>
-            <Button variant="outline" className="bg-white border-slate-200 text-blue-600 hover:bg-slate-50 font-medium h-10">
-              Save & New
-            </Button>
-            <Button variant="primary" className="h-10 px-4">
-              Save & Confirm
-              <ChevronDown className="w-4 h-4 ml-1 opacity-80" />
-            </Button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="bg-white border-slate-200 text-blue-600 hover:bg-slate-50 font-medium h-10">
+                Save Draft
+              </Button>
+              <Button variant="outline" className="bg-white border-slate-200 text-blue-600 hover:bg-slate-50 font-medium h-10">
+                Save & New
+              </Button>
+              <Button type="submit" variant="primary" className="h-10 px-4">
+                Save & Confirm
+                <ChevronDown className="w-4 h-4 ml-1 opacity-80" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

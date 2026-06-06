@@ -1,11 +1,11 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { SalesOrder } from "@/types/sales-order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
-export function OrderSummaryPanel() {
-  const { watch, register, setValue } = useFormContext<SalesOrder>();
-  const products = watch("products");
+export function OrderSummaryPanel({ isReadOnly = false }: { isReadOnly?: boolean }) {
+  const { watch, register, setValue, control } = useFormContext<SalesOrder>();
+  const products = useWatch({ control, name: "products", defaultValue: [] });
   const discountPercentage = watch("discountPercentage");
   const cgstRate = watch("cgstRate");
   const sgstRate = watch("sgstRate");
@@ -50,22 +50,28 @@ export function OrderSummaryPanel() {
       <div className="flex items-center justify-between text-sm text-slate-600">
         <div className="flex items-center gap-2">
           <span>Discount</span>
-          <div className="flex items-center">
-            <Select defaultValue="%">
-              <SelectTrigger className="h-8 w-[60px] rounded-r-none border-r-0 text-xs px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="%">%</SelectItem>
-                <SelectItem value="₹">₹</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              className="h-8 w-[60px] rounded-l-none text-xs px-2"
-              {...register("discountPercentage", { valueAsNumber: true })}
-            />
-          </div>
+          {isReadOnly ? (
+            <span className="font-semibold text-slate-800 text-xs bg-slate-50 px-2 py-1 rounded">
+              {discountPercentage}%
+            </span>
+          ) : (
+            <div className="flex items-center">
+              <Select defaultValue="%">
+                <SelectTrigger className="h-8 w-[60px] rounded-r-none border-r-0 text-xs px-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="%">%</SelectItem>
+                  <SelectItem value="₹">₹</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                className="h-8 w-[60px] rounded-l-none text-xs px-2"
+                {...register("discountPercentage", { valueAsNumber: true })}
+              />
+            </div>
+          )}
         </div>
         <span className="font-semibold text-red-500">- ₹ {formatCurrency(discountAmount)}</span>
       </div>
