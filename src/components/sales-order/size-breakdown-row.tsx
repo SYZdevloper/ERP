@@ -24,11 +24,11 @@ export function SizeBreakdownRow({ index }: SizeBreakdownProps) {
   return (
     <div className="flex items-center gap-1 flex-wrap justify-center">
       {activeSizes.map(({ size, qty }) => (
-        <div key={size} className="flex flex-col items-center border border-slate-200 rounded-md overflow-hidden min-w-[34px]">
-          <div className="text-[10px] bg-slate-50 w-full text-center py-1 font-medium text-slate-600 border-b border-slate-200 px-1">
+        <div key={size} className="flex flex-col items-center border border-slate-200 rounded overflow-hidden min-w-[28px]">
+          <div className="text-[10px] bg-slate-50 w-full text-center py-0.5 font-medium text-slate-600 border-b border-slate-200 px-1 leading-tight">
             {size}
           </div>
-          <div className="w-full h-[34px] flex items-center justify-center text-sm font-medium text-slate-800 bg-white px-1">
+          <div className="w-full h-6 flex items-center justify-center text-[13px] font-medium text-slate-800 bg-white px-1">
             {qty}
           </div>
         </div>

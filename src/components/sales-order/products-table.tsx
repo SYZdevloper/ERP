@@ -41,14 +41,14 @@ export function ProductsTable() {
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead className="w-12 text-center">#</TableHead>
-              <TableHead className="w-[250px]">Product</TableHead>
-              <TableHead className="w-[120px]">Color</TableHead>
-              <TableHead className="w-[300px] text-center">Size Breakup (Qty)</TableHead>
-              <TableHead className="w-[100px] text-center">Total Qty</TableHead>
-              <TableHead className="w-[120px] text-right">Rate (₹)</TableHead>
-              <TableHead className="w-[150px] text-right">Amount (₹)</TableHead>
-              <TableHead className="w-[100px] text-center">Action</TableHead>
+              <TableHead className="w-10 text-center px-2">#</TableHead>
+              <TableHead className="px-2">Product</TableHead>
+              <TableHead className="w-[100px] px-2">Color</TableHead>
+              <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>
+              <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>
+              <TableHead className="w-[100px] text-right px-2">Rate (₹)</TableHead>
+              <TableHead className="w-[120px] text-right px-2">Amount (₹)</TableHead>
+              <TableHead className="w-[80px] text-center px-2">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -60,8 +60,8 @@ export function ProductsTable() {
 
               return (
                 <TableRow key={field.id}>
-                  <TableCell className="text-center text-sm font-medium text-slate-600">{index + 1}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center text-sm font-medium text-slate-600 px-2 py-2">{index + 1}</TableCell>
+                  <TableCell className="px-2 py-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
                         {/* Placeholder for product image */}
@@ -75,7 +75,7 @@ export function ProductsTable() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2 py-2">
                     <div className="flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full border border-slate-300"
@@ -84,21 +84,21 @@ export function ProductsTable() {
                       <span className="text-sm text-slate-700">{product.color}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="flex justify-center py-3">
+                  <TableCell className="flex justify-center px-2 py-2">
                     <SizeBreakdownRow index={index} />
                   </TableCell>
-                  <TableCell className="text-center font-semibold text-slate-800">
+                  <TableCell className="text-center font-semibold text-slate-800 px-2 py-2">
                     {totalQty}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="w-[72px] h-[34px] border border-slate-200 rounded-md flex items-center justify-center text-sm font-medium text-slate-800 ml-auto bg-white">
+                  <TableCell className="text-right px-2 py-2">
+                    <div className="w-[72px] h-[30px] border border-slate-200 rounded-md flex items-center justify-center text-sm font-medium text-slate-800 ml-auto bg-white">
                       {product.rate}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-slate-800">
+                  <TableCell className="text-right font-semibold text-slate-800 px-2 py-2">
                     {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2 py-2">
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-100" onClick={(e) => { e.preventDefault(); handleEdit(index); }}>
                         <Edit2 className="w-4 h-4" />

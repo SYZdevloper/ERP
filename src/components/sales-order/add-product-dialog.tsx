@@ -440,8 +440,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
               {editProduct ? 'Update Order' : 'Add to Order'}
             </Button>
           ) : (
-            <Button
-              className="bg-slate-800 hover:bg-slate-900 text-white font-semibold h-11 px-8 shadow-md"
+            <Button 
+              variant="primary"
+              className="h-11 px-8" 
               onClick={handleCreateProduct}
             >
               Create Product
