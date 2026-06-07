@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutDashboard, FileText, Users, Box, ShoppingCart, BarChart3, Settings, ChevronDown, PlusSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import Link from "next/link";
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
+  const pathname = usePathname();
+
+  const isSalesActive = pathname.startsWith("/sales-orders");
+  const isFabricActive = pathname.startsWith("/fabric-purchases");
+  const isTrimsActive = pathname.startsWith("/trims-purchases");
+  const isSuppliersActive = pathname.startsWith("/suppliers");
 
   return (
     <div className={`relative ${isExpanded ? "w-64" : "w-[72px]"} bg-[#0453B8] h-screen flex flex-col transition-all duration-300 ease-in-out shrink-0 z-50`}>
@@ -13,67 +20,83 @@ export function Sidebar() {
         {/* Logo Area */}
         <div className={`p-6 pb-2 flex items-center ${isExpanded ? "justify-start" : "justify-center px-0"}`}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-white shrink-0">
-          <path d="M4 3C3.44772 3 3 3.44772 3 4V20C3 20.5523 3.44772 21 4 21H7C7.55228 21 8 20.5523 8 20V4C8 3.44772 7.55228 3 7 3H4Z" fill="currentColor"/>
-          <path d="M9 12.5L19 4.5C19.5 4.1 20.2 4.4 20.2 5V8.5L13 12.5L20.2 16.5V20C20.2 20.6 19.5 20.9 19 20.5L9 12.5Z" fill="currentColor"/>
-        </svg>
-      </div>
+            <path d="M4 3C3.44772 3 3 3.44772 3 4V20C3 20.5523 3.44772 21 4 21H7C7.55228 21 8 20.5523 8 20V4C8 3.44772 7.55228 3 7 3H4Z" fill="currentColor"/>
+            <path d="M9 12.5L19 4.5C19.5 4.1 20.2 4.4 20.2 5V8.5L13 12.5L20.2 16.5V20C20.2 20.6 19.5 20.9 19 20.5L9 12.5Z" fill="currentColor"/>
+          </svg>
+        </div>
 
         <nav className={`flex-1 py-4 space-y-1 ${isExpanded ? "px-4" : "px-2"}`}>
-          <Link href="/" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <LayoutDashboard className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Dashboard</span>}
-          </Link>
-
-          {/* Sales (Active Dropdown) */}
-          <div className="relative pt-2 pb-1">
-            {/* Active Glowing Highlight */}
-            <div className="absolute left-[-16px] top-4 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]" />
-            
-            <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white bg-transparent rounded-md`}>
-              <PlusSquare className="w-5 h-5 shrink-0" />
-              {isExpanded && (
-                <>
-                  <span className="truncate">Sales</span>
-                  <ChevronDown className="w-4 h-4 ml-auto opacity-70 shrink-0" />
-                </>
-              )}
-            </Link>
-            
-            {isExpanded && (
-              <div className="pl-11 pr-2 py-1 space-y-1">
-                <Link href="/sales-orders" className="flex items-center px-4 py-2 text-sm font-medium text-white bg-[#1a66c4] rounded-md truncate">
-                  Orders
-                </Link>
-                <Link href="#" className="flex items-center px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 rounded-md transition-colors truncate">
-                  Quotations
-                </Link>
-                <Link href="#" className="flex items-center px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 rounded-md transition-colors truncate">
-                  Invoices
-                </Link>
-              </div>
+          {/* Sales Link */}
+          <div className="relative">
+            {isSalesActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
             )}
+            <Link
+              href="/sales-orders"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isSalesActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <PlusSquare className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Sales</span>}
+            </Link>
           </div>
 
-          <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <Users className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Customers</span>}
-          </Link>
-          <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <Box className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Products</span>}
-          </Link>
-          <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <ShoppingCart className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Inventory</span>}
-          </Link>
-          <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <FileText className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Reports</span>}
-          </Link>
-          <Link href="#" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium text-white/80 rounded-md hover:text-white hover:bg-white/10 transition-colors`}>
-            <Settings className="w-5 h-5 shrink-0" />
-            {isExpanded && <span className="truncate">Settings</span>}
-          </Link>
+          {/* Fabric PO Link */}
+          <div className="relative">
+            {isFabricActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/fabric-purchases"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isFabricActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <FileText className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Fabric PO</span>}
+            </Link>
+          </div>
+
+          {/* Trims PO Link */}
+          <div className="relative">
+            {isTrimsActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/trims-purchases"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isTrimsActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <FileText className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Trims PO</span>}
+            </Link>
+          </div>
+
+          {/* Suppliers Link */}
+          <div className="relative">
+            {isSuppliersActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/suppliers"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isSuppliersActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Users className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Suppliers</span>}
+            </Link>
+          </div>
         </nav>
 
         {/* User Profile */}

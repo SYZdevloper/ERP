@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDate } from "@/lib/utils";
 
 import { MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 
@@ -173,7 +174,7 @@ export default function SalesOrdersPage() {
                        <TableCell className="px-4 py-3 text-[13px] font-medium text-slate-800">
                          {String(index + 1).padStart(2, '0')}
                        </TableCell>
-                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{order.orderDate}</TableCell>
+                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.orderDate)}</TableCell>
                        <TableCell className="px-4 py-3">
                          <div className="flex items-center gap-3">
                            <div className="w-9 h-9 rounded-full bg-[#F8FAFC] text-slate-700 flex items-center justify-center font-medium text-[13px] shrink-0 border border-slate-200">
@@ -193,15 +194,9 @@ export default function SalesOrdersPage() {
                        <TableCell className="px-4 py-3 text-[13px] text-slate-600 font-medium">
                          {order.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                        </TableCell>
-                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{order.deliveryDate}</TableCell>
+                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.deliveryDate)}</TableCell>
                        <TableCell className="px-4 py-3 text-center">
-                         <Badge variant="outline" className={
-                           order.status === "Draft" ? "bg-slate-100 text-slate-600 border-slate-200 font-medium text-[11px]" :
-                           order.status === "Confirmed" ? "bg-emerald-50 text-emerald-600 border-emerald-200 font-medium text-[11px]" :
-                           "bg-rose-50 text-rose-600 border-rose-200 font-medium text-[11px]"
-                         }>
-                           {order.status}
-                         </Badge>
+                         <StatusBadge status={order.status} />
                        </TableCell>
                        <TableCell className="px-4 py-3 text-center">
                          <DropdownMenu>

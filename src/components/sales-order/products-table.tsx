@@ -2,7 +2,7 @@ import { useFormContext, useFieldArray } from "react-hook-form";
 import { SalesOrder } from "@/types/sales-order";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit2, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
 import { SizeBreakdownRow } from "./size-breakdown-row";
 import { AddProductDialog } from "./add-product-dialog";
 import { useState } from "react";
@@ -43,8 +43,10 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
+              <TableHead className="w-14 text-center px-2">SO</TableHead>
               <TableHead className="w-10 text-center px-2">#</TableHead>
               <TableHead className="px-2">Product</TableHead>
+              <TableHead className="w-[130px] px-2">Brand Name</TableHead>
               <TableHead className="w-[110px] pl-6 pr-2">Color</TableHead>
               <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>
               <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>
@@ -62,6 +64,7 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
 
               return (
                 <TableRow key={field.id}>
+                  <TableCell className="text-center text-sm font-semibold text-slate-900 px-2 py-2">{`SO${index + 1}`}</TableCell>
                   <TableCell className="text-center text-sm font-medium text-slate-600 px-2 py-2">{index + 1}</TableCell>
                   <TableCell className="px-2 py-2">
                     <div className="flex items-center gap-3">
@@ -77,6 +80,17 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell className="px-2 py-2">
+                    {isReadOnly ? (
+                      <span className="text-sm font-medium text-slate-700">{product.brandName || "No Brand"}</span>
+                    ) : (
+                      <Input
+                        {...register(`products.${index}.brandName`)}
+                        placeholder="No Brand"
+                        className="h-8 w-[112px] rounded-none border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:border-0 focus-visible:ring-0"
+                      />
+                    )}
+                  </TableCell>
                   <TableCell className="pl-6 pr-2 py-2">
                     <div className="flex items-center gap-2">
                       <div
@@ -90,16 +104,25 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
                     <SizeBreakdownRow index={index} />
                   </TableCell>
                   <TableCell className="text-center font-semibold text-slate-800 px-2 py-2">
-                    {totalQty}
+                    {isReadOnly ? (
+                      <div className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-sm font-semibold text-slate-900">
+                        {totalQty}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-sm font-semibold text-slate-900 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0453B8]/30"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleEdit(index);
+                        }}
+                      >
+                        {totalQty}
+                      </button>
+                    )}
                   </TableCell>
                   <TableCell className="text-right px-2 py-2">
-                    {isReadOnly ? (
-                      <span className="text-sm font-medium text-slate-800">{product.rate}</span>
-                    ) : (
-                      <div className="w-[72px] h-[30px] border border-slate-200 rounded-md flex items-center justify-center text-sm font-medium text-slate-800 ml-auto bg-white">
-                        {product.rate}
-                      </div>
-                    )}
+                    <span className="text-sm font-medium text-slate-800">{product.rate}</span>
                   </TableCell>
                   <TableCell className="text-right font-semibold text-slate-800 pr-6 pl-2 py-2">
                     {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -107,9 +130,6 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
                   {!isReadOnly && (
                     <TableCell className="px-2 py-2">
                       <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-100" onClick={(e) => { e.preventDefault(); handleEdit(index); }}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-100" onClick={() => remove(index)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -135,13 +155,13 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
           </div>
         </div>
       </div>
-      
-      <AddProductDialog 
-        open={isAddProductOpen} 
+
+      <AddProductDialog
+        open={isAddProductOpen}
         onOpenChange={(open) => {
           setIsAddProductOpen(open);
           if (!open) setEditingIndex(null);
-        }} 
+        }}
         onAddProduct={(product) => {
           if (editingIndex !== null) {
             update(editingIndex, product);
@@ -149,7 +169,7 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
           } else {
             append(product);
           }
-        }} 
+        }}
         editProduct={editingIndex !== null ? products[editingIndex] : undefined}
       />
     </div>

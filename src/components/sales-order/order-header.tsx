@@ -23,14 +23,6 @@ export function OrderHeader({ salesOrderNo, orderDate, status, isReadOnly = fals
             <p className="text-xs text-slate-500">{isReadOnly ? "View order details" : "Create or edit sales order in simple steps"}</p>
           </div>
         </div>
-        {!isReadOnly && (
-          <Button variant="outline" className="h-9 px-4 text-slate-700 bg-white" asChild>
-            <a href={`/sales-orders/${salesOrderNo.replace("SO-", "") || "1"}`}>
-              <FileText className="w-4 h-4 mr-2" />
-              View Order
-            </a>
-          </Button>
-        )}
       </div>
     </div>
   );

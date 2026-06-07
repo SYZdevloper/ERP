@@ -18,23 +18,30 @@ interface AddProductDialogProps {
 
 const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
 const EXTENDED_SIZES = ["XXL", "3XL", "4XL", "5XL", "6XL"] as const;
+const AUDIENCE_FILTERS = ["Men", "Women", "Kids"] as const;
+type AudienceFilter = typeof AUDIENCE_FILTERS[number];
+const BRAND_BADGES = ["Zara", "H&M", "Uniqlo", "Levi's"] as const;
 
 // Hardcoded Master Values
-const MASTER_CATEGORIES = ["Mens", "Womens", "Kids", "Winter Wear", "Bottom Wear"];
-const MASTER_SUBCATEGORIES = ["Shirt", "Trouser", "Dress", "Half Sleeves", "Full Sleeves", "Slim Fit"];
-const MASTER_TYPES = ["Cotton", "Denim", "Fleece", "Linen", "Polyester"];
+const MASTER_CATEGORIES = ["Men", "Women", "Kids"];
+const MASTER_SUBCATEGORIES = ["T-Shirt", "Shirt", "Hoodie", "Dress", "Trouser", "Skirt", "Top", "Shorts", "Jacket"];
+const MASTER_TYPES = ["Half Sleeves", "Full Sleeves", "Sleeveless", "Full Length", "Knee Length"];
 
 export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct }: AddProductDialogProps) {
   const [catalogItems, setCatalogItems] = useState<CatalogProduct[]>(MOCK_CATALOG_PRODUCTS);
   const [viewMode, setViewMode] = useState<'search' | 'create'>('search');
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeAudience, setActiveAudience] = useState<AudienceFilter>("Men");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
 
   const [showMoreSizes, setShowMoreSizes] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedColor, setSelectedColor] = useState("White");
   const [customRate, setCustomRate] = useState<string>("");
+  const [sqNumber, setSqNumber] = useState("");
+  const [brandName, setBrandName] = useState("");
 
   const [newProduct, setNewProduct] = useState({
     code: "",
@@ -57,6 +64,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       if (catProduct) setSelectedProductId(catProduct.id);
       setSelectedColor(editProduct.color || "White");
       setCustomRate(editProduct.rate?.toString() || "");
+      setSqNumber(editProduct.sqNumber || "");
+      setBrandName(editProduct.brandName || "");
       setQuantities(editProduct.sizeBreakdown || {});
       const hasExtendedSizes = Object.keys(editProduct.sizeBreakdown || {}).some(k => EXTENDED_SIZES.includes(k as any) && editProduct.sizeBreakdown[k] > 0);
       setShowMoreSizes(hasExtendedSizes);
@@ -64,9 +73,12 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     } else if (open) {
       setSelectedProductId(null);
       setSearchQuery("");
+      setIsProductDropdownOpen(false);
       setQuantities({});
       setSelectedColor("White");
       setCustomRate("");
+      setSqNumber("");
+      setBrandName("");
       setShowMoreSizes(false);
       setViewMode('search');
     }
@@ -75,13 +87,24 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const filteredProducts = useMemo(() => {
     if (!searchQuery) return catalogItems;
     const query = searchQuery.toLowerCase();
-    return catalogItems.filter(p =>
-      p.code.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query) ||
-      p.subcategory.toLowerCase().includes(query) ||
-      p.name.toLowerCase().includes(query)
-    );
-  }, [searchQuery, catalogItems]);
+    return catalogItems.filter(p => {
+      const isActiveAudience = p.category.toLowerCase().startsWith(activeAudience.toLowerCase());
+      const matchesQuery =
+        p.code.toLowerCase() === query ||
+        p.sqNumber?.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query) ||
+        p.name.toLowerCase().includes(query) ||
+        p.subcategory.toLowerCase().includes(query) ||
+        p.type.toLowerCase().includes(query);
+
+      return isActiveAudience && matchesQuery;
+    });
+  }, [searchQuery, catalogItems, activeAudience]);
+
+  const visibleProducts = useMemo(() => {
+    if (searchQuery) return filteredProducts;
+    return catalogItems.filter(p => p.category.toLowerCase().startsWith(activeAudience.toLowerCase()));
+  }, [activeAudience, catalogItems, filteredProducts, searchQuery]);
 
   const selectedProduct = useMemo(() => {
     return catalogItems.find(p => p.id === selectedProductId) || null;
@@ -130,6 +153,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       category: selectedProduct.category,
       subcategory: selectedProduct.subcategory,
       type: selectedProduct.type,
+      brandName,
+      sqNumber,
       color: selectedColor,
       rate: parseFloat(customRate) || 0,
       sizeBreakdown: sizeBreakdown,
@@ -160,21 +185,25 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     setSelectedProductId(createdProduct.id);
     setViewMode('search');
     setSearchQuery("");
+    setIsProductDropdownOpen(false);
   };
 
   const handleClose = () => {
     setSearchQuery("");
     setSelectedProductId(null);
+    setIsProductDropdownOpen(false);
     setQuantities({});
     setShowMoreSizes(false);
     setSelectedColor("White");
+    setSqNumber("");
+    setBrandName("");
     setViewMode('search');
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] h-[750px] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
+      <DialogContent className="sm:max-w-[820px] h-[860px] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
         <DialogHeader className="px-6 py-4 border-b border-slate-200 bg-white shadow-sm z-10 flex-shrink-0">
           <div className="flex items-center gap-3">
             {viewMode === 'create' && (
@@ -201,31 +230,56 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
               {/* Search Section - Fixed height container so it doesn't jump */}
               <div className="flex flex-col gap-3 min-h-[70px]">
+                <div className="flex items-center gap-2">
+                  {AUDIENCE_FILTERS.map(audience => (
+                    <button
+                      key={audience}
+                      type="button"
+                      className={`h-8 rounded-md border px-4 text-xs font-bold transition-colors ${activeAudience === audience
+                        ? "border-[#0453B8] bg-[#0453B8] text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      onClick={() => {
+                        setActiveAudience(audience);
+                        setSelectedProductId(null);
+                        setIsProductDropdownOpen(true);
+                      }}
+                    >
+                      {audience}
+                    </button>
+                  ))}
+                </div>
+
                 <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">Search Catalog</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search by code, category, or subcategory..."
+                    placeholder="Search by number, product, type, or subcategory..."
                     className="pl-10 h-12 bg-white border-slate-200 shadow-sm focus-visible:ring-[#0453B8] rounded-md text-base"
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
+                      setIsProductDropdownOpen(true);
                       setSelectedProductId(null); // Reset selection when searching
                     }}
+                    onFocus={() => setIsProductDropdownOpen(true)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && searchQuery && filteredProducts.length > 0 && !selectedProduct) {
                         e.preventDefault();
                         setSelectedProductId(filteredProducts[0].id);
                         setSearchQuery("");
+                        setIsProductDropdownOpen(false);
+                      }
+                      if (e.key === 'Escape') {
+                        setIsProductDropdownOpen(false);
                       }
                     }}
                   />
                 </div>
 
-                {/* Search Results */}
-                {!selectedProduct && searchQuery && (
-                  <div className="absolute top-[135px] left-6 right-6 border border-slate-200 rounded-md max-h-[220px] overflow-y-auto bg-white shadow-lg z-20">
-                    {filteredProducts.length === 0 ? (
+                {!selectedProduct && isProductDropdownOpen && (
+                  <div className="absolute top-[135px] left-6 right-6 border border-slate-200 rounded-md max-h-[280px] overflow-y-auto bg-white shadow-lg z-20">
+                    {visibleProducts.length === 0 ? (
                       <div className="p-4 flex flex-col items-center justify-center text-center gap-3">
                         <span className="text-sm text-slate-500">No products found for "{searchQuery}"</span>
                         <Button
@@ -242,30 +296,37 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         </Button>
                       </div>
                     ) : (
-                      filteredProducts.map(p => (
-                        <div
+                      visibleProducts.map(p => (
+                        <button
                           key={p.id}
-                          className="p-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-colors"
+                          type="button"
+                          className="flex w-full items-center justify-between gap-3 border-b border-slate-100 p-3 text-left transition-colors last:border-0 hover:bg-blue-50"
                           onClick={() => {
                             setSelectedProductId(p.id);
+                            setIsProductDropdownOpen(false);
                             setSearchQuery(""); // Clear search to hide dropdown
                           }}
                         >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-slate-800">{p.code} - {p.name}</span>
-                            <span className="text-xs text-slate-500">{p.category} &gt; {p.subcategory}</span>
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-sm font-bold text-slate-900">
+                              {p.code}
+                            </span>
+                            <span className="flex min-w-0 flex-col">
+                              <span className="truncate text-sm font-bold text-slate-800">{p.name}</span>
+                              <span className="truncate text-xs text-slate-500">{p.category} &gt; {p.subcategory} &gt; {p.type}</span>
+                            </span>
                           </div>
                           <span className="text-sm font-semibold text-[#0453B8]">₹{p.rate}</span>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Fixed Placeholder Area for Product Selection */}
-              <div className="flex flex-col min-h-[400px] border border-dashed border-slate-300 rounded-xl bg-white p-6 justify-center items-center relative overflow-hidden">
-                {!selectedProduct ? (
+              {/* Product Selection Area */}
+              {!selectedProduct ? (
+                <div className="flex flex-col min-h-[400px] border border-dashed border-slate-300 rounded-xl bg-white p-6 justify-center items-center relative overflow-hidden">
                   <div className="flex flex-col items-center text-center max-w-[280px]">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                       <Search className="w-8 h-8 text-slate-300" />
@@ -288,26 +349,37 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       Create New Product
                     </Button>
                   </div>
-                ) : (
-                  <div className="absolute inset-0 bg-white p-6 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
-                    {/* Selected Product Card */}
-                    <div className="bg-[#0453B8]/5 border border-[#0453B8]/20 rounded-xl p-4 flex items-start justify-between shadow-sm">
-                      <div className="flex flex-col">
-                        <span className="text-lg font-bold text-slate-900">{selectedProduct.code}</span>
-                        <span className="text-sm font-medium text-slate-700 mt-1">{selectedProduct.name}</span>
-                        <div className="flex items-center gap-2 mt-2 text-xs font-medium text-slate-500">
+                </div>
+              ) : (
+                <div className="border border-slate-200 rounded-xl bg-white p-6 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
+                  {/* Selected Product Card */}
+                    <div className="bg-[#0453B8]/5 border border-[#0453B8]/20 rounded-lg p-4 flex items-start justify-between gap-4 shadow-sm">
+                      <div className="flex min-w-0 flex-col gap-3">
+                        <span className="text-base font-semibold text-slate-900">{selectedProduct.name}</span>
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                           <span className="bg-white px-2 py-0.5 rounded-sm border border-slate-200">{selectedProduct.category}</span>
                           <span className="bg-white px-2 py-0.5 rounded-sm border border-slate-200">{selectedProduct.subcategory}</span>
                           <span className="bg-white px-2 py-0.5 rounded-sm border border-slate-200">{selectedProduct.type}</span>
                         </div>
+                        <div className="flex h-8 w-fit items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2 shadow-sm">
+                          <span className="text-[10px] font-bold uppercase text-slate-500">SQ No.</span>
+                          <Input
+                            value={sqNumber}
+                            maxLength={10}
+                            inputMode="numeric"
+                            placeholder="0000000000"
+                            className="h-6 w-[92px] rounded-none border-0 bg-transparent p-0 text-sm font-bold text-slate-900 shadow-none focus-visible:ring-0"
+                            onChange={(e) => setSqNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          />
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end gap-3">
-                        <div className="flex items-center justify-end">
-                          <span className="text-xl font-bold text-[#0453B8]">₹</span>
-                          <Input 
+                      <div className="flex shrink-0 flex-col items-end gap-3">
+                        <div className="flex h-8 items-center gap-1.5 rounded-md border border-blue-100 bg-white px-2 shadow-sm">
+                          <span className="text-sm font-bold text-[#0453B8]">₹</span>
+                          <Input
                             ref={rateInputRef}
                             type="number"
-                            className="h-8 text-xl font-bold text-[#0453B8] border-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-[#0453B8] rounded-none bg-transparent shadow-none text-right px-1 w-[70px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="h-7 w-[58px] rounded-none border-0 bg-transparent p-0 text-right text-sm font-bold text-[#0453B8] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={customRate}
                             onChange={(e) => setCustomRate(e.target.value)}
                             onFocus={(e) => e.target.select()}
@@ -336,6 +408,27 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="mr-1 text-[10px] font-bold uppercase text-slate-500">Brand</span>
+                      {BRAND_BADGES.map(brand => {
+                        const isSelected = brandName === brand;
+
+                        return (
+                          <button
+                            key={brand}
+                            type="button"
+                            className={`h-8 rounded-md border px-3 text-xs font-bold transition-colors ${isSelected
+                              ? "border-[#0453B8] bg-[#0453B8] text-white shadow-sm"
+                              : "border-blue-100 bg-blue-50 text-[#0453B8] hover:border-[#0453B8] hover:bg-blue-100"
+                              }`}
+                            onClick={() => setBrandName(isSelected ? "" : brand)}
+                          >
+                            {brand}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* Quantities Grid */}
@@ -423,8 +516,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       )}
                     </div>
                   </div>
-                )}
-              </div>
+              )}
             </div>
           )}
 
@@ -434,10 +526,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600 uppercase">Code <span className="text-red-500">*</span></Label>
                   <Input
-                    placeholder="e.g. MSC-019"
+                    placeholder="e.g. 7"
                     className="h-11 font-medium bg-slate-50 border-slate-200"
                     value={newProduct.code}
-                    onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value.toUpperCase() })}
+                    onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -529,7 +621,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
               </>
             )}
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Button variant="outline" onClick={handleClose} className="border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold h-11 px-6">Cancel</Button>
 
@@ -543,9 +635,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 {editProduct ? 'Update Order' : 'Add to Order'}
               </Button>
             ) : (
-              <Button 
+              <Button
                 variant="primary"
-                className="h-11 px-8" 
+                className="h-11 px-8"
                 onClick={handleCreateProduct}
               >
                 Create Product
