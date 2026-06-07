@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [showMoreSizes, setShowMoreSizes] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedColor, setSelectedColor] = useState("White");
+  const [customRate, setCustomRate] = useState<string>("");
 
   const [newProduct, setNewProduct] = useState({
     code: "",
@@ -44,6 +45,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     type: ""
   });
 
+  const rateInputRef = useRef<HTMLInputElement>(null);
+
   const currentTotalQty = useMemo(() => {
     return Object.values(quantities).reduce((acc, qty) => acc + (qty || 0), 0);
   }, [quantities]);
@@ -53,6 +56,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       const catProduct = catalogItems.find(p => p.code === editProduct.productId);
       if (catProduct) setSelectedProductId(catProduct.id);
       setSelectedColor(editProduct.color || "White");
+      setCustomRate(editProduct.rate?.toString() || "");
       setQuantities(editProduct.sizeBreakdown || {});
       const hasExtendedSizes = Object.keys(editProduct.sizeBreakdown || {}).some(k => EXTENDED_SIZES.includes(k as any) && editProduct.sizeBreakdown[k] > 0);
       setShowMoreSizes(hasExtendedSizes);
@@ -62,6 +66,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setSearchQuery("");
       setQuantities({});
       setSelectedColor("White");
+      setCustomRate("");
       setShowMoreSizes(false);
       setViewMode('search');
     }
@@ -82,10 +87,22 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     return catalogItems.find(p => p.id === selectedProductId) || null;
   }, [selectedProductId, catalogItems]);
 
+  // Sync custom rate when product changes
+  useEffect(() => {
+    if (selectedProduct && !editProduct) {
+      setCustomRate(selectedProduct.rate.toString());
+      setTimeout(() => {
+        rateInputRef.current?.focus();
+        rateInputRef.current?.select();
+      }, 50);
+    }
+  }, [selectedProduct, editProduct]);
+
   const currentTotalAmount = useMemo(() => {
     if (!selectedProduct) return 0;
-    return currentTotalQty * selectedProduct.rate;
-  }, [currentTotalQty, selectedProduct]);
+    const rate = parseFloat(customRate) || 0;
+    return currentTotalQty * rate;
+  }, [currentTotalQty, selectedProduct, customRate]);
 
   const handleAdd = () => {
     if (!selectedProduct) return;
@@ -114,7 +131,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       subcategory: selectedProduct.subcategory,
       type: selectedProduct.type,
       color: selectedColor,
-      rate: selectedProduct.rate,
+      rate: parseFloat(customRate) || 0,
       sizeBreakdown: sizeBreakdown,
     };
 
@@ -194,6 +211,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       setSelectedProductId(null); // Reset selection when searching
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery && filteredProducts.length > 0 && !selectedProduct) {
+                        e.preventDefault();
+                        setSelectedProductId(filteredProducts[0].id);
+                        setSearchQuery("");
+                      }
                     }}
                   />
                 </div>
@@ -278,7 +302,27 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-3">
-                        <span className="text-xl font-bold text-[#0453B8]">₹{selectedProduct.rate}</span>
+                        <div className="flex items-center justify-end">
+                          <span className="text-xl font-bold text-[#0453B8]">₹</span>
+                          <Input 
+                            ref={rateInputRef}
+                            type="number"
+                            className="h-8 text-xl font-bold text-[#0453B8] border-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-[#0453B8] rounded-none bg-transparent shadow-none text-right px-1 w-[70px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={customRate}
+                            onChange={(e) => setCustomRate(e.target.value)}
+                            onFocus={(e) => e.target.select()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const firstSizeInput = document.getElementById(`size-input-${DEFAULT_SIZES[0]}`);
+                                if (firstSizeInput) {
+                                  firstSizeInput.focus();
+                                  (firstSizeInput as HTMLInputElement).select();
+                                }
+                              }
+                            }}
+                          />
+                        </div>
                         <Select value={selectedColor} onValueChange={setSelectedColor}>
                           <SelectTrigger className="h-8 bg-white border-slate-200 shadow-sm rounded-md w-[100px] text-xs font-bold text-slate-700">
                             <SelectValue placeholder="Color" />
@@ -314,12 +358,31 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200">
                             <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
                             <Input
+                              id={`size-input-${size}`}
                               type="number"
                               min="0"
                               className="h-10 text-center rounded-none border-0 shadow-none focus-visible:ring-[#0453B8] font-semibold text-slate-900 bg-white"
                               value={quantities[size] || ""}
                               onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
                               onFocus={(e) => e.target.select()}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
+                                  const currentIndex = allSizes.indexOf(size as any);
+                                  if (currentIndex < allSizes.length - 1) {
+                                    const nextSize = allSizes[currentIndex + 1];
+                                    const nextInput = document.getElementById(`size-input-${nextSize}`);
+                                    if (nextInput) {
+                                      nextInput.focus();
+                                      (nextInput as HTMLInputElement).select();
+                                    }
+                                  } else {
+                                    // if last one, maybe add to order?
+                                    // Or just do nothing for now, since they might want to click Add
+                                  }
+                                }
+                              }}
                             />
                           </div>
                         ))}
@@ -331,12 +394,28 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                             <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200">
                               <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
                               <Input
+                                id={`size-input-${size}`}
                                 type="number"
                                 min="0"
                                 className="h-10 text-center rounded-none border-0 shadow-none focus-visible:ring-[#0453B8] font-semibold text-slate-900 bg-white"
                                 value={quantities[size] || ""}
                                 onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
                                 onFocus={(e) => e.target.select()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
+                                    const currentIndex = allSizes.indexOf(size as any);
+                                    if (currentIndex < allSizes.length - 1) {
+                                      const nextSize = allSizes[currentIndex + 1];
+                                      const nextInput = document.getElementById(`size-input-${nextSize}`);
+                                      if (nextInput) {
+                                        nextInput.focus();
+                                        (nextInput as HTMLInputElement).select();
+                                      }
+                                    }
+                                  }
+                                }}
                               />
                             </div>
                           ))}

@@ -62,6 +62,7 @@ export const MOCK_BUYERS: Buyer[] = [
       pincode: "560001",
       country: "India",
       gstin: "29XYZDE1234F1Z5",
+      isDefault: true,
     }
   }
 ];
@@ -119,6 +120,7 @@ export const INITIAL_SALES_ORDER = {
   discountPercentage: 5,
   cgstRate: 9,
   sgstRate: 9,
+  roundOff: 0,
 };
 
 export const EMPTY_SALES_ORDER = {
@@ -134,27 +136,27 @@ export const EMPTY_SALES_ORDER = {
   discountPercentage: 0,
   cgstRate: 9,
   sgstRate: 9,
+  roundOff: 0,
   internalNotes: "",
 };
 
 export interface SalesOrderListItem {
   id: string;
   soNo: string;
+  orderDate: string;
   buyer: string;
-  style: string;
+  location: string;
   deliveryDate: string;
   status: "Draft" | "Confirmed" | "Cancelled";
-  fabricPo: "Placed" | "Pending";
-  trimsPo: "Placed" | "Pending";
   amount: number;
 }
 
 export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
-  { id: "1", soNo: "SO-2026-1015", buyer: "Zara", style: "Quilted Bomber Jacket", deliveryDate: "2026-06-17", status: "Confirmed", fabricPo: "Pending", trimsPo: "Pending", amount: 1250000 },
-  { id: "2", soNo: "SO-2026-1001", buyer: "H&M", style: "ZG-101 Crew Tee", deliveryDate: "2026-06-11", status: "Confirmed", fabricPo: "Placed", trimsPo: "Pending", amount: 450000 },
-  { id: "3", soNo: "SO-2026-1002", buyer: "Zara", style: "ZG-220 Slim Jean", deliveryDate: "2026-06-18", status: "Draft", fabricPo: "Placed", trimsPo: "Pending", amount: 890000 },
-  { id: "4", soNo: "SO-2026-1003", buyer: "Levi's", style: "ZG-305 Polo", deliveryDate: "2026-06-24", status: "Draft", fabricPo: "Placed", trimsPo: "Pending", amount: 320000 },
-  { id: "5", soNo: "SO-2026-1004", buyer: "Uniqlo", style: "ZG-410 Chino", deliveryDate: "2026-07-04", status: "Confirmed", fabricPo: "Placed", trimsPo: "Placed", amount: 675000 },
-  { id: "6", soNo: "SO-2026-1005", buyer: "Marks & Spencer", style: "ZG-512 Hoodie", deliveryDate: "2026-06-04", status: "Confirmed", fabricPo: "Placed", trimsPo: "Placed", amount: 1100000 },
-  { id: "7", soNo: "SO-2026-1008", buyer: "Zara", style: "ZG-305 Polo", deliveryDate: "2026-06-28", status: "Cancelled", fabricPo: "Placed", trimsPo: "Placed", amount: 250000 },
+  { id: "1", soNo: "SO-2026-1015", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000 },
+  { id: "2", soNo: "SO-2026-1001", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000 },
+  { id: "3", soNo: "SO-2026-1002", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000 },
+  { id: "4", soNo: "SO-2026-1003", orderDate: "2026-06-03", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-06-24", status: "Draft", amount: 320000 },
+  { id: "5", soNo: "SO-2026-1004", orderDate: "2026-06-04", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-04", status: "Confirmed", amount: 675000 },
+  { id: "6", soNo: "SO-2026-1005", orderDate: "2026-06-04", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-06-04", status: "Confirmed", amount: 1100000 },
+  { id: "7", soNo: "SO-2026-1008", orderDate: "2026-06-05", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-28", status: "Cancelled", amount: 250000 },
 ];

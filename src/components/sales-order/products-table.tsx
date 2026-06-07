@@ -45,11 +45,11 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
             <TableRow>
               <TableHead className="w-10 text-center px-2">#</TableHead>
               <TableHead className="px-2">Product</TableHead>
-              <TableHead className="w-[100px] px-2">Color</TableHead>
+              <TableHead className="w-[110px] pl-6 pr-2">Color</TableHead>
               <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>
               <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>
               <TableHead className="w-[100px] text-right px-2">Rate (₹)</TableHead>
-              <TableHead className="w-[120px] text-right px-2">Amount (₹)</TableHead>
+              <TableHead className="w-[130px] text-right pr-6 pl-2">Amount (₹)</TableHead>
               {!isReadOnly && <TableHead className="w-[80px] text-center px-2">Action</TableHead>}
             </TableRow>
           </TableHeader>
@@ -77,7 +77,7 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-2 py-2">
+                  <TableCell className="pl-6 pr-2 py-2">
                     <div className="flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full border border-slate-300"
@@ -101,7 +101,7 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-slate-800 px-2 py-2">
+                  <TableCell className="text-right font-semibold text-slate-800 pr-6 pl-2 py-2">
                     {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </TableCell>
                   {!isReadOnly && (

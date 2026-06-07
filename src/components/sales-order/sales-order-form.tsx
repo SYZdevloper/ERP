@@ -3,6 +3,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SalesOrderSchema, SalesOrder } from "@/types/sales-order";
 import { EMPTY_SALES_ORDER, MOCK_SALES_ORDERS_LIST, MOCK_BUYERS } from "@/data/mock-sales-order";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 import { OrderHeader } from "@/components/sales-order/order-header";
 import { BuyerOrderDetailsCard } from "@/components/sales-order/buyer-order-details-card";
@@ -12,7 +15,7 @@ import { ProductsTable } from "@/components/sales-order/products-table";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { OrderSummaryPanel } from "@/components/sales-order/order-summary-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface SalesOrderFormProps {
   initialValues?: Partial<SalesOrder>;
@@ -24,8 +27,10 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
   const methods = useForm<SalesOrder>({
     resolver: zodResolver(SalesOrderSchema),
     defaultValues: initialValues || EMPTY_SALES_ORDER,
-    disabled: isReadOnly,
   });
+
+  const [isTopSectionEditable, setIsTopSectionEditable] = useState(false);
+  const topSectionReadOnly = isReadOnly && !isTopSectionEditable;
 
   // Reset form when initialValues change
   useEffect(() => {
@@ -38,7 +43,10 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
 
   const onSubmit = (data: SalesOrder) => {
     if (!isEditMode && !initialValues) {
-      const buyer = MOCK_BUYERS.find(b => b.id === data.buyerId)?.name || "Unknown Buyer";
+      const buyerData = MOCK_BUYERS.find(b => b.id === data.buyerId);
+      const buyer = buyerData?.name || "Unknown Buyer";
+      const location = buyerData?.billingAddress ? `${buyerData.billingAddress.city}, ${buyerData.billingAddress.state}` : "Unknown Location";
+
       const amount = data.products.reduce((acc, p) => {
         const qty = (p.sizeBreakdown.XS || 0) + (p.sizeBreakdown.S || 0) + (p.sizeBreakdown.M || 0) + 
                     (p.sizeBreakdown.L || 0) + (p.sizeBreakdown.XL || 0) + (p.sizeBreakdown.XXL || 0) + 
@@ -53,12 +61,11 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
       MOCK_SALES_ORDERS_LIST.unshift({
         id: String(Date.now()),
         soNo: data.salesOrderNo,
+        orderDate: data.orderDate ? new Date(data.orderDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         buyer,
-        style: data.products[0]?.name || "Multiple Styles",
+        location,
         deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString().split('T')[0] : "TBD",
         status: (data.status === "Sent" ? "Confirmed" : data.status) as any,
-        fabricPo: "Pending",
-        trimsPo: "Pending",
         amount: grandTotal,
       });
     }
@@ -84,11 +91,16 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
             {/* Left Column (Main Content) */}
             <div className="flex-1 min-w-0 flex flex-col gap-5">
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <BuyerOrderDetailsCard isReadOnly={isReadOnly} isEditMode={isEditMode} />
+                <BuyerOrderDetailsCard 
+                  isReadOnly={topSectionReadOnly} 
+                  isEditMode={isEditMode || isTopSectionEditable}
+                  isSectionLocked={isReadOnly && !isTopSectionEditable}
+                  onToggleEdit={isReadOnly ? () => setIsTopSectionEditable(!isTopSectionEditable) : undefined}
+                />
 
                 <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch">
-                  <BillingAddressCard isReadOnly={isReadOnly || isEditMode} />
-                  <ShippingAddressCard isReadOnly={isReadOnly || isEditMode} />
+                  <BillingAddressCard isReadOnly={topSectionReadOnly} />
+                  <ShippingAddressCard isReadOnly={topSectionReadOnly} />
                 </div>
               </div>
 
@@ -99,13 +111,52 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
 
             {/* Right Column (Information Rail) */}
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
+              {/* Order Info Card */}
+              <div className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">SO No.</span>
+                    <span className="text-sm font-bold text-slate-900">{methods.watch("salesOrderNo")}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">Order Date</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {new Date(methods.watch("orderDate") || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <NotesPanel isReadOnly={isReadOnly} />
-              <OrderSummaryPanel isReadOnly={isReadOnly} />
               <AttachmentsModal isReadOnly={isReadOnly} />
+              <OrderSummaryPanel isReadOnly={isReadOnly} />
             </div>
 
           </div>
         </div>
+
+        {/* Sticky Action Footer */}
+        {(!isReadOnly || isTopSectionEditable) && (
+          <div className="flex-shrink-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)] z-10">
+            {isEditMode && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => router.push(`/sales-orders/${methods.getValues('salesOrderNo')?.replace('SO-', '') || '1'}`)}
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium h-10 px-6"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button type="button" variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6">
+              Save Draft
+            </Button>
+            <Button type="submit" className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
+              Save & Confirm
+              <ChevronDown className="w-4 h-4 ml-2 opacity-80" />
+            </Button>
+          </div>
+        )}
       </form>
     </FormProvider>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { SalesOrder } from "@/types/sales-order";
 import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { Truck, Plus } from "lucide-react";
@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function ShippingAddressCard({ isReadOnly = false }: { isReadOnly?: boolean }) {
-  const { watch } = useFormContext<SalesOrder>();
-  const buyerId = watch("buyerId");
+  const { control } = useFormContext<SalesOrder>();
+  const buyerId = useWatch({ control, name: "buyerId" });
   const selectedBuyer = MOCK_BUYERS.find(b => b.id === buyerId);
   const [isAdded, setIsAdded] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -21,7 +21,17 @@ export function ShippingAddressCard({ isReadOnly = false }: { isReadOnly?: boole
     }
   }, [buyerId, selectedBuyer]);
 
-  if (!selectedBuyer) return null;
+  if (!selectedBuyer) {
+    return (
+      <div className="border border-slate-200 border-dashed rounded-lg p-5 flex-1 flex flex-col justify-center items-center text-center bg-slate-50/50 w-full min-h-[164px]">
+        <div className="flex flex-col items-center justify-center text-slate-400">
+          <Truck className="w-8 h-8 mb-2 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">No Buyer Selected</p>
+          <p className="text-xs mt-1 text-slate-400">Select a buyer to view shipping address</p>
+        </div>
+      </div>
+    );
+  }
 
   let address = selectedBuyer.shippingAddress || selectedBuyer.billingAddress;
   if (selectedBuyer.shippingAddresses?.length && selectedAddressId) {
@@ -30,7 +40,7 @@ export function ShippingAddressCard({ isReadOnly = false }: { isReadOnly?: boole
   }
 
   return (
-    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col justify-center items-center text-center bg-white w-full">
+    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col justify-center items-center text-center bg-white w-full min-h-[164px]">
       {!isAdded ? (
         <div className="w-full h-full flex flex-col">
           <div className="flex items-center gap-3 mb-auto">

@@ -95,6 +95,7 @@ export const SalesOrderSchema = z.object({
   discountPercentage: z.number().min(0).max(100).optional(),
   cgstRate: z.number().optional(),
   sgstRate: z.number().optional(),
+  roundOff: z.number().optional(),
   internalNotes: z.string().optional(),
 });
 

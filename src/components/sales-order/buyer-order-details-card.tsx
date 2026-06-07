@@ -1,16 +1,30 @@
-import { useFormContext, Controller } from "react-hook-form";
+import { useFormContext, Controller, useWatch } from "react-hook-form";
 import { SalesOrder } from "@/types/sales-order";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Edit2 } from "lucide-react";
+import Link from "next/link";
 import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { format, differenceInDays } from "date-fns";
 
-export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }: { isReadOnly?: boolean, isEditMode?: boolean }) {
+export function BuyerOrderDetailsCard({ 
+  isReadOnly = false, 
+  isEditMode = false,
+  isSectionLocked = false,
+  onToggleEdit
+}: { 
+  isReadOnly?: boolean, 
+  isEditMode?: boolean,
+  isSectionLocked?: boolean,
+  onToggleEdit?: () => void
+}) {
   const { register, watch, setValue, getValues, control } = useFormContext<SalesOrder>();
-  const buyerId = watch("buyerId");
+  const buyerId = useWatch({ control, name: "buyerId" });
   const poDate = watch("poDate");
   const deliveryDate = watch("deliveryDate");
+  const orderId = watch("salesOrderNo")?.replace("SO-", "") || "1";
 
   const selectedBuyer = MOCK_BUYERS.find(b => b.id === buyerId);
   
@@ -23,6 +37,8 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
     }
   }
 
+  const effectivelyReadOnly = isReadOnly;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between mb-2">
@@ -30,12 +46,28 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
           <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
           <h2 className="text-base font-semibold text-slate-800">Buyer & Order Details</h2>
         </div>
+        {onToggleEdit && (
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={onToggleEdit} 
+            className={`h-8 px-3 font-medium ${!isSectionLocked ? 'text-slate-500 hover:text-slate-700 hover:bg-slate-100' : 'text-[#0453B8] hover:text-[#0453B8] hover:bg-blue-50'}`}
+          >
+            {!isSectionLocked ? "Lock Details" : (
+              <>
+                <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                Edit Details
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="flex flex-col gap-2 md:col-span-1">
-          <Label htmlFor="buyerId" className="text-xs text-slate-500 font-medium">Buyer {!(isReadOnly || isEditMode) && <span className="text-red-500">*</span>}</Label>
-          {(isReadOnly || isEditMode) ? (
+          <Label htmlFor="buyerId" className="text-xs text-slate-500 font-medium">Buyer {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
+          {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{selectedBuyer?.name || "-"}</div>
           ) : (
             <Controller
@@ -55,7 +87,7 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
               )}
             />
           )}
-          {selectedBuyer && !(isReadOnly || isEditMode) && (
+          {selectedBuyer && !effectivelyReadOnly && (
             <div className="flex items-center gap-4 mt-1 text-xs">
               <span className="text-green-600">Credit Limit: ₹ {(selectedBuyer.creditLimit / 100000).toFixed(2)} L</span>
               <span className="text-green-600">Balance: ₹ {(selectedBuyer.balance / 100000).toFixed(2)} L</span>
@@ -64,8 +96,8 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="buyerPoNo" className="text-xs text-slate-500 font-medium">Buyer PO No. {!isReadOnly && <span className="text-red-500">*</span>}</Label>
-          {isReadOnly ? (
+          <Label htmlFor="buyerPoNo" className="text-xs text-slate-500 font-medium">Buyer PO No. {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
+          {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{watch("buyerPoNo") || "-"}</div>
           ) : (
             <Input id="buyerPoNo" {...register("buyerPoNo")} className="h-[42px]" />
@@ -73,8 +105,8 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="poDate" className="text-xs text-slate-500 font-medium">PO Date {!isReadOnly && <span className="text-red-500">*</span>}</Label>
-          {isReadOnly ? (
+          <Label htmlFor="poDate" className="text-xs text-slate-500 font-medium">PO Date {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
+          {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">
               {poDate ? format(new Date(poDate), "dd MMM yyyy") : "-"}
             </div>
@@ -84,8 +116,8 @@ export function BuyerOrderDetailsCard({ isReadOnly = false, isEditMode = false }
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="deliveryDate" className="text-xs text-slate-500 font-medium">Delivery Date {!isReadOnly && <span className="text-red-500">*</span>}</Label>
-          {isReadOnly ? (
+          <Label htmlFor="deliveryDate" className="text-xs text-slate-500 font-medium">Delivery Date {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
+          {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">
               {deliveryDate ? format(new Date(deliveryDate), "dd MMM yyyy") : "-"}
             </div>

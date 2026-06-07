@@ -1,19 +1,29 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { SalesOrder } from "@/types/sales-order";
 import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function BillingAddressCard({ isReadOnly = false }: { isReadOnly?: boolean }) {
-  const { watch } = useFormContext<SalesOrder>();
-  const buyerId = watch("buyerId");
+  const { control } = useFormContext<SalesOrder>();
+  const buyerId = useWatch({ control, name: "buyerId" });
   const selectedBuyer = MOCK_BUYERS.find(b => b.id === buyerId);
 
-  if (!selectedBuyer || !selectedBuyer.billingAddress) return null;
+  if (!selectedBuyer || !selectedBuyer.billingAddress) {
+    return (
+      <div className="border border-slate-200 border-dashed rounded-lg p-5 flex-1 flex flex-col justify-center items-center text-center bg-slate-50/50 w-full min-h-[164px]">
+        <div className="flex flex-col items-center justify-center text-slate-400">
+          <MapPin className="w-8 h-8 mb-2 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">No Buyer Selected</p>
+          <p className="text-xs mt-1 text-slate-400">Select a buyer to view billing address</p>
+        </div>
+      </div>
+    );
+  }
   const address = selectedBuyer.billingAddress;
 
   return (
-    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full h-full text-left">
+    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
       <div className="flex items-center justify-between mb-4 h-8">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
