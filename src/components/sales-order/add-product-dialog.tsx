@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, ChevronDown, ChevronUp, Plus, ArrowLeft } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Plus, ArrowLeft, Calculator } from "lucide-react";
 import { MOCK_CATALOG_PRODUCTS } from "@/data/mock-sales-order";
 import { INITIAL_MASTER_PATTERNS } from "@/data/mock-masters";
 import { CatalogProduct } from "@/types/sales-order";
@@ -52,6 +52,58 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [isPatternOpen, setIsPatternOpen] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
 
+  const [isRatioMode, setIsRatioMode] = useState(false);
+  const [totalOrderQty, setTotalOrderQty] = useState<string>("");
+  const [ratios, setRatios] = useState<Record<string, number>>({});
+  const [adjustmentSize, setAdjustmentSize] = useState<string>("XL");
+
+  // Keep adjustmentSize in visible bounds when showMoreSizes changes
+  useEffect(() => {
+    const activeSizes = showMoreSizes
+      ? [...DEFAULT_SIZES, ...EXTENDED_SIZES]
+      : [...DEFAULT_SIZES];
+    if (!activeSizes.includes(adjustmentSize as any)) {
+      setAdjustmentSize(activeSizes[activeSizes.length - 1]);
+    }
+  }, [showMoreSizes, adjustmentSize]);
+
+  const handleCalculate = () => {
+    const qty = parseInt(totalOrderQty);
+    if (isNaN(qty) || qty <= 0) return;
+
+    const activeSizes = showMoreSizes
+      ? [...DEFAULT_SIZES, ...EXTENDED_SIZES]
+      : [...DEFAULT_SIZES];
+
+    let totalRatio = 0;
+    activeSizes.forEach(size => {
+      totalRatio += ratios[size] || 0;
+    });
+
+    if (totalRatio === 0) return;
+
+    const baseSets = Math.floor(qty / totalRatio);
+    const newQuantities: Record<string, number> = {};
+    let allocatedTotal = 0;
+
+    activeSizes.forEach(size => {
+      const r = ratios[size] || 0;
+      const sizeQty = r * baseSets;
+      if (sizeQty > 0) {
+        newQuantities[size] = sizeQty;
+        allocatedTotal += sizeQty;
+      }
+    });
+
+    const balance = qty - allocatedTotal;
+    if (balance > 0) {
+      const targetSize = activeSizes.includes(adjustmentSize as any) ? adjustmentSize : activeSizes[activeSizes.length - 1];
+      newQuantities[targetSize] = (newQuantities[targetSize] || 0) + balance;
+    }
+
+    setQuantities(newQuantities);
+  };
+
   const [newProduct, setNewProduct] = useState({
     code: "",
     rate: "",
@@ -92,6 +144,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setShowMoreSizes(false);
       setViewMode('search');
       setCustomImage(null);
+      setRatios({});
+      setTotalOrderQty("");
+      setIsRatioMode(false);
     }
   }, [open, editProduct, catalogItems]);
 
@@ -220,21 +275,23 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[820px] h-[90vh] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
+      <DialogContent className="sm:max-w-[1000px] h-[90vh] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
         <DialogHeader className="px-6 py-3 border-b border-slate-200 bg-white shadow-sm z-10 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            {viewMode === 'create' && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 text-slate-500" onClick={() => setViewMode('search')}>
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            )}
-            <div>
-              <DialogTitle className="text-lg font-bold text-slate-900">
-                {viewMode === 'search' ? (editProduct ? 'Edit Product' : 'Add Product') : 'Create Catalog Product'}
-              </DialogTitle>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
               {viewMode === 'create' && (
-                <p className="text-xs text-slate-500 mt-0.5">Products feed the cascading Category → Sub-Category → Product dropdowns.</p>
+                <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 text-slate-500" onClick={() => setViewMode('search')}>
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
               )}
+              <div>
+                <DialogTitle className="text-lg font-bold text-slate-900">
+                  {viewMode === 'search' ? (editProduct ? 'Edit Product' : 'Add Product') : 'Create Catalog Product'}
+                </DialogTitle>
+                {viewMode === 'create' && (
+                  <p className="text-xs text-slate-500 mt-0.5">Products feed the cascading Category → Sub-Category → Product dropdowns.</p>
+                )}
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -395,7 +452,19 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   </div>
 
                   {/* Attributes Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mt-2 mb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 mt-2 mb-2">
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Rate <span className="text-red-500">*</span></Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={customRate}
+                        onChange={(e) => setCustomRate(e.target.value)}
+                        placeholder="0"
+                        className="h-9 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                      />
+                    </div>
+
                     <div className="flex items-center gap-3">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Color <span className="text-red-500">*</span></Label>
                       <Select value={selectedColor} onValueChange={setSelectedColor}>
@@ -403,11 +472,36 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           <SelectValue placeholder="Select Color" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="White">White</SelectItem>
-                          <SelectItem value="Black">Black</SelectItem>
-                          <SelectItem value="Navy">Navy</SelectItem>
-                          <SelectItem value="Red">Red</SelectItem>
-                          <SelectItem value="Grey">Grey</SelectItem>
+                          <SelectItem value="White">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'white' }} />
+                              <span>White</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Black">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'black' }} />
+                              <span>Black</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Navy">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#000080' }} />
+                              <span>Navy</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Red">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#ef4444' }} />
+                              <span>Red</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Grey">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#808080' }} />
+                              <span>Grey</span>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -500,10 +594,81 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     </div>
                   </div>
 
-                    {/* Quantities Grid */}
+                  {/* Brand Tabs & Total Quantity Rearranged */}
+                  <div className="flex items-center justify-between mt-1 mb-2">
+                    <div className="flex items-center gap-2">
+                      {isRatioMode && (
+                        <>
+                          <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
+                          <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
+                            <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
+                              <SelectValue placeholder="Size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
+                                <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
+                      )}
+                      <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Total Qty</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={totalOrderQty}
+                        onChange={(e) => setTotalOrderQty(e.target.value)}
+                        placeholder="0"
+                        className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
+                      />
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleCalculate}
+                        disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
+                        className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
+                      >
+                        <Calculator className="w-4 h-4 mr-1" /> Calculate
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Brand</Label>
+                      <div className="flex items-center gap-2 flex-wrap whitespace-nowrap">
+                        {["Zara", "H&M", "Levi's", "No Brand"].map((brand) => (
+                          <button
+                            key={brand}
+                            type="button"
+                            className={`px-3 py-1.5 text-xs font-bold rounded-md border transition-colors whitespace-nowrap ${brandName === brand ? 'bg-[#0453B8] text-white border-[#0453B8]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                            onClick={() => setBrandName(brand)}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                     <div className="flex flex-col gap-4 flex-1">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">Enter Quantities</Label>
+                        <div className="flex items-center gap-3">
+                          <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">
+                            {isRatioMode ? "Enter Ratios" : "Enter Quantities"}
+                          </Label>
+                          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                            <button
+                              className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${!isRatioMode ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                              onClick={() => setIsRatioMode(false)}
+                            >
+                              Qty
+                            </button>
+                            <button
+                              className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${isRatioMode ? 'bg-white text-[#0453B8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                              onClick={() => setIsRatioMode(true)}
+                            >
+                              Ratio
+                            </button>
+                          </div>
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -524,8 +689,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               type="number"
                               min="0"
                               className="h-9 text-center rounded-none border-0 shadow-none focus-visible:ring-[#0453B8] font-semibold text-slate-900 bg-white px-1"
-                              value={quantities[size] || ""}
-                              onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
+                              value={isRatioMode ? (ratios[size] || "") : (quantities[size] || "")}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                if (isRatioMode) {
+                                  setRatios({ ...ratios, [size]: val });
+                                } else {
+                                  setQuantities({ ...quantities, [size]: val });
+                                }
+                              }}
                               onFocus={(e) => e.target.select()}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -668,6 +840,17 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
           <div className="flex items-center gap-3">
             <Button variant="outline" onClick={handleClose} className="border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold h-11 px-6">Cancel</Button>
+
+            {viewMode === 'search' && !editProduct && (
+              <Button 
+                variant="outline" 
+                className="border-[#0453B8] text-[#0453B8] hover:bg-blue-50 font-bold h-11 px-6"
+                onClick={() => setViewMode('create')}
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Create Catalog
+              </Button>
+            )}
 
             {viewMode === 'search' ? (
               <Button

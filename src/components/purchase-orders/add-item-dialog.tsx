@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { POItem } from "@/types/purchase-order";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AddItemDialogProps {
   open: boolean;
@@ -14,28 +15,35 @@ interface AddItemDialogProps {
   itemOptions: string[];
   itemLabel: string; // e.g. "Material" or "Trim Item"
   specLabel?: string; // e.g. "GSM / Content" or "Specifications"
+  initialValues?: Partial<POItem>;
+  type?: "Fabric" | "Trims";
 }
 
-export function AddItemDialog({ 
-  open, 
-  onOpenChange, 
-  onAddItem, 
+export function AddItemDialog({
+  open,
+  onOpenChange,
+  onAddItem,
   editItem,
   itemOptions,
   itemLabel,
-  specLabel = "GSM / Content"
+  specLabel = "GSM / Content",
+  initialValues,
+  type
 }: AddItemDialogProps) {
   const [formData, setFormData] = useState({
     material: "",
     gsmContent: "",
+    gsm: "",
+    width: "",
     colorShade: "",
+    requiredQty: "",
     qty: "",
     uom: "mtr",
     rate: "",
     gst: "5",
   });
-  
-  const [images, setImages] = useState<{name: string; url: string}[]>([]);
+
+  const [images, setImages] = useState<{ name: string; url: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -43,26 +51,32 @@ export function AddItemDialog({
       setFormData({
         material: editItem.material || "",
         gsmContent: editItem.gsmContent || "",
+        gsm: editItem.gsm || "",
+        width: editItem.width || "",
         colorShade: editItem.colorShade || "",
-        qty: editItem.qty.toString(),
+        requiredQty: editItem.requiredQty?.toString() || editItem.qty?.toString() || "",
+        qty: editItem.qty?.toString() || "",
         uom: editItem.uom || "mtr",
-        rate: editItem.rate.toString(),
-        gst: editItem.gst.toString(),
+        rate: editItem.rate?.toString() || "",
+        gst: editItem.gst?.toString() || "5",
       });
       setImages(editItem.images || []);
     } else if (open) {
       setFormData({
-        material: "",
-        gsmContent: "",
-        colorShade: "",
-        qty: "",
-        uom: "mtr", // or "pcs" based on trims, but user can change
-        rate: "",
-        gst: "5", 
+        material: initialValues?.material || "",
+        gsmContent: initialValues?.gsmContent || "",
+        gsm: initialValues?.gsm || "",
+        width: initialValues?.width || "",
+        colorShade: initialValues?.colorShade || "",
+        requiredQty: initialValues?.requiredQty?.toString() || initialValues?.qty?.toString() || "",
+        qty: initialValues?.qty?.toString() || "",
+        uom: initialValues?.uom || "mtr", // or "pcs" based on trims, but user can change
+        rate: initialValues?.rate?.toString() || "",
+        gst: initialValues?.gst?.toString() || "5", 
       });
-      setImages([]);
+      setImages(initialValues?.images || []);
     }
-  }, [open, editItem]);
+  }, [open, editItem, initialValues]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -83,9 +97,10 @@ export function AddItemDialog({
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  const qtyNum = parseFloat(formData.qty) || 0;
+  const rateNum = parseFloat(formData.rate) || 0;
+
   const handleSubmit = () => {
-    const qtyNum = parseFloat(formData.qty) || 0;
-    const rateNum = parseFloat(formData.rate) || 0;
     const gstNum = parseFloat(formData.gst) || 0;
     
     if (!formData.material || !formData.colorShade || qtyNum <= 0 || rateNum <= 0) {
@@ -96,9 +111,13 @@ export function AddItemDialog({
     const newItem: POItem = {
       id: editItem ? editItem.id : `item-${Date.now()}`,
       material: formData.material,
-      gsmContent: formData.gsmContent,
+      gsmContent: type === "Fabric" || itemLabel === "Material" ? `${formData.gsm} / ${formData.width}` : formData.gsmContent,
+      gsm: formData.gsm,
+      width: formData.width,
       colorShade: formData.colorShade,
+      requiredQty: parseFloat(formData.requiredQty) || 0,
       qty: qtyNum,
+      buffer: qtyNum - (parseFloat(formData.requiredQty) || 0),
       uom: formData.uom,
       rate: rateNum,
       gst: gstNum,
@@ -125,56 +144,191 @@ export function AddItemDialog({
     }
   };
 
-  const amount = (parseFloat(formData.qty) || 0) * (parseFloat(formData.rate) || 0);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
-        <DialogHeader className="px-6 py-3 border-b border-slate-200 bg-white shadow-sm z-10 flex-shrink-0">
-          <DialogTitle className="text-lg font-bold text-slate-900">
+      <DialogContent className="w-[95vw] sm:max-w-[1000px] h-[90vh] sm:h-[750px] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
+        <DialogHeader className="px-6 py-4 border-b border-slate-200 flex flex-row items-center justify-between bg-white shadow-sm z-10 flex-shrink-0">
+          <DialogTitle className="text-xl font-bold text-[#0F172A]">
             {editItem ? `Edit ${itemLabel}` : `Add ${itemLabel}`}
           </DialogTitle>
+          <button onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+            <X className="w-5 h-5" />
+          </button>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar relative" onKeyDown={handleKeyDown}>
-          <div className="flex flex-col gap-4 mb-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">{itemLabel} <span className="text-red-500">*</span></Label>
-                <select 
-                  value={formData.material}
-                  onChange={(e) => handleInputChange("material", e.target.value)}
-                  className="h-10 px-3 py-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900"
-                >
-                  <option value="">Select {itemLabel}</option>
-                  {itemOptions.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
+          <div className="flex flex-col gap-4">
+            {type === "Fabric" || itemLabel === "Material" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">{itemLabel} <span className="text-red-500">*</span></Label>
+                  <Select value={formData.material} onValueChange={(val) => handleInputChange("material", val)}>
+                    <SelectTrigger className="w-full bg-white h-12 border-slate-200 focus:ring-[#0453B8]">
+                      <SelectValue placeholder={`Select ${itemLabel}`} className="w-full truncate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {itemOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">GSM</Label>
+                  <Input 
+                    value={formData.gsm}
+                    onChange={(e) => handleInputChange("gsm", e.target.value)}
+                    placeholder="e.g. 180" 
+                    className="w-full bg-white h-12"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
+                  <Select value={formData.colorShade} onValueChange={(val) => handleInputChange("colorShade", val)}>
+                    <SelectTrigger className="w-full bg-white h-12 border-slate-200 focus:ring-[#0453B8]">
+                      <SelectValue placeholder="Select Color" className="w-full truncate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="White">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'white' }} />
+                          <span>White</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Black">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'black' }} />
+                          <span>Black</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Navy">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#000080' }} />
+                          <span>Navy</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Red">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#ef4444' }} />
+                          <span>Red</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Grey">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#555555' }} />
+                          <span>Grey</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Natural">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#f5f5dc' }} />
+                          <span>Natural</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Width</Label>
+                  <Input 
+                    value={formData.width}
+                    onChange={(e) => handleInputChange("width", e.target.value)}
+                    placeholder='e.g. 44"' 
+                    className="w-full bg-white h-12"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">{specLabel}</Label>
-                <Input 
-                  value={formData.gsmContent}
-                  onChange={(e) => handleInputChange("gsmContent", e.target.value)}
-                  placeholder={`e.g. ${itemLabel === "Trim Item" ? "Size 18L" : "180gsm CO"}`} 
-                  className="bg-white h-10"
-                />
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">{itemLabel} <span className="text-red-500">*</span></Label>
+                    <Select value={formData.material} onValueChange={(val) => handleInputChange("material", val)}>
+                      <SelectTrigger className="bg-white h-10 border-slate-200 focus:ring-[#0453B8]">
+                        <SelectValue placeholder={`Select ${itemLabel}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {itemOptions.map((opt) => (
+                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
+                    <Select value={formData.colorShade} onValueChange={(val) => handleInputChange("colorShade", val)}>
+                      <SelectTrigger className="bg-white h-10 border-slate-200 focus:ring-[#0453B8]">
+                        <SelectValue placeholder="Select Color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="White">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'white' }} />
+                            <span>White</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Black">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'black' }} />
+                            <span>Black</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Navy">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#000080' }} />
+                            <span>Navy</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Red">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#ef4444' }} />
+                            <span>Red</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Grey">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#555555' }} />
+                            <span>Grey</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Natural">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#f5f5dc' }} />
+                            <span>Natural</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">{specLabel}</Label>
+                    <Input 
+                      value={formData.gsmContent}
+                      onChange={(e) => handleInputChange("gsmContent", e.target.value)}
+                      placeholder={`e.g. ${itemLabel === "Trim Item" ? "Size 18L" : "180gsm CO"}`} 
+                      className="bg-white h-10"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
+                <Label className="text-xs font-bold text-slate-600 whitespace-nowrap text-ellipsis overflow-hidden">Quantity Required</Label>
                 <Input 
-                  value={formData.colorShade}
-                  onChange={(e) => handleInputChange("colorShade", e.target.value)}
-                  placeholder="e.g. 06-D.GREY or Black" 
-                  className="bg-white h-10"
+                  readOnly 
+                  value={formData.requiredQty || "0"} 
+                  className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Qty <span className="text-red-500">*</span></Label>
+                <Label className="text-xs font-bold text-slate-600">Your Order <span className="text-red-500">*</span></Label>
                 <div className="flex gap-2">
                   <Input 
                     type="number"
@@ -183,22 +337,24 @@ export function AddItemDialog({
                     placeholder="0.00" 
                     className="bg-white flex-1 h-10"
                   />
-                  <select 
-                    value={formData.uom}
-                    onChange={(e) => handleInputChange("uom", e.target.value)}
-                    className="w-20 h-10 px-2 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900"
-                  >
-                    <option value="mtr">mtr</option>
-                    <option value="pcs">pcs</option>
-                    <option value="kg">kg</option>
-                    <option value="roll">roll</option>
-                    <option value="cones">cones</option>
-                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-600">Buffer</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    readOnly 
+                    value={((parseFloat(formData.qty) || 0) - (parseFloat(formData.requiredQty) || 0)).toFixed(2)} 
+                    className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                  />
+                  <div className="w-12 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
+                    {formData.uom}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-bold text-slate-600">Rate (₹) <span className="text-red-500">*</span></Label>
                 <Input 
@@ -218,19 +374,26 @@ export function AddItemDialog({
                   className="bg-white h-10"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Amount (Auto)</Label>
-                <div className="h-10 px-3 py-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-semibold text-slate-700 flex items-center">
-                  ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
+                <Label className="text-xs font-bold text-slate-600">Amount</Label>
+                <Input 
+                  readOnly 
+                  value={`₹ ${(qtyNum * rateNum).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                  className="bg-slate-50 text-slate-700 font-bold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-600">Total (With GST)</Label>
+                <Input 
+                  readOnly 
+                  value={`₹ ${((qtyNum * rateNum) * (1 + (parseFloat(formData.gst) || 0) / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                  className="bg-slate-50 text-[#0453B8] font-bold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                />
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-3 rounded-lg border border-slate-200">
+          <div className="bg-white p-3 rounded-lg border border-slate-200 mt-4">
             <div className="flex items-center justify-between mb-3">
               <Label className="text-xs font-bold text-slate-600 flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-slate-400" />
@@ -247,43 +410,45 @@ export function AddItemDialog({
               </Button>
               <input 
                 type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageUpload} 
-                multiple 
-                accept="image/*" 
+                ref={fileInputRef}
                 className="hidden" 
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
               />
             </div>
-
-            {images.length > 0 ? (
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {images.map((img, i) => (
-                  <div key={i} className="relative w-20 h-20 rounded-md border border-slate-200 overflow-hidden shrink-0 group bg-slate-100 flex items-center justify-center">
-                    <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                    <button 
-                      onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-20 border-2 border-dashed border-slate-200 rounded-md flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                <ImageIcon className="h-6 w-6 mb-1 opacity-50" />
-                <span className="text-xs">No images uploaded</span>
-              </div>
-            )}
+            
+            <div className="min-h-[100px] border-2 border-dashed border-slate-200 rounded-md flex items-center justify-center p-4 bg-slate-50/50">
+              {images.length > 0 ? (
+                <div className="flex flex-wrap gap-4 w-full">
+                  {images.map((img, index) => (
+                    <div key={index} className="relative group rounded-md overflow-hidden border border-slate-200 bg-white">
+                      <img src={img.url} alt={`Upload ${index + 1}`} className="h-20 w-20 object-cover" />
+                      <button 
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center flex flex-col items-center text-slate-400">
+                  <ImageIcon className="h-6 w-6 mb-2 opacity-50" />
+                  <p className="text-xs font-medium">No images uploaded</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 border-t border-slate-200 bg-slate-50 px-6 py-5 sm:justify-end gap-3 rounded-b-lg">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="min-w-[100px] border-slate-300 text-slate-700 hover:bg-slate-100 h-10">
+        <DialogFooter className="px-6 py-4 border-t border-slate-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 flex-shrink-0 flex items-center justify-end gap-3 sm:space-x-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10 px-5 font-medium border-slate-200 text-slate-600">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="min-w-[140px] h-10 bg-[#0453B8] hover:bg-[#034294] text-white font-medium">
-            {editItem ? "Update Item" : "Add to Order"}
+          <Button onClick={handleSubmit} className="h-10 px-6 font-medium bg-[#0453B8] hover:bg-[#034294] text-white">
+            {editItem ? "Save Changes" : "Add to Order"}
           </Button>
         </DialogFooter>
       </DialogContent>

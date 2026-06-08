@@ -318,15 +318,15 @@ function FabricDetailDialog({ fabric, onClose }: { fabric: FabricStock; onClose:
               </h3>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
-                  <TableHeader className="bg-slate-800">
-                    <TableRow className="border-0 hover:bg-slate-800">
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider">GRN</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider">Date</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider">PO</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider">Supplier</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider text-right">Expected</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider text-right">Received</TableHead>
-                      <TableHead className="px-4 py-2.5 text-white font-semibold text-[11px] uppercase tracking-wider">Status</TableHead>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold">GRN</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold">Date</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold">PO</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold">Supplier</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold text-right">Expected</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold text-right">Received</TableHead>
+                      <TableHead className="px-4 py-2.5 text-slate-700 text-xs font-bold">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

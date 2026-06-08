@@ -210,7 +210,7 @@ export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = [
   { id: "cat-4", code: "WD001", name: "Summer Dress", category: "Women's Shirt", subcategory: "Dress", type: "Sleeveless", sqNumber: "1000000004", color: "White", rate: 700.00 },
   { id: "cat-5", code: "WTR001", name: "Slim Fit Trouser", category: "Women's Shirt", subcategory: "Trouser", type: "Full Length", sqNumber: "1000000005", color: "Black", rate: 550.00 },
   { id: "cat-6", code: "KT001", name: "Kids T-Shirt", category: "Kids' Wear", subcategory: "T-Shirt", type: "Half Sleeves", sqNumber: "1000000006", color: "Blue", rate: 180.00 },
-  { id: "cat-7", code: "MS001", name: "Oxford Shirt", category: "Men's Shirt", subcategory: "Shirt", type: "Full Sleeves", sqNumber: "1000000007", color: "White", rate: 420.00 },
+  { id: "cat-7", code: "MS001", name: "Men's Shirt", category: "Men's Shirt", subcategory: "Shirt", type: "Full Sleeves", sqNumber: "1000000007", color: "White", rate: 420.00 },
   { id: "cat-8", code: "MS002", name: "Linen Shirt", category: "Men's Shirt", subcategory: "Shirt", type: "Half Sleeves", sqNumber: "1000000008", color: "Beige", rate: 480.00 },
   { id: "cat-9", code: "MJ001", name: "Denim Jacket", category: "Men's Shirt", subcategory: "Jacket", type: "Full Sleeves", sqNumber: "1000000009", color: "Blue", rate: 950.00 },
   { id: "cat-10", code: "MT003", name: "Crew Neck Tee", category: "Men's T-Shirt", subcategory: "T-Shirt", type: "Half Sleeves", sqNumber: "1000000010", color: "Red", rate: 220.00 },

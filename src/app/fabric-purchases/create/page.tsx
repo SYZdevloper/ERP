@@ -3,7 +3,7 @@
 import { PurchaseOrderForm } from "@/components/purchase-orders/po-form";
 
 export const FABRIC_OPTIONS = [
-  "Cotton 180gsm",
+  "Cotton",
   "Denim 12oz",
   "Pique 220gsm",
   "Twill 240gsm",

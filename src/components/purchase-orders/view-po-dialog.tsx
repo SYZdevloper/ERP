@@ -36,7 +36,7 @@ export function ViewPODialog({
   const contactPhone = po.phone || "+91 9810000000";
   const paymentTerms = po.paymentTerms || "30 days credit";
   const linkedSo = po.linkedSo || "SO-2026-1001";
-  const itemDesc = po.material || po.itemDesc || "Cotton 180gsm";
+  const itemDesc = po.material || po.itemDesc || "Cotton";
   const qtyStr = po.qty || "1,200 Pcs";
   const rateVal = po.rate || 180;
   const gstPct = po.gst || 5;
@@ -109,15 +109,15 @@ export function ViewPODialog({
             <h3 className="text-sm font-bold text-slate-900 mb-2.5">Items (1)</h3>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <Table>
-                <TableHeader className="bg-[#1e3a5f]">
-                  <TableRow className="hover:bg-[#1e3a5f] border-0">
-                    <TableHead className="text-white text-[11px] font-bold uppercase w-10 text-center py-2.5">#</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase py-2.5">{itemNameLabel}</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-center py-2.5">Uom</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Qty</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Rate</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-center py-2.5">Gst%</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Amount</TableHead>
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="text-slate-700 text-xs font-bold w-10 text-center py-2.5">#</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold py-2.5">{itemNameLabel}</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">UOM</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Qty</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Rate</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">GST %</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="text-[13px]">
@@ -157,16 +157,16 @@ export function ViewPODialog({
             <h3 className="text-sm font-bold text-slate-900 mb-2.5">Goods Receipt Notes (1)</h3>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <Table>
-                <TableHeader className="bg-[#1e3a5f]">
-                  <TableRow className="hover:bg-[#1e3a5f] border-0">
-                    <TableHead className="text-white text-[11px] font-bold uppercase py-2.5">Grn</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase py-2.5">Date</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase py-2.5">Inv / Challan</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Expected</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Received</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Accepted</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-right py-2.5">Rejected</TableHead>
-                    <TableHead className="text-white text-[11px] font-bold uppercase text-center py-2.5">Status</TableHead>
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="text-slate-700 text-xs font-bold py-2.5">GRN</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold py-2.5">Date</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold py-2.5">Invoice / Challan</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Expected</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Received</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Accepted</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Rejected</TableHead>
+                    <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="text-[12px]">
