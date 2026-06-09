@@ -45,6 +45,7 @@ export const CatalogProductSchema = z.object({
   color: z.string(),
   rate: z.number(),
   image: z.string().optional(),
+  buttons: z.string().optional(),
 });
 
 export type CatalogProduct = z.infer<typeof CatalogProductSchema>;

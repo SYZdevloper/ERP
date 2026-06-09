@@ -192,14 +192,7 @@ export function ProductsTable({ isReadOnly = false }: { isReadOnly?: boolean }) 
           </TableFooter>
         </Table>
       </div>
-      {!isReadOnly && (
-        <div className="mt-2">
-          <Button variant="outline" className="w-full h-10 border-dashed border-2 bg-slate-50 text-slate-600 hover:text-slate-900" onClick={(e) => { e.preventDefault(); setIsAddProductOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Another Product
-          </Button>
-        </div>
-      )}
+
 
       {isAddProductOpen && (
         <AddProductDialog

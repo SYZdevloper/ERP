@@ -21,9 +21,10 @@ export interface SalesOrderFormProps {
   initialValues?: Partial<SalesOrder>;
   isReadOnly?: boolean;
   isEditMode?: boolean;
+  hideEditDetails?: boolean;
 }
 
-export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode = false }: SalesOrderFormProps) {
+export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode = false, hideEditDetails = false }: SalesOrderFormProps) {
   const methods = useForm<SalesOrder>({
     resolver: zodResolver(SalesOrderSchema),
     defaultValues: initialValues || EMPTY_SALES_ORDER,
@@ -95,7 +96,7 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
                   isReadOnly={topSectionReadOnly} 
                   isEditMode={isEditMode || isTopSectionEditable}
                   isSectionLocked={isReadOnly && !isTopSectionEditable}
-                  onToggleEdit={isReadOnly ? () => setIsTopSectionEditable(!isTopSectionEditable) : undefined}
+                  onToggleEdit={isReadOnly && !hideEditDetails ? () => setIsTopSectionEditable(!isTopSectionEditable) : undefined}
                 />
 
                 <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch">

@@ -205,7 +205,7 @@ export default function SalesOrdersPage() {
                                <MoreHorizontal className="h-4 w-4" />
                              </Button>
                            </DropdownMenuTrigger>
-                           <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-lg border-slate-200">
+                           <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg border-slate-200">
                              <DropdownMenuItem className="p-0 cursor-pointer">
                                <Link href={`/sales-orders/${order.id}`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
                                  <Eye className="mr-2 h-4 w-4 text-slate-400" /> View Details
@@ -214,6 +214,11 @@ export default function SalesOrdersPage() {
                              <DropdownMenuItem className="p-0 cursor-pointer">
                                <Link href={`/sales-orders/${order.id}/edit`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
                                  <Edit2 className="mr-2 h-4 w-4 text-slate-400" /> Edit Order
+                               </Link>
+                             </DropdownMenuItem>
+                             <DropdownMenuItem className="p-0 cursor-pointer">
+                               <Link href={`/sales-orders/${order.id}/trims-bom`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
+                                 <ClipboardList className="mr-2 h-4 w-4 text-slate-400" /> Add Trim BOM
                                </Link>
                              </DropdownMenuItem>
                            </DropdownMenuContent>

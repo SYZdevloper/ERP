@@ -52,7 +52,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [isPatternOpen, setIsPatternOpen] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
 
-  const [isRatioMode, setIsRatioMode] = useState(false);
+  const [isRatioMode, setIsRatioMode] = useState(true);
   const [totalOrderQty, setTotalOrderQty] = useState<string>("");
   const [ratios, setRatios] = useState<Record<string, number>>({});
   const [adjustmentSize, setAdjustmentSize] = useState<string>("XL");
@@ -111,7 +111,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     subcategory: "",
     name: "",
     type: "",
-    type2: ""
+    type2: "",
+    buttons: ""
   });
 
   const rateInputRef = useRef<HTMLInputElement>(null);
@@ -146,7 +147,17 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setCustomImage(null);
       setRatios({});
       setTotalOrderQty("");
-      setIsRatioMode(false);
+      setIsRatioMode(true);
+      setNewProduct({
+        code: "",
+        rate: "",
+        category: "",
+        subcategory: "",
+        name: "",
+        type: "",
+        type2: "",
+        buttons: ""
+      });
     }
   }, [open, editProduct, catalogItems]);
 
@@ -248,6 +259,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       type: newProduct.type || "-",
       color: "N/A", // Color is selected during Add
       rate: parseFloat(newProduct.rate) || 0,
+      buttons: newProduct.buttons || undefined,
     };
 
     setCatalogItems([createdProduct, ...catalogItems]);
@@ -393,8 +405,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                             </div>
                             <span className="text-[13px] font-extrabold text-slate-900 mb-0.5">{p.code}</span>
                             <span className="text-xs font-semibold text-slate-700 mb-1 truncate w-full">{p.name}</span>
-                            <span className="text-[10px] text-slate-500">{p.type}</span>
                             <span className="text-[10px] text-slate-500">{p.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
+                            <span className="text-[10px] text-slate-500">{p.type}{p.buttons ? ` • ${p.buttons} Buttons` : ""}</span>
                           </button>
                         );
                       })}
@@ -437,13 +449,16 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           </div>
                           <div className="flex flex-col gap-2 pt-1">
                             <span className="text-base font-extrabold text-slate-900">{selectedProduct.code}</span>
-                            <span className="text-sm font-semibold text-slate-700">{selectedProduct.name} {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
+                            <span className="text-sm font-semibold text-slate-700">{selectedProduct.name} {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}</span>
                             
                             <div className="flex flex-wrap items-center gap-2 mt-2">
                               <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.category.replace("'s", "").replace(" Wear", "")}</span>
                               <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory}</span>
                               <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.type}</span>
                               <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
+                              {selectedProduct.buttons && (
+                                <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.buttons} Buttons</span>
+                              )}
                             </div>
                           </div>
                         </>
@@ -596,40 +611,50 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
                   {/* Brand Tabs & Total Quantity Rearranged */}
                   <div className="flex items-center justify-between mt-1 mb-2">
-                    <div className="flex items-center gap-2">
-                      {isRatioMode && (
-                        <>
-                          <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
-                          <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
-                            <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
-                              <SelectValue placeholder="Size" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
-                                <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </>
-                      )}
-                      <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Total Qty</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={totalOrderQty}
-                        onChange={(e) => setTotalOrderQty(e.target.value)}
-                        placeholder="0"
-                        className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
-                      />
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={handleCalculate}
-                        disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
-                        className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
+                    <div className="flex items-center gap-2 relative h-9 min-w-[500px]">
+                      <div 
+                        className={`absolute left-0 top-0 flex items-center gap-2 transition-all duration-300 ease-in-out ${
+                          isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"
+                        }`}
                       >
-                        <Calculator className="w-4 h-4 mr-1" /> Calculate
-                      </Button>
+                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
+                        <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
+                          <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
+                            <SelectValue placeholder="Size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
+                              <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap ml-2">Total Qty</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={totalOrderQty}
+                          onChange={(e) => setTotalOrderQty(e.target.value)}
+                          placeholder="0"
+                          className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
+                        />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleCalculate}
+                          disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
+                          className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
+                        >
+                          <Calculator className="w-4 h-4 mr-1" /> Calculate
+                        </Button>
+                      </div>
+                      
+                      <div 
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium italic select-none transition-all duration-300 ease-in-out ${
+                          !isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none translate-x-2"
+                        }`}
+                      >
+                        Manual quantity mode. Click "Ratio" to distribute quantities.
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
@@ -682,39 +707,80 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
                       <div className="grid gap-2 transition-all duration-300 grid-cols-5">
                         {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
-                          <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                          <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white animate-in fade-in zoom-in-95 duration-200">
                             <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
-                            <Input
-                              id={`size-input-${size}`}
-                              type="number"
-                              min="0"
-                              className="h-9 text-center rounded-none border-0 shadow-none focus-visible:ring-[#0453B8] font-semibold text-slate-900 bg-white px-1"
-                              value={isRatioMode ? (ratios[size] || "") : (quantities[size] || "")}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 0;
-                                if (isRatioMode) {
-                                  setRatios({ ...ratios, [size]: val });
-                                } else {
-                                  setQuantities({ ...quantities, [size]: val });
-                                }
-                              }}
-                              onFocus={(e) => e.target.select()}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
-                                  const currentIndex = allSizes.indexOf(size as any);
-                                  if (currentIndex < allSizes.length - 1) {
-                                    const nextSize = allSizes[currentIndex + 1];
-                                    const nextInput = document.getElementById(`size-input-${nextSize}`);
-                                    if (nextInput) {
-                                      nextInput.focus();
-                                      (nextInput as HTMLInputElement).select();
+                            <div className="flex h-9 bg-white relative overflow-hidden">
+                              {/* Ratio Input Container */}
+                              <div
+                                className={`flex-1 flex items-center transition-all duration-300 ease-in-out border-slate-150 ${
+                                  isRatioMode
+                                    ? "opacity-100 max-w-[50%] border-r pointer-events-auto"
+                                    : "opacity-0 max-w-0 pointer-events-none border-r-0"
+                                }`}
+                              >
+                                <Input
+                                  id={`ratio-input-${size}`}
+                                  type="number"
+                                  min="0"
+                                  placeholder="Ratio"
+                                  className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-semibold text-slate-900 bg-white"
+                                  value={ratios[size] || ""}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    setRatios({ ...ratios, [size]: val });
+                                  }}
+                                  onFocus={(e) => e.target.select()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
+                                      const currentIndex = allSizes.indexOf(size as any);
+                                      if (currentIndex < allSizes.length - 1) {
+                                        const nextSize = allSizes[currentIndex + 1];
+                                        const nextInput = document.getElementById(`ratio-input-${nextSize}`);
+                                        if (nextInput) {
+                                          nextInput.focus();
+                                          (nextInput as HTMLInputElement).select();
+                                        }
+                                      }
                                     }
-                                  }
-                                }
-                              }}
-                            />
+                                  }}
+                                />
+                              </div>
+                              {/* Qty Input Container */}
+                              <div className="flex-1 flex items-center transition-all duration-300 ease-in-out">
+                                <Input
+                                  id={`size-input-${size}`}
+                                  type="number"
+                                  min="0"
+                                  placeholder="Qty"
+                                  className={`h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-bold bg-white transition-colors duration-300 ${
+                                    isRatioMode ? "text-[#0453B8]" : "text-slate-900"
+                                  }`}
+                                  value={quantities[size] || ""}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    setQuantities({ ...quantities, [size]: val });
+                                  }}
+                                  onFocus={(e) => e.target.select()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
+                                      const currentIndex = allSizes.indexOf(size as any);
+                                      if (currentIndex < allSizes.length - 1) {
+                                        const nextSize = allSizes[currentIndex + 1];
+                                        const nextInput = document.getElementById(`size-input-${nextSize}`);
+                                        if (nextInput) {
+                                          nextInput.focus();
+                                          (nextInput as HTMLInputElement).select();
+                                        }
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -793,10 +859,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
                 {/* Row 4 */}
                 <div className="flex flex-col gap-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Type</Label>
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sleeve Type</Label>
                   <Select value={newProduct.type} onValueChange={(v) => setNewProduct({ ...newProduct, type: v })}>
                     <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg">
-                      <SelectValue placeholder="Select Type" />
+                      <SelectValue placeholder="Select Sleeve Type" />
                     </SelectTrigger>
                     <SelectContent>
                       {MASTER_TYPES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
@@ -804,16 +870,28 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Type</Label>
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Collar Style</Label>
                   <Select value={newProduct.type2} onValueChange={(v) => setNewProduct({ ...newProduct, type2: v })}>
                     <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg">
-                      <SelectValue placeholder="Select Type" />
+                      <SelectValue placeholder="Select Collar Style" />
                     </SelectTrigger>
                     <SelectContent>
                       {MASTER_TYPE2S.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Row 5 */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">No. of Buttons</Label>
+                  <Input
+                    placeholder="e.g. 7"
+                    className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg"
+                    value={newProduct.buttons}
+                    onChange={(e) => setNewProduct({ ...newProduct, buttons: e.target.value })}
+                  />
+                </div>
+                <div className="flex flex-col gap-2 invisible" />
 
               </div>
             </div>
