@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { POItem } from "@/types/purchase-order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MOCK_TRIM_CATALOG } from "@/data/mock-sales-order";
 
 interface AddItemDialogProps {
   open: boolean;
@@ -13,10 +14,12 @@ interface AddItemDialogProps {
   onAddItem: (item: POItem) => void;
   editItem?: POItem | null;
   itemOptions: string[];
-  itemLabel: string; // e.g. "Material" or "Trim Item"
-  specLabel?: string; // e.g. "GSM / Content" or "Specifications"
+  itemLabel: string;
+  specLabel?: string;
   initialValues?: Partial<POItem>;
   type?: "Fabric" | "Trims";
+  trimItem?: string; // "Button" | "Label" | "Hangtag"
+  soItemTotalPcs?: number; // total garment pcs from selected SO item
 }
 
 export function AddItemDialog({
@@ -28,8 +31,12 @@ export function AddItemDialog({
   itemLabel,
   specLabel = "GSM / Content",
   initialValues,
-  type
+  type,
+  trimItem: propTrimItem = "",
+  soItemTotalPcs = 0,
 }: AddItemDialogProps) {
+  const trimItem = editItem && type === "Trims" ? editItem.material : propTrimItem;
+
   const [formData, setFormData] = useState({
     material: "",
     gsmContent: "",
@@ -108,9 +115,12 @@ export function AddItemDialog({
       return;
     }
 
+    const trimData = type === "Trims" && trimItem ? MOCK_TRIM_CATALOG[trimItem] : undefined;
+
     const newItem: POItem = {
       id: editItem ? editItem.id : `item-${Date.now()}`,
       material: formData.material,
+      code: trimData?.code,
       gsmContent: type === "Fabric" || itemLabel === "Material" ? `${formData.gsm} / ${formData.width}` : formData.gsmContent,
       gsm: formData.gsm,
       width: formData.width,
@@ -242,117 +252,128 @@ export function AddItemDialog({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">{itemLabel} <span className="text-red-500">*</span></Label>
-                    <Select value={formData.material} onValueChange={(val) => handleInputChange("material", val)}>
-                      <SelectTrigger className="bg-white h-10 border-slate-200 focus:ring-[#0453B8]">
-                        <SelectValue placeholder={`Select ${itemLabel}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {itemOptions.map((opt) => (
-                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              (() => {
+                const trimData = MOCK_TRIM_CATALOG[trimItem];
+                // Per-garment counts from product catalog (system values)
+                const PER_GARMENT: Record<string, number> = {
+                  "Button": 7,
+                  "Label": 1,
+                  "Hangtag": 1,
+                };
+                const perGarment = PER_GARMENT[trimItem] ?? 1;
+                const autoQty = soItemTotalPcs * perGarment;
+
+                if (!trimItem) {
+                  return (
+                    <div className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-10 text-center shadow-inner">
+                      <ImageIcon className="w-12 h-12 text-slate-300 mb-3" />
+                      <h3 className="text-sm font-bold text-slate-700">No Trim Item Selected</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                        Please go back and select a Trim Item (e.g., Button, Label, Hangtag) from the dropdown on the PO Form first.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col gap-5">
+                    {/* Trim Image + Info */}
+                    <div className="flex gap-5 items-start bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <div className="w-36 h-36 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-sm">
+                        {trimData?.image ? (
+                          <img src={trimData.image} alt={trimItem} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="w-10 h-10 text-slate-300" />
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-3 flex-1">
+                        <div>
+                          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Trim Type</span>
+                          <p className="text-xl font-bold text-slate-900 mt-0.5">{trimItem || "—"}</p>
+                          {trimData?.description && <p className="text-xs text-slate-500 mt-0.5">{trimData.description}</p>}
+                          {/* Code + Color chips */}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {trimData?.code && (
+                              <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">
+                                <span className="text-[10px] text-slate-400 font-sans font-bold uppercase">Code</span>
+                                {trimData.code}
+                              </span>
+                            )}
+                            {trimData?.color && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">
+                                <div className="w-2.5 h-2.5 rounded-full border border-slate-300 shrink-0" style={{ backgroundColor: trimData.color.split(' / ')[0].toLowerCase() }} />
+                                {trimData.color}
+                              </span>
+                            )}
+                            <span className="text-[10px] bg-slate-200 text-slate-500 rounded px-1.5 py-0.5 font-bold">From System</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Garments (Pcs)</span>
+                            <p className="text-lg font-bold text-slate-800 mt-0.5">{soItemTotalPcs.toLocaleString('en-IN')}</p>
+                          </div>
+                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-xs font-semibold text-[#0453B8] uppercase tracking-wide">
+                                × {perGarment} per garment
+                              </span>
+                              <span className="text-[10px] bg-[#0453B8] text-white rounded px-1 py-0.5 font-bold leading-none">From System</span>
+                            </div>
+                            <p className="text-lg font-bold text-[#0453B8]">{autoQty.toLocaleString('en-IN')} pcs</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-100">
+                          <span className="text-sm font-semibold">System Qty: {autoQty.toLocaleString('en-IN')} pcs</span>
+                          <span className="text-xs text-emerald-600">({soItemTotalPcs} garments × {perGarment} {trimItem?.toLowerCase()}s/garment)</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
-                    <Select value={formData.colorShade} onValueChange={(val) => handleInputChange("colorShade", val)}>
-                      <SelectTrigger className="bg-white h-10 border-slate-200 focus:ring-[#0453B8]">
-                        <SelectValue placeholder="Select Color" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="White">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'white' }} />
-                            <span>White</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Black">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: 'black' }} />
-                            <span>Black</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Navy">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#000080' }} />
-                            <span>Navy</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Red">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#ef4444' }} />
-                            <span>Red</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Grey">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#555555' }} />
-                            <span>Grey</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Natural">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: '#f5f5dc' }} />
-                            <span>Natural</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">{specLabel}</Label>
-                    <Input 
-                      value={formData.gsmContent}
-                      onChange={(e) => handleInputChange("gsmContent", e.target.value)}
-                      placeholder={`e.g. ${itemLabel === "Trim Item" ? "Size 18L" : "180gsm CO"}`} 
-                      className="bg-white h-10"
-                    />
-                  </div>
-                </div>
-              </div>
+                );
+              })()
             )}
             
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600 whitespace-nowrap text-ellipsis overflow-hidden">Quantity Required</Label>
-                <Input 
-                  readOnly 
-                  value={formData.requiredQty || "0"} 
-                  className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Your Order <span className="text-red-500">*</span></Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="number"
-                    value={formData.qty}
-                    onChange={(e) => handleInputChange("qty", e.target.value)}
-                    placeholder="0.00" 
-                    className="bg-white flex-1 h-10"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Buffer</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    readOnly 
-                    value={((parseFloat(formData.qty) || 0) - (parseFloat(formData.requiredQty) || 0)).toFixed(2)} 
-                    className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
-                  />
-                  <div className="w-12 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
-                    {formData.uom}
+            {/* Form fields below */}
+            {(!type || type === "Fabric" || (type === "Trims" && trimItem)) && (
+              <>
+                <div className="grid grid-cols-3 gap-4">
+                  {type !== "Trims" && (
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600 whitespace-nowrap text-ellipsis overflow-hidden">Quantity Required</Label>
+                      <Input 
+                        readOnly 
+                        value={formData.requiredQty || "0"} 
+                        className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                      />
+                    </div>
+                  )}
+                  <div className={`flex flex-col gap-2 ${type === "Trims" ? "col-span-2" : ""}`}>
+                    <Label className="text-xs font-bold text-slate-600">Your Order <span className="text-red-500">*</span></Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="number"
+                        value={formData.qty}
+                        onChange={(e) => handleInputChange("qty", e.target.value)}
+                        placeholder="0.00" 
+                        className="bg-white flex-1 h-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">Buffer</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        readOnly 
+                        value={((parseFloat(formData.qty) || 0) - (parseFloat(formData.requiredQty) || 0)).toFixed(2)} 
+                        className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                      />
+                      <div className="w-12 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
+                        {formData.uom}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
@@ -391,8 +412,11 @@ export function AddItemDialog({
                 />
               </div>
             </div>
+            </>
+            )}
           </div>
 
+          {type !== "Trims" && (
           <div className="bg-white p-3 rounded-lg border border-slate-200 mt-4">
             <div className="flex items-center justify-between mb-3">
               <Label className="text-xs font-bold text-slate-600 flex items-center gap-2">
@@ -441,6 +465,7 @@ export function AddItemDialog({
               )}
             </div>
           </div>
+          )}
         </div>
 
         <DialogFooter className="px-6 py-4 border-t border-slate-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 flex-shrink-0 flex items-center justify-end gap-3 sm:space-x-0">

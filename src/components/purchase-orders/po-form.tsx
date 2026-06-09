@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ArrowLeft, FileText, MapPin } from "lucide-react";
+import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check } from "lucide-react";
 import Link from "next/link";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
@@ -15,6 +15,19 @@ import { POItemsTable } from "@/components/purchase-orders/po-items-table";
 import { POItem } from "@/types/purchase-order";
 import { useRouter } from "next/navigation";
 import { SelectSalesOrderItemsDialog } from "@/components/purchase-orders/select-so-items-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PurchaseOrderFormProps {
   initialPo?: any;
@@ -40,7 +53,7 @@ export function PurchaseOrderForm({
   const methods = useForm({
     defaultValues: {
       buyerId: initialPo?.buyerId || "b-3", // default to Zara Fashion
-      supplier: initialPo?.supplier || (type === "Fabric" ? "Arvind Mills" : "YKK Zippers"),
+      supplier: initialPo?.supplier || "",
     }
   });
 
@@ -51,6 +64,10 @@ export function PurchaseOrderForm({
   const [isSelectSoItemDialogOpen, setIsSelectSoItemDialogOpen] = useState(false);
   const [selectedSoItemContext, setSelectedSoItemContext] = useState<any>(null);
 
+  const [selectedBuyerId, setSelectedBuyerId] = useState<string>("");
+  const [isLinkedToSo, setIsLinkedToSo] = useState<boolean>(true);
+  const [selectedTrimItem, setSelectedTrimItem] = useState<string>("");
+
   useEffect(() => {
     if (initialPo) {
       methods.reset({
@@ -58,7 +75,7 @@ export function PurchaseOrderForm({
       });
       const numericQty = parseInt((initialPo.qty || "0").toString().replace(/[^0-9]/g, "")) || 1200;
       const rate = initialPo?.id === "FPO-5002" ? 185 : (initialPo?.rate || 180);
-      const baseMaterial = initialPo?.material || initialPo?.itemDesc || (type === "Fabric" ? "Cotton Fabric" : "5# Nylon Coil Zippers");
+      const baseMaterial = initialPo?.material || initialPo?.itemDesc || (type === "Fabric" ? "Cotton Fabric" : "Button");
       
       const qty1 = Math.floor(numericQty * 0.4);
       const qty2 = Math.floor(numericQty * 0.4);
@@ -67,10 +84,11 @@ export function PurchaseOrderForm({
       setPoItems([
         {
           id: "item-1",
-          material: baseMaterial,
+          material: type === "Fabric" ? baseMaterial : "Button",
+          code: type === "Fabric" ? undefined : "BTN-18L-BLK",
           gsmContent: type === "Fabric" ? "180gsm CO" : "Standard",
           width: type === "Fabric" ? "44\"" : undefined,
-          colorShade: "Grey",
+          colorShade: type === "Fabric" ? "Grey" : "Black",
           requiredQty: Math.floor(qty1 * 0.95),
           qty: qty1,
           buffer: qty1 - Math.floor(qty1 * 0.95),
@@ -81,10 +99,11 @@ export function PurchaseOrderForm({
         },
         {
           id: "item-2",
-          material: baseMaterial,
+          material: type === "Fabric" ? baseMaterial : "Label",
+          code: type === "Fabric" ? undefined : "LBL-WVN-ZRA",
           gsmContent: type === "Fabric" ? "180gsm CO" : "Standard",
           width: type === "Fabric" ? "44\"" : undefined,
-          colorShade: "Navy",
+          colorShade: type === "Fabric" ? "Navy" : "Navy / White",
           requiredQty: Math.floor(qty2 * 0.95),
           qty: qty2,
           buffer: qty2 - Math.floor(qty2 * 0.95),
@@ -95,10 +114,11 @@ export function PurchaseOrderForm({
         },
         {
           id: "item-3",
-          material: baseMaterial,
+          material: type === "Fabric" ? baseMaterial : "Hangtag",
+          code: type === "Fabric" ? undefined : "HTG-PRM-BLK",
           gsmContent: type === "Fabric" ? "180gsm CO" : "Standard",
           width: type === "Fabric" ? "44\"" : undefined,
-          colorShade: "White",
+          colorShade: type === "Fabric" ? "White" : "Black",
           requiredQty: Math.floor(qty3 * 0.95),
           qty: qty3,
           buffer: qty3 - Math.floor(qty3 * 0.95),
@@ -133,7 +153,14 @@ export function PurchaseOrderForm({
   const handleOpenAddDialog = () => {
     setEditingItem(null);
     setSelectedSoItemContext(null);
-    setIsSelectSoItemDialogOpen(true);
+    
+    // If not linked to a sales order (e.g., sample PO), skip the SO selection dialog
+    if (!isLinkedToSo) {
+      setIsAddDialogOpen(true);
+    } else {
+      // If linked to a sales order, show the SO item selection dialog first
+      setIsSelectSoItemDialogOpen(true);
+    }
   };
 
   const handleSoItemNext = (soItem: any) => {
@@ -160,6 +187,8 @@ export function PurchaseOrderForm({
   };
 
   const selectedSupplier = methods.watch("supplier") as string;
+  const selectedSoIds = (methods.watch("buyerId") || "").split(",").filter(Boolean);
+
   const SUPPLIER_ADDRESSES: Record<string, { line1: string, line2: string, gstin: string }> = {
     "Arvind Mills": { line1: "Naroda Road, Near Railway Station", line2: "Ahmedabad, Gujarat - 380025, India", gstin: "24AABCA1234F1Z5" },
     "Vardhman Textiles": { line1: "Chandigarh Road", line2: "Ludhiana, Punjab - 141010, India", gstin: "03AAACV1234F1Z5" },
@@ -213,84 +242,196 @@ export function PurchaseOrderForm({
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-9 gap-6 mb-6">
-                  <div className="flex flex-col gap-2 col-span-1 md:col-span-2 xl:col-span-2">
+                <div className={`grid grid-cols-1 md:grid-cols-3 ${type === "Trims" ? "xl:grid-cols-7" : "xl:grid-cols-6"} gap-5 mb-6`}>
+                  {/* Supplier */}
+                  <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
                     <div className="relative">
-                      <select 
-                        {...methods.register("supplier")}
-                        className="w-full h-10 pl-3 pr-8 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] appearance-none bg-white font-medium truncate"
+                      <Select 
+                        value={methods.watch("supplier") || ""}
+                        onValueChange={(val) => methods.setValue("supplier", val)}
                       >
-                        {type === "Fabric" ? (
-                          <>
-                            <option value="Arvind Mills">Arvind Mills</option>
-                            <option value="Vardhman Textiles">Vardhman Textiles</option>
-                            <option value="Raymond Fabrics">Raymond Fabrics</option>
-                            <option value="Welspun">Welspun</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="YKK Zippers">YKK Zippers</option>
-                            <option value="Laxmi Buttons">Laxmi Buttons</option>
-                            <option value="Super Labels">Super Labels</option>
-                            <option value="Vardhman Threads">Vardhman Threads</option>
-                            <option value="Reliance Packaging">Reliance Packaging</option>
-                          </>
-                        )}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate">
+                          <SelectValue placeholder="Select Supplier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {type === "Fabric" ? (
+                            <>
+                              <SelectItem value="Arvind Mills">Arvind Mills</SelectItem>
+                              <SelectItem value="Vardhman Textiles">Vardhman Textiles</SelectItem>
+                              <SelectItem value="Raymond Fabrics">Raymond Fabrics</SelectItem>
+                              <SelectItem value="Welspun">Welspun</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="YKK Zippers">YKK Zippers</SelectItem>
+                              <SelectItem value="Laxmi Buttons">Laxmi Buttons</SelectItem>
+                              <SelectItem value="Super Labels">Super Labels</SelectItem>
+                              <SelectItem value="Vardhman Threads">Vardhman Threads</SelectItem>
+                              <SelectItem value="Reliance Packaging">Reliance Packaging</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1 col-span-1 md:col-span-2 xl:col-span-3">
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Sales Order (Buyer & Product) <span className="text-red-500">*</span></Label>
-                      <div className="relative">
-                        <select 
-                          {...methods.register("buyerId")}
-                          className="w-full h-10 pl-3 pr-8 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] appearance-none bg-white text-slate-900 font-medium truncate"
-                        >
-                          <option className="text-slate-500" value="">Select Sales Order</option>
-                          {MOCK_SALES_ORDERS_LIST.map((so, i) => (
-                            <option key={so.id} value={so.id}>
-                              {so.soNo} - {so.buyer} - {["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}
-                            </option>
+                  {/* Buyer */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">Buyer <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <Select
+                        value={selectedBuyerId || ""}
+                        onValueChange={(val) => { setSelectedBuyerId(val); methods.setValue("buyerId", ""); }}
+                      >
+                        <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate">
+                          <SelectValue placeholder="Select Buyer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from(new Set(MOCK_SALES_ORDERS_LIST.map(so => so.buyer))).map(buyer => (
+                            <SelectItem key={buyer} value={buyer}>{buyer}</SelectItem>
                           ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Sales Order */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600 flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={isLinkedToSo} 
+                        onChange={(e) => {
+                          setIsLinkedToSo(e.target.checked);
+                          if (!e.target.checked) {
+                            methods.setValue("buyerId", "");
+                          }
+                        }}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-[#0453B8] focus:ring-[#0453B8] cursor-pointer"
+                      />
+                      <span className="cursor-pointer" onClick={() => setIsLinkedToSo(!isLinkedToSo)}>
+                        Link to Sales Order {isLinkedToSo && <span className="text-red-500">*</span>}
+                      </span>
+                    </Label>
+                    <div className="relative">
+                      {type === "Trims" ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              disabled={!isLinkedToSo || !selectedBuyerId}
+                              className="w-full justify-between h-10 border-slate-200 text-sm font-normal truncate disabled:opacity-50 disabled:cursor-not-allowed bg-white px-3"
+                            >
+                              {selectedSoIds.length > 0 
+                                ? `${selectedSoIds.length} order${selectedSoIds.length > 1 ? "s" : ""} selected` 
+                                : <span className="text-muted-foreground">Select Sales Orders</span>}
+                              <ChevronDown className="h-4 w-4 opacity-50" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                            {MOCK_SALES_ORDERS_LIST
+                              .filter(so => !selectedBuyerId || so.buyer === selectedBuyerId)
+                              .map((so, i) => {
+                                const soName = `${so.soNo} — ${["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}`;
+                                return (
+                                  <DropdownMenuItem
+                                    key={so.id}
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      const isChecked = selectedSoIds.includes(so.id);
+                                      const newIds = !isChecked 
+                                        ? [...selectedSoIds, so.id] 
+                                        : selectedSoIds.filter((id: string) => id !== so.id);
+                                      methods.setValue("buyerId", newIds.join(","));
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2.5 w-full">
+                                      <div className={`w-4 h-4 border rounded-sm flex items-center justify-center shrink-0 transition-colors ${selectedSoIds.includes(so.id) ? 'bg-[#0453B8] border-[#0453B8]' : 'border-slate-300 bg-white'}`}>
+                                        {selectedSoIds.includes(so.id) && <Check className="w-3 h-3 text-white" />}
+                                      </div>
+                                      <span className="truncate">{soName}</span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <Select
+                          value={methods.watch("buyerId") || ""}
+                          onValueChange={(val) => methods.setValue("buyerId", val)}
+                          disabled={!isLinkedToSo || !selectedBuyerId}
+                        >
+                          <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50">
+                            <SelectValue placeholder="Select Sales Order" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MOCK_SALES_ORDERS_LIST
+                              .filter(so => !selectedBuyerId || so.buyer === selectedBuyerId)
+                              .map((so, i) => (
+                                <SelectItem key={so.id} value={so.id}>
+                                  {so.soNo} — {["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    {methods.watch("buyerId") && (
+                      <span className="text-[11px] font-bold text-emerald-600 tracking-tight px-0.5">Payment Terms: 30 days credit</span>
+                    )}
+                  </div>
+
+                  {/* Trim Item (Only for Trims) */}
+                  {type === "Trims" && (
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Trim Item</Label>
+                      <div className="relative">
+                        <Select value={selectedTrimItem} onValueChange={setSelectedTrimItem}>
+                          <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate">
+                            <SelectValue placeholder="Select Trim Item" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Button">Button</SelectItem>
+                            <SelectItem value="Label">Label</SelectItem>
+                            <SelectItem value="Hangtag">Hangtag</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-emerald-600 mt-0.5 tracking-tight px-1">Payment Terms: 30 days credit</span>
-                  </div>
+                  )}
 
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">Place of Supply</Label>
-                    <Input defaultValue="Gujarat (24)" className="h-10 text-sm bg-white" />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
-                    <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white" />
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 col-span-1 md:col-span-2 xl:col-span-2">
+                  {/* Required Delivery */}
+                  <div className="flex flex-col gap-2 xl:col-span-2">
                     <Label className="text-xs font-bold text-slate-600">Required Delivery <span className="text-red-500">*</span></Label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <select className="w-full h-10 px-2 rounded-md border border-slate-200 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#0453B8] appearance-none bg-white font-medium pr-6">
-                          <option>15 Days</option>
-                          <option>30 Days</option>
-                          <option>45 Days</option>
-                          <option>60 Days</option>
-                        </select>
-                        <ChevronDown className="absolute right-2 top-3 h-3 w-3 text-slate-400 pointer-events-none" />
+                        <Select defaultValue="15 Days">
+                          <SelectTrigger className="w-full h-10 border-slate-200 text-[13px] focus:ring-[#0453B8] bg-white font-medium">
+                            <SelectValue placeholder="Days" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="15 Days">15 Days</SelectItem>
+                            <SelectItem value="30 Days">30 Days</SelectItem>
+                            <SelectItem value="45 Days">45 Days</SelectItem>
+                            <SelectItem value="60 Days">60 Days</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="relative flex-1">
                         <Input type="date" defaultValue={initialPo?.delivery || "2026-06-21"} className="h-10 text-[13px] font-medium px-2 bg-white" />
                       </div>
                     </div>
                   </div>
+
+                  {/* Agent / Broker */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
+                    <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white" />
+                  </div>
                 </div>
+
 
                 <div className="flex flex-col md:flex-row gap-5 items-stretch mt-2">
                   {/* Supplier Address */}
@@ -305,32 +446,20 @@ export function PurchaseOrderForm({
                         </h3>
                       </div>
                     </div>
-                    <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
-                      <p className="font-medium text-slate-900">{selectedSupplier}</p>
-                      <p>{supplierAddressInfo.line1}</p>
-                      <p>{supplierAddressInfo.line2}</p>
-                      <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
-                    </div>
-                  </div>
-
-                  {/* Terms & Conditions */}
-                  <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px]">
-                    <div className="flex items-center gap-3 mb-4 h-8">
-                      <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4 text-[#0453B8]" />
+                    {selectedSupplier ? (
+                      <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
+                        <p className="font-medium text-slate-900">{selectedSupplier}</p>
+                        <p>{supplierAddressInfo.line1}</p>
+                        <p>{supplierAddressInfo.line2}</p>
+                        <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
                       </div>
-                      <h3 className="text-sm font-semibold text-slate-800">
-                        Terms & Conditions
-                      </h3>
-                    </div>
-                    <div className="flex-1">
-                      <textarea 
-                        className="w-full h-full min-h-[80px] p-0 text-sm text-slate-700 bg-transparent border-0 focus:outline-none resize-none leading-relaxed"
-                        defaultValue={`${type} quality to be as per approved sample.\nDelivery should be completed within the committed timeline.\nPayment will be released after quality inspection.\nThis is a system generated PO, no signature required.`}
-                      />
-                    </div>
+                    ) : (
+                      <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
+                        Please select a supplier to view their address details.
+                      </div>
+                    )}
                   </div>
-                </div>
+</div>
               </div>
 
               {/* 2. Items Table (REUSED COMPONENT) */}
@@ -342,6 +471,7 @@ export function PurchaseOrderForm({
                 totalQtyDisplay={totalQtyDisplay}
                 itemLabel={itemLabel}
                 specLabel={specLabel}
+                type={type}
               />
 
 
@@ -442,6 +572,8 @@ export function PurchaseOrderForm({
           itemLabel={itemLabel}
           specLabel={specLabel}
           type={type}
+          trimItem={selectedTrimItem}
+          soItemTotalPcs={selectedSoItemContext ? Object.values(selectedSoItemContext.sizeBreakdown || {}).reduce((a: number, b) => a + (b as number), 0) : 0}
           initialValues={selectedSoItemContext ? {
             requiredQty: selectedSoItemContext.requiredQtyMtr,
             qty: selectedSoItemContext.requiredQtyMtr,
@@ -456,6 +588,7 @@ export function PurchaseOrderForm({
           buyerId={methods.watch("buyerId")}
           existingPoItems={poItems}
           onNext={handleSoItemNext}
+          type={type}
         />
       </div>
     </FormProvider>

@@ -16,6 +16,7 @@ interface POItemsTableProps {
   isReadOnly?: boolean;
   itemLabel: string; // e.g. "Material" or "Trim Item"
   specLabel?: string; // e.g. "GSM / Content" or "Specifications"
+  type?: "Fabric" | "Trims";
 }
 
 export function POItemsTable({
@@ -26,7 +27,8 @@ export function POItemsTable({
   totalQtyDisplay,
   isReadOnly = false,
   itemLabel,
-  specLabel = "GSM / Content"
+  specLabel = "GSM / Content",
+  type
 }: POItemsTableProps) {
   const [viewingItem, setViewingItem] = useState<POItem | null>(null);
 
@@ -51,8 +53,15 @@ export function POItemsTable({
               <TableHead className="text-slate-700 text-xs font-bold w-10 text-center py-2.5">#</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold py-2.5">Image</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">{itemLabel}</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">{specLabel}</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Width</TableHead>
+              {type === "Trims" && (
+                <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Item Code</TableHead>
+              )}
+              {type !== "Trims" && (
+                <>
+                  <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">{specLabel}</TableHead>
+                  <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Width</TableHead>
+                </>
+              )}
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Color / Shade</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">UOM</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Required Qty</TableHead>
@@ -92,12 +101,23 @@ export function POItemsTable({
                   <TableCell className="text-center py-3">
                     <span className="font-bold text-slate-900">{item.material || '-'}</span>
                   </TableCell>
-                  <TableCell className="text-center py-3">
-                    <span className="font-semibold text-slate-700">{item.gsm || item.gsmContent || '-'}</span>
-                  </TableCell>
-                  <TableCell className="text-center py-3">
-                    <span className="font-semibold text-slate-700">{item.width || '-'}</span>
-                  </TableCell>
+                  {type === "Trims" && (
+                    <TableCell className="text-center py-3">
+                      <span className="font-mono font-semibold text-slate-700 text-xs tracking-wide bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                        {item.code || '-'}
+                      </span>
+                    </TableCell>
+                  )}
+                  {type !== "Trims" && (
+                    <>
+                      <TableCell className="text-center py-3">
+                        <span className="font-semibold text-slate-700">{item.gsm || item.gsmContent || '-'}</span>
+                      </TableCell>
+                      <TableCell className="text-center py-3">
+                        <span className="font-semibold text-slate-700">{item.width || '-'}</span>
+                      </TableCell>
+                    </>
+                  )}
                   <TableCell className="text-center py-3">
                     <div className="flex items-center justify-center gap-2">
                       {item.colorShade && item.colorShade !== '-' && (
@@ -179,14 +199,24 @@ export function POItemsTable({
                     <h3 className="text-xs font-bold text-slate-500 mb-1">{itemLabel}</h3>
                     <p className="text-lg font-bold text-slate-900">{viewingItem.material}</p>
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-500 mb-1">{specLabel}</h3>
-                    <p className="text-md font-semibold text-slate-700">{viewingItem.gsm || viewingItem.gsmContent || '-'}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-500 mb-1">Width</h3>
-                    <p className="text-md font-semibold text-slate-700">{viewingItem.width || '-'}</p>
-                  </div>
+                  {type === "Trims" && (
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-500 mb-1">Item Code</h3>
+                      <p className="text-md font-mono font-semibold text-slate-700">{viewingItem.code || '-'}</p>
+                    </div>
+                  )}
+                  {type !== "Trims" && (
+                    <>
+                      <div>
+                        <h3 className="text-xs font-bold text-slate-500 mb-1">{specLabel}</h3>
+                        <p className="text-md font-semibold text-slate-700">{viewingItem.gsm || viewingItem.gsmContent || '-'}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-slate-500 mb-1">Width</h3>
+                        <p className="text-md font-semibold text-slate-700">{viewingItem.width || '-'}</p>
+                      </div>
+                    </>
+                  )}
                   <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <h3 className="text-xs font-bold text-slate-500 mb-1">Color / Shade</h3>
                     <div className="flex items-center gap-2">

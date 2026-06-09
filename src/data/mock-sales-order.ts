@@ -224,6 +224,27 @@ export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = [
   { id: "cat-18", code: "KTR001", name: "Kids Jogger", category: "Kids' Wear", subcategory: "Trouser", type: "Full Length", sqNumber: "1000000018", color: "Black", rate: 280.00 },
 ];
 
+export const MOCK_TRIM_CATALOG: Record<string, { code: string; color: string; image: string; description: string }> = {
+  Button: {
+    code: "BTN-18L-BLK",
+    color: "Black",
+    image: "/buttons .jpeg",
+    description: "18L Resin Button — Standard",
+  },
+  Label: {
+    code: "LBL-WVN-ZRA",
+    color: "Navy / White",
+    image: "/label.png",
+    description: "Woven Brand Label — Zara",
+  },
+  Hangtag: {
+    code: "HTG-PRM-BLK",
+    color: "Black",
+    image: "/hangtag.jpeg",
+    description: "Premium Cardboard Hangtag",
+  },
+};
+
 export const INITIAL_SALES_ORDER = {
   salesOrderNo: "SO-26-000125",
   orderDate: new Date("2026-06-06"),
