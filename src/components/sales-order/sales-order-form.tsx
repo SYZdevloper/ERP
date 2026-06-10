@@ -106,7 +106,7 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
               </div>
 
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <ProductsTable isReadOnly={isReadOnly} />
+                <ProductsTable isReadOnly={isReadOnly} hideEditDetails={hideEditDetails} />
               </div>
             </div>
 

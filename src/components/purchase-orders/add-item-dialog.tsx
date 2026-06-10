@@ -125,22 +125,26 @@ export function AddItemDialog({
   const handleSubmit = () => {
     const gstNum = parseFloat(formData.gst) || 0;
     
-    if (!formData.material || !formData.colorShade || qtyNum <= 0 || rateNum <= 0) {
+    const trimVariants = type === "Trims" && trimItem ? MOCK_TRIM_CATALOG[trimItem] : undefined;
+    const trimData = trimVariants?.find(v => v.code === selectedVariantCode) || trimVariants?.[0];
+
+    // For Trims: color comes from the variant, not from user input
+    const effectiveColor = type === "Trims" ? (trimData?.color || "") : formData.colorShade;
+    const effectiveMaterial = type === "Trims" ? (trimItem || formData.material) : formData.material;
+
+    if (!effectiveMaterial || (type !== "Trims" && !effectiveColor) || qtyNum <= 0 || rateNum <= 0) {
       alert(`Please fill in all required fields (${itemLabel}, Color/Shade, valid QTY and RATE)`);
       return;
     }
 
-    const trimVariants = type === "Trims" && trimItem ? MOCK_TRIM_CATALOG[trimItem] : undefined;
-    const trimData = trimVariants?.find(v => v.code === selectedVariantCode) || trimVariants?.[0];
-
     const newItem: POItem = {
       id: editItem ? editItem.id : `item-${Date.now()}`,
-      material: formData.material,
+      material: effectiveMaterial,
       code: trimData?.code,
       gsmContent: type === "Fabric" || itemLabel === "Material" ? `${formData.gsm} / ${formData.width}` : formData.gsmContent,
       gsm: formData.gsm,
       width: formData.width,
-      colorShade: formData.colorShade,
+      colorShade: effectiveColor,
       requiredQty: parseFloat(formData.requiredQty) || 0,
       qty: qtyNum,
       buffer: qtyNum - (parseFloat(formData.requiredQty) || 0),

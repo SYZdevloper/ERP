@@ -76,12 +76,22 @@ export function PurchaseOrderForm({
         supplier: initialPo.supplier || ""
       });
       
-      const buyerObj = MOCK_BUYERS.find(b => b.id === (initialPo.buyerId || "b-3"));
-      if (buyerObj) {
-        setSelectedBuyerId(buyerObj.name);
+      // Restore Buyer dropdown — use buyer name directly (matches MOCK_SALES_ORDERS_LIST)
+      if (initialPo.buyer) {
+        setSelectedBuyerId(initialPo.buyer);
+      } else {
+        // Fallback: look up from MOCK_BUYERS by id
+        const buyerObj = MOCK_BUYERS.find(b => b.id === (initialPo.buyerId || "b-3"));
+        if (buyerObj) setSelectedBuyerId(buyerObj.name);
       }
-      if (type === "Trims" && initialPo.itemDesc) {
-        setSelectedTrimItem(initialPo.itemDesc);
+
+      // Restore pre-selected Sales Order IDs (comma-separated)
+      if (initialPo.soIds) {
+        methods.setValue("buyerId", initialPo.soIds);
+      }
+
+      if (type === "Trims" && initialPo.trimItem) {
+        setSelectedTrimItem(initialPo.trimItem);
       }
 
       const numericQty = parseInt((initialPo.qty || "0").toString().replace(/[^0-9]/g, "")) || 1200;
@@ -146,31 +156,35 @@ export function PurchaseOrderForm({
 
   const handleAddItem = (item: POItem) => {
     if (editingItem) {
-      setPoItems(poItems.map(i => i.id === item.id ? item : i));
+      setPoItems(prev => prev.map(i => i.id === item.id ? item : i));
     } else if (type === "Trims") {
       // Group by Trim Item + Code + Color — merge qty if same combination exists
-      const existing = poItems.find(
-        i => i.material === item.material && i.code === item.code && i.colorShade === item.colorShade
-      );
-      if (existing) {
-        setPoItems(poItems.map(i =>
-          i.id === existing.id
-            ? {
-                ...i,
-                qty: i.qty + item.qty,
-                requiredQty: (i.requiredQty || 0) + (item.requiredQty || 0),
-                buffer: (i.buffer || 0) + (item.buffer || 0),
-                amount: (i.qty + item.qty) * i.rate,
-              }
-            : i
-        ));
-      } else {
-        setPoItems([...poItems, { ...item, soItemId: selectedSoItemContext?.id }]);
-      }
+      // Use functional updater to always read latest state (avoids stale closure bug)
+      setPoItems(prev => {
+        const existing = prev.find(
+          i => i.material === item.material && i.code === item.code && i.colorShade === item.colorShade
+        );
+        if (existing) {
+          return prev.map(i =>
+            i.id === existing.id
+              ? {
+                  ...i,
+                  qty: i.qty + item.qty,
+                  requiredQty: (i.requiredQty || 0) + (item.requiredQty || 0),
+                  buffer: (i.buffer || 0) + (item.buffer || 0),
+                  amount: (i.qty + item.qty) * i.rate,
+                }
+              : i
+          );
+        } else {
+          return [...prev, { ...item, soItemId: selectedSoItemContext?.id }];
+        }
+      });
     } else {
-      setPoItems([...poItems, { ...item, soItemId: selectedSoItemContext?.id }]);
+      setPoItems(prev => [...prev, { ...item, soItemId: selectedSoItemContext?.id }]);
     }
   };
+
 
   const handleEditClick = (item: POItem) => {
     setEditingItem(item);
@@ -608,8 +622,11 @@ export function PurchaseOrderForm({
           initialValues={selectedSoItemContext ? {
             requiredQty: selectedSoItemContext.requiredQtyMtr,
             qty: selectedSoItemContext.requiredQtyMtr,
-            colorShade: selectedSoItemContext.color,
-            material: type === "Fabric" ? "Cotton Fabric" : selectedSoItemContext.name,
+            // For Fabric: pre-fill material name and garment color
+            // For Trims: material = trim type (e.g. "Button"), color comes from the variant picker
+            colorShade: type === "Fabric" ? selectedSoItemContext.color : "",
+            material: type === "Fabric" ? "Cotton Fabric" : selectedTrimItem,
+            uom: type === "Fabric" ? "mtr" : "pcs",
           } : undefined}
         />
 
