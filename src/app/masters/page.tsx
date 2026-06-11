@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
-import { FileText, ArrowRight, Scissors, Tag, Droplet, LayoutTemplate } from "lucide-react";
+import { FileText, ArrowRight, Scissors, Tag, Droplet, LayoutTemplate, Briefcase, Truck } from "lucide-react";
 
 export default function MastersPage() {
   return (
@@ -88,6 +88,36 @@ export default function MastersPage() {
                   <h3 className="text-lg font-bold text-slate-800">Colors</h3>
                   <p className="text-sm text-slate-500 mt-2 flex-1">
                     Manage color options and their corresponding hex codes.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/masters/buyer" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Briefcase className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Buyers</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage buyer details including billing, shipping, and credit terms.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/suppliers" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Truck className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Suppliers</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage fabric and trim vendors, performance metrics, and terms.
                   </p>
                 </div>
               </Link>

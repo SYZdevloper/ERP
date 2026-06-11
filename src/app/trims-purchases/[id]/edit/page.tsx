@@ -29,7 +29,7 @@ export default function EditTrimsPurchaseOrderPage({ params }: { params: Promise
       initialPo={po} 
       isEditMode={true} 
       type="Trims"
-      itemLabel="Trim Item"
+      itemLabel="Trim PO"
       specLabel="Specifications"
       itemOptions={TRIMS_OPTIONS}
       backHref="/trims-purchases"

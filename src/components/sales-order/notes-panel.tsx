@@ -13,13 +13,13 @@ export function NotesPanel({ isReadOnly = false }: { isReadOnly?: boolean }) {
       
       <div className="p-4">
         {isReadOnly ? (
-          <div className="w-full min-h-[150px] text-sm text-slate-700 whitespace-pre-wrap">
+          <div className="w-full min-h-[250px] text-sm text-slate-700 whitespace-pre-wrap">
             {watch("internalNotes") || <span className="text-slate-400 italic">No notes provided</span>}
           </div>
         ) : (
           <textarea 
             placeholder="Add any internal notes or special instructions for this order..."
-            className="w-full min-h-[150px] resize-none border border-slate-200 rounded-md p-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[250px] resize-none border border-slate-200 rounded-md p-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
             {...register("internalNotes")}
           />
         )}

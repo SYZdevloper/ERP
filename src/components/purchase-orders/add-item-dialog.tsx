@@ -124,6 +124,7 @@ export function AddItemDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Track which catalog variant is selected (by code)
   const [selectedVariantCode, setSelectedVariantCode] = useState<string>("");
+  const [showGst, setShowGst] = useState<boolean>(false);
 
   useEffect(() => {
     if (open && editItem) {
@@ -597,7 +598,7 @@ export function AddItemDialog({
             {/* Form fields below */}
             {(!type || type === "Fabric" || (type === "Trims" && trimItem)) && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600 whitespace-nowrap text-ellipsis overflow-hidden">Quantity Required</Label>
                     <Input 
@@ -618,19 +619,7 @@ export function AddItemDialog({
                       />
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">Buffer</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        readOnly 
-                        value={((parseFloat(formData.qty) || 0) - (parseFloat(formData.requiredQty) || 0)).toFixed(2)} 
-                        className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0 flex-1" 
-                      />
-                      <div className="w-12 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
-                        {formData.uom}
-                      </div>
-                    </div>
-                  </div>
+
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Delivery Date <span className="text-red-500">*</span></Label>
                     <div className="flex gap-2">
@@ -668,40 +657,44 @@ export function AddItemDialog({
                   </div>
                 </div>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-bold text-slate-600">Rate (₹) <span className="text-red-500">*</span></Label>
-                <Input 
-                  type="number"
-                  value={formData.rate}
-                  onChange={(e) => handleInputChange("rate", e.target.value)}
-                  placeholder="0.00" 
-                  className="bg-white h-10"
-                />
+                <div className="flex gap-2 items-center">
+                  <Input 
+                    type="number"
+                    value={formData.rate}
+                    onChange={(e) => handleInputChange("rate", e.target.value)}
+                    placeholder="0.00" 
+                    className="bg-white h-10 w-full"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 text-xs whitespace-nowrap bg-white hover:bg-slate-50"
+                    onClick={() => setShowGst(!showGst)}
+                  >
+                    {showGst ? "Hide GST" : "+ Add GST"}
+                  </Button>
+                </div>
               </div>
+              {showGst && (
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">GST %</Label>
+                  <Input 
+                    type="number"
+                    value={formData.gst}
+                    onChange={(e) => handleInputChange("gst", e.target.value)}
+                    className="bg-white h-10"
+                  />
+                </div>
+              )}
               <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">GST %</Label>
-                <Input 
-                  type="number"
-                  value={formData.gst}
-                  onChange={(e) => handleInputChange("gst", e.target.value)}
-                  className="bg-white h-10"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Amount</Label>
+                <Label className="text-xs font-bold text-slate-600">Total (With GST) (₹)</Label>
                 <Input 
                   readOnly 
-                  value={`₹ ${(qtyNum * rateNum).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-                  className="bg-slate-50 text-slate-700 font-bold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Total (With GST)</Label>
-                <Input 
-                  readOnly 
-                  value={`₹ ${((qtyNum * rateNum) * (1 + (parseFloat(formData.gst) || 0) / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-                  className="bg-slate-50 text-[#0453B8] font-bold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                  value={(qtyNum * rateNum * (1 + (parseFloat(formData.gst) || 0)/100)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                  className="bg-slate-50 font-bold text-[#0453B8] h-10 border-slate-200 cursor-default focus-visible:ring-0"
                 />
               </div>
             </div>

@@ -10,6 +10,7 @@ import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
 import { useForm, FormProvider } from "react-hook-form";
 import { MOCK_BUYERS, MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
+import { INITIAL_MASTER_SUPPLIERS } from "@/data/mock-masters";
 import { AddItemDialog } from "@/components/purchase-orders/add-item-dialog";
 import { POItemsTable } from "@/components/purchase-orders/po-items-table";
 import { POItem } from "@/types/purchase-order";
@@ -67,6 +68,7 @@ export function PurchaseOrderForm({
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>("");
   const [isLinkedToSo, setIsLinkedToSo] = useState<boolean>(true);
   const [selectedTrimItem, setSelectedTrimItem] = useState<string>("");
+  const [sortCategory, setSortCategory] = useState<string>("All Categories");
 
   const [showAddress, setShowAddress] = useState(true);
 
@@ -223,8 +225,9 @@ export function PurchaseOrderForm({
     }
   };
 
-  const handleSoItemNext = (soItem: any) => {
+  const handleSoItemNext = (soItem: any, trimItem?: string) => {
     setSelectedSoItemContext(soItem);
+    if (trimItem) setSelectedTrimItem(trimItem);
     setIsSelectSoItemDialogOpen(false);
     setIsAddDialogOpen(true);
   };
@@ -269,25 +272,45 @@ export function PurchaseOrderForm({
           {/* Header */}
           <div className="flex flex-col mb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Link href={backHref} className="p-2 bg-white hover:bg-slate-50 rounded-full border border-slate-200 text-slate-500 hover:text-[#0453B8] transition-colors">
+              <div className="flex items-start gap-4">
+                <Link href={backHref} className="p-2 bg-white hover:bg-slate-50 rounded-full border border-slate-200 text-slate-500 hover:text-[#0453B8] transition-colors mt-0.5">
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <div>
-                  <h1 className="text-xl font-semibold text-slate-900">
-                    {isEditMode ? `Edit ${type} Purchase Order` : `New ${type} Purchase Order`}
-                  </h1>
-                  <p className="text-xs text-slate-500">
-                    {isEditMode ? `Edit details for purchase order ${initialPo?.id}` : `Create a new ${type.toLowerCase()} purchase order in simple steps`}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 rounded-full border border-slate-100 flex items-center justify-center w-11 h-11 text-blue-600 shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h1 className="text-xl font-semibold text-slate-900 mb-2.5">
+                      {isEditMode ? `Edit ${type} Purchase Order` : `New ${type} Purchase Order`}
+                    </h1>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 py-1 shadow-sm">
+                        <span className="text-[10px] font-bold text-[#0453B8]/70 uppercase tracking-wider mr-2">PO NUMBER</span>
+                        <span className="text-xs font-bold text-[#0453B8] tracking-wide">
+                          {initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}
+                        </span>
+                      </div>
+                      <div className="flex items-center bg-slate-50 border border-slate-200 rounded-md px-3 py-1 shadow-sm">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-2">
+                          {isEditMode ? "STATUS" : "PO DATE"}
+                        </span>
+                        <span className="text-xs font-bold text-slate-700 tracking-wide">
+                          {isEditMode ? initialPo?.status : "06-JUN-2026"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <Link href={backHref}>
-                <Button variant="outline" className="h-9 px-4 text-slate-700 bg-white">
-                  <FileText className="w-4 h-4 mr-2" />
-                  View POs
-                </Button>
-              </Link>
+              <div className="flex items-center gap-6">
+                <Link href={backHref}>
+                  <Button variant="outline" className="h-10 px-4 text-slate-700 bg-white font-medium shadow-sm">
+                    <FileText className="w-4 h-4 mr-2" />
+                    View POs
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -302,7 +325,7 @@ export function PurchaseOrderForm({
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
                 </div>
                 
-                <div className={`grid grid-cols-1 md:grid-cols-3 ${type === "Trims" ? "xl:grid-cols-5" : "xl:grid-cols-4"} gap-5 mb-6`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5 mb-6`}>
                   {/* Supplier */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
@@ -315,22 +338,11 @@ export function PurchaseOrderForm({
                           <SelectValue placeholder="Select Supplier" />
                         </SelectTrigger>
                         <SelectContent>
-                          {type === "Fabric" ? (
-                            <>
-                              <SelectItem value="Arvind Mills">Arvind Mills</SelectItem>
-                              <SelectItem value="Vardhman Textiles">Vardhman Textiles</SelectItem>
-                              <SelectItem value="Raymond Fabrics">Raymond Fabrics</SelectItem>
-                              <SelectItem value="Welspun">Welspun</SelectItem>
-                            </>
-                          ) : (
-                            <>
-                              <SelectItem value="YKK Zippers">YKK Zippers</SelectItem>
-                              <SelectItem value="Laxmi Buttons">Laxmi Buttons</SelectItem>
-                              <SelectItem value="Super Labels">Super Labels</SelectItem>
-                              <SelectItem value="Vardhman Threads">Vardhman Threads</SelectItem>
-                              <SelectItem value="Reliance Packaging">Reliance Packaging</SelectItem>
-                            </>
-                          )}
+                          {INITIAL_MASTER_SUPPLIERS
+                            .filter(s => type === "Fabric" ? ["Fabric", "Both"].includes(s.category) : ["Trims", "Both"].includes(s.category))
+                            .map(supplier => (
+                              <SelectItem key={supplier.name} value={supplier.name}>{supplier.name}</SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -371,7 +383,7 @@ export function PurchaseOrderForm({
                         className="w-3.5 h-3.5 rounded border-slate-300 text-[#0453B8] focus:ring-[#0453B8] cursor-pointer"
                       />
                       <span className="cursor-pointer" onClick={() => setIsLinkedToSo(!isLinkedToSo)}>
-                        Link to Sales Order {isLinkedToSo && <span className="text-red-500">*</span>}
+                        Add Products {isLinkedToSo && <span className="text-red-500">*</span>}
                       </span>
                     </Label>
                     <div className="relative">
@@ -390,22 +402,35 @@ export function PurchaseOrderForm({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-[600px] max-h-[500px] flex flex-col p-0 shadow-2xl rounded-xl border-slate-200 overflow-hidden" align="start">
                           {(() => {
-                            const filteredSalesOrders = MOCK_SALES_ORDERS_LIST.filter(so => !selectedBuyerId || so.buyer === selectedBuyerId);
+                            let filteredSalesOrders = MOCK_SALES_ORDERS_LIST.filter(so => !selectedBuyerId || so.buyer === selectedBuyerId);
+                            if (sortCategory !== "All Categories") {
+                              filteredSalesOrders = filteredSalesOrders.filter(so => so.category === sortCategory);
+                            }
                             const allSelected = filteredSalesOrders.length > 0 && selectedSoIds.length === filteredSalesOrders.length;
                             
                             return (
                               <>
-                                <div className="overflow-y-auto p-4 flex-1 custom-scrollbar">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    {filteredSalesOrders.map((so, i) => {
-                                      const soName = `${so.soNo} — ${["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}`;
-                                      const imgUrls = [
-                                        "/men casual tshirt.jpeg",
-                                        "/men casual half shirt.jpg",
-                                        "/mens casual full sleeve shirt.jpg",
-                                        "/men regualr fit shirt.jpeg"
-                                      ];
-                                      const imgUrl = imgUrls[i % 4];
+                                <div className="p-3 border-b border-slate-100 bg-slate-50 flex flex-col gap-2">
+                                  <span className="text-xs font-bold text-slate-700">Filter by Category</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {["All Categories", "T-Shirts", "Shirts", "Jackets", "Trousers"].map(cat => (
+                                      <div
+                                        key={cat}
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSortCategory(cat); }}
+                                        className={`cursor-pointer px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${sortCategory === cat ? 'bg-[#0453B8] text-white border-[#0453B8]' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
+                                      >
+                                        {cat}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="overflow-y-auto p-3 flex-1 custom-scrollbar max-h-[400px]">
+                                  <div className="grid grid-cols-3 gap-3">
+                                    {filteredSalesOrders.map((so) => {
+                                      const soName = so.productName || "Product";
+                                      const imgUrl = so.category === "T-Shirts" ? "/men casual tshirt.jpeg" : 
+                                                     so.category === "Shirts" ? "/men casual half shirt.jpg" :
+                                                     so.category === "Jackets" ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
                                       const isSelected = selectedSoIds.includes(so.id);
                                       
                                       return (
@@ -418,27 +443,31 @@ export function PurchaseOrderForm({
                                               : selectedSoIds.filter((id: string) => id !== so.id);
                                             methods.setValue("buyerId", newIds.join(","));
                                           }}
-                                          className={`relative p-0 flex flex-col items-start rounded-xl overflow-hidden cursor-pointer transition-all border-2 !bg-transparent focus:!bg-transparent ${
-                                            isSelected ? 'border-[#0453B8] ring-4 ring-[#0453B8]/10' : 'border-slate-200 hover:border-[#0453B8]/50 hover:shadow-lg'
+                                          className={`relative p-3 flex flex-col items-center gap-3 rounded-xl overflow-hidden cursor-pointer transition-all border !bg-transparent focus:!bg-transparent ${
+                                            isSelected ? 'border-[#0453B8] bg-blue-50/30 shadow-sm' : 'border-slate-200 hover:border-[#0453B8]/50 hover:bg-slate-50'
                                           }`}
                                         >
-                                          <div className="h-44 w-full relative group overflow-hidden bg-slate-100 flex items-center justify-center p-2">
-                                            <img src={imgUrl} alt={soName} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 mix-blend-multiply" />
-                                            
-                                            <div className="absolute top-3 right-3 z-10">
-                                              <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors shadow-md ${isSelected ? 'bg-[#0453B8] text-white border border-[#0453B8]' : 'bg-white/90 border border-slate-300'}`}>
-                                                {isSelected && <Check className="w-4 h-4" />}
-                                              </div>
-                                            </div>
+                                          <div className="h-24 w-24 shrink-0 relative overflow-hidden bg-white rounded-lg border border-slate-200 flex items-center justify-center p-2 shadow-sm">
+                                            <img src={imgUrl} alt={soName} className="w-full h-full object-contain mix-blend-multiply" />
                                           </div>
                                           
-                                          <div className="w-full p-3.5 bg-white flex flex-col items-start border-t border-slate-100">
-                                            <span className="text-[#0453B8] font-bold text-[11px] uppercase tracking-wider mb-1">{so.soNo}</span>
-                                            <span className="text-slate-900 font-bold text-[15px] truncate w-full leading-tight">{["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}</span>
+                                          <div className="flex flex-col items-center justify-center w-full text-center">
+                                            <span className="text-slate-900 font-bold text-xs truncate w-full" title={soName}>{soName}</span>
+                                          </div>
+
+                                          <div className="absolute top-2 right-2">
+                                            <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border shadow-sm ${isSelected ? 'bg-[#0453B8] border-[#0453B8] text-white' : 'bg-white border-slate-300'}`}>
+                                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                                            </div>
                                           </div>
                                         </DropdownMenuItem>
                                       );
                                     })}
+                                    {filteredSalesOrders.length === 0 && (
+                                      <div className="py-8 text-center text-slate-500 text-sm font-medium">
+                                        No sales orders found for this category.
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 
@@ -478,24 +507,7 @@ export function PurchaseOrderForm({
                     )}
                   </div>
 
-                  {/* Trim Item (Only for Trims) */}
-                  {type === "Trims" && (
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Trim Item</Label>
-                      <div className="relative">
-                        <Select value={selectedTrimItem} onValueChange={setSelectedTrimItem}>
-                          <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate">
-                            <SelectValue placeholder="Select Trim Item" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Button">Button</SelectItem>
-                            <SelectItem value="Label">Label</SelectItem>
-                            <SelectItem value="Hangtag">Hangtag</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
+
 
 
 
@@ -568,23 +580,7 @@ export function PurchaseOrderForm({
 
             {/* Right Column (Sidebar) */}
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
-              {/* PO Summary Header */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-5">
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">PO NUMBER</span>
-                    <span className="text-sm font-bold text-slate-900">{initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}</span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">
-                      {isEditMode ? "STATUS" : "PO DATE"}
-                    </span>
-                    <span className={`text-sm font-bold ${isEditMode ? "text-emerald-600" : "text-slate-900"}`}>
-                      {isEditMode ? initialPo?.status : "06-Jun-2026"}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {/* PO Number/Date moved to header */}
 
               <NotesPanel isReadOnly={false} />
               
@@ -643,10 +639,10 @@ export function PurchaseOrderForm({
           <Button onClick={handleSave} variant="ghost" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium h-10 px-6">
             Cancel
           </Button>
-          <Button onClick={handleSave} variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6">
+          <Button onClick={handleSave} disabled={!selectedSupplier} variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
             <FileText className="w-4 h-4 mr-2 opacity-70" /> {isEditMode ? "Update Draft" : "Save Draft"}
           </Button>
-          <Button onClick={handleSave} className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
+          <Button onClick={handleSave} disabled={!selectedSupplier} className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             {isEditMode ? "Save PO Changes" : "Send to Supplier"}
           </Button>
         </div>
@@ -681,6 +677,7 @@ export function PurchaseOrderForm({
           existingPoItems={poItems}
           onNext={handleSoItemNext}
           type={type}
+          supplierName={selectedSupplier}
         />
       </div>
     </FormProvider>

@@ -16,7 +16,7 @@ export default function CreateTrimsPurchaseOrderPage() {
   return (
     <PurchaseOrderForm 
       type="Trims"
-      itemLabel="Trim Item"
+      itemLabel="Trim PO"
       specLabel="Specifications"
       itemOptions={TRIMS_OPTIONS}
       backHref="/trims-purchases"

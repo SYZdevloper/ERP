@@ -524,6 +524,18 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
                   {/* Attributes */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 mt-2 mb-2">
+                    {/* 1) Buyer Design No */}
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Buyer Design No</Label>
+                      <Input
+                        value={sqNumber}
+                        onChange={(e) => setSqNumber(e.target.value)}
+                        placeholder="e.g. 10 digit code"
+                        className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                      />
+                    </div>
+
+                    {/* 2) Rate */}
                     <div className="flex items-center gap-3">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Rate <span className="text-red-500">*</span></Label>
                       <Input
@@ -537,76 +549,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Color <span className="text-red-500">*</span></Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Select value={selectedColor} onValueChange={setSelectedColor}>
-                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                            <SelectValue placeholder="Select Color" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              { label: "White", hex: "white" },
-                              { label: "Black", hex: "black" },
-                              { label: "Navy", hex: "#000080" },
-                              { label: "Red", hex: "#ef4444" },
-                              { label: "Grey", hex: "#808080" },
-                            ].map(c => (
-                              <SelectItem key={c.label} value={c.label}>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
-                                  <span>{c.label}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsColorDialogOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fabric <span className="text-red-500">*</span></Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Select value={selectedFabric} onValueChange={setSelectedFabric}>
-                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                            <SelectValue placeholder="Select Fabric" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
-                            <SelectItem value="Linen">Linen</SelectItem>
-                            <SelectItem value="Denim">Denim</SelectItem>
-                            <SelectItem value="Polyester">Polyester</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFabricDialogOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fit <span className="text-red-500">*</span></Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Select value={selectedFit} onValueChange={setSelectedFit}>
-                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                            <SelectValue placeholder="Select Fit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Regular">Regular</SelectItem>
-                            <SelectItem value="Slim Fit">Slim Fit</SelectItem>
-                            <SelectItem value="Oversized">Oversized</SelectItem>
-                            <SelectItem value="Casual Fit">Casual Fit</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFitDialogOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
+                    {/* 2) Pattern */}
                     <div className="flex items-center gap-2">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Pattern</Label>
                       <div className="flex-1 flex items-center gap-1">
@@ -657,15 +600,59 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Buyer Design No</Label>
-                      <Input
-                        value={sqNumber}
-                        onChange={(e) => setSqNumber(e.target.value)}
-                        placeholder="e.g. 10 digit code"
-                        className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
-                      />
+                    {/* 3) Colour */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Color <span className="text-red-500">*</span></Label>
+                      <div className="flex-1 flex items-center gap-1">
+                        <Select value={selectedColor} onValueChange={setSelectedColor}>
+                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectValue placeholder="Select Color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              { label: "White", hex: "white" },
+                              { label: "Black", hex: "black" },
+                              { label: "Navy", hex: "#000080" },
+                              { label: "Red", hex: "#ef4444" },
+                              { label: "Grey", hex: "#808080" },
+                            ].map(c => (
+                              <SelectItem key={c.label} value={c.label}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
+                                  <span>{c.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsColorDialogOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* 4) Fabric */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fabric <span className="text-red-500">*</span></Label>
+                      <div className="flex-1 flex items-center gap-1">
+                        <Select value={selectedFabric} onValueChange={setSelectedFabric}>
+                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectValue placeholder="Select Fabric" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
+                            <SelectItem value="Linen">Linen</SelectItem>
+                            <SelectItem value="Denim">Denim</SelectItem>
+                            <SelectItem value="Polyester">Polyester</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFabricDialogOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+
                   </div>
 
                   {/* Brand */}
@@ -695,12 +682,12 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
                   {/* Size / Ratio Inputs */}
                   <div className="flex flex-col gap-4 flex-1">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-4">
                       <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">
+                        <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider whitespace-nowrap">
                           {isRatioMode ? "Enter Ratios" : "Enter Quantities"}
                         </Label>
-                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 shrink-0">
                           <button
                             className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${!isRatioMode ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             onClick={() => setIsRatioMode(false)}
@@ -711,10 +698,49 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           >Ratio</button>
                         </div>
                       </div>
+
+                      {/* Advanced Calculator Moved Here */}
+                      <div className="flex items-center gap-2 relative h-8 flex-1 justify-start ml-2">
+                        <div className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 transition-all duration-300 ease-in-out ${isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"}`}>
+                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
+                          <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
+                            <SelectTrigger className="w-[75px] h-8 text-[11px] bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
+                              <SelectValue placeholder="Size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
+                                <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap ml-1">Total Qty</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={totalOrderQty}
+                            onChange={(e) => setTotalOrderQty(e.target.value)}
+                            placeholder="0"
+                            className="h-8 w-20 bg-white border-slate-200 shadow-sm rounded-md text-[11px] font-semibold px-2 focus-visible:ring-[#0453B8]"
+                          />
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={handleCalculate}
+                            disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
+                            className="h-8 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-[11px] whitespace-nowrap px-3"
+                          >
+                            <Calculator className="w-3.5 h-3.5 mr-1.5" /> Calculate
+                          </Button>
+                        </div>
+                        <div className={`absolute left-0 top-1/2 -translate-y-1/2 text-[11px] text-slate-500 font-medium italic select-none transition-all duration-300 ease-in-out ${!isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none translate-x-2"}`}>
+                          Manual quantity mode. Click "Ratio" to distribute quantities.
+                        </div>
+                      </div>
+
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-[#0453B8] hover:text-blue-800 hover:bg-blue-50 px-3 rounded-full font-semibold"
+                        className="h-7 text-xs text-[#0453B8] hover:text-blue-800 hover:bg-blue-50 px-3 rounded-full font-semibold shrink-0"
                         onClick={() => setShowMoreSizes(!showMoreSizes)}
                       >
                         {showMoreSizes ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
@@ -778,44 +804,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           </div>
                         </div>
                       ))}
-                    </div>
-
-                    {/* Advanced Calculator */}
-                    <div className="flex items-center gap-2 relative h-9 mt-2">
-                      <div className={`absolute left-0 top-0 flex items-center gap-2 transition-all duration-300 ease-in-out ${isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"}`}>
-                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
-                        <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
-                          <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
-                            <SelectValue placeholder="Size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
-                              <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap ml-2">Total Qty</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={totalOrderQty}
-                          onChange={(e) => setTotalOrderQty(e.target.value)}
-                          placeholder="0"
-                          className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
-                        />
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={handleCalculate}
-                          disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
-                          className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
-                        >
-                          <Calculator className="w-4 h-4 mr-1" /> Calculate
-                        </Button>
-                      </div>
-                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium italic select-none transition-all duration-300 ease-in-out ${!isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none translate-x-2"}`}>
-                        Manual quantity mode. Click "Ratio" to distribute quantities.
-                      </div>
                     </div>
 
                   </div>

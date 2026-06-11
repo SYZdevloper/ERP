@@ -11,18 +11,10 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { Users, Clock, AlertTriangle, ShoppingCart, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const MOCK_SUPPLIERS: Supplier[] = [
-  { code: "SUP-100", name: "Arvind Mills", contactPerson: "Rakesh", phone: "+91 9810000000", category: "Fabric", onTimePct: 86, rejectionPct: 0.4, openPos: 0, billingAddress: "Ahmedabad, Gujarat" },
-  { code: "SUP-101", name: "Vardhman Textiles", contactPerson: "Vinod", phone: "+91 9810000013", category: "Fabric", onTimePct: 87, rejectionPct: 0.8, openPos: 1, billingAddress: "Ludhiana, Punjab" },
-  { code: "SUP-102", name: "Raymond Fabrics", contactPerson: "Asha", phone: "+91 9810000026", category: "Fabric", onTimePct: 88, rejectionPct: 1.2, openPos: 2, billingAddress: "Mumbai, Maharashtra" },
-  { code: "SUP-103", name: "Welspun", contactPerson: "Tariq", phone: "+91 9810000039", category: "Fabric", onTimePct: 89, rejectionPct: 1.6, openPos: 3, billingAddress: "Anjar, Gujarat" },
-  { code: "SUP-104", name: "Trim & Co.", contactPerson: "Rakesh", phone: "+91 9810000052", category: "Both", onTimePct: 90, rejectionPct: 2.0, openPos: 4, billingAddress: "New Delhi, Delhi" },
-  { code: "SUP-105", name: "Button House", contactPerson: "Vinod", phone: "+91 9810000065", category: "Trims", onTimePct: 91, rejectionPct: 2.4, openPos: 0, billingAddress: "Tirupur, Tamil Nadu" }
-];
+import { INITIAL_MASTER_SUPPLIERS } from "@/data/mock-masters";
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(MOCK_SUPPLIERS);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_MASTER_SUPPLIERS);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
   const [searchTerm, setSearchTerm] = useState("");

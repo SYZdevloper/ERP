@@ -12,7 +12,6 @@ export function Sidebar() {
   const isSalesActive = pathname.startsWith("/sales-orders");
   const isFabricActive = pathname.startsWith("/fabric-purchases");
   const isTrimsActive = pathname.startsWith("/trims-purchases");
-  const isSuppliersActive = pathname.startsWith("/suppliers");
   const isMastersActive = pathname.startsWith("/masters");
 
   return (
@@ -78,24 +77,6 @@ export function Sidebar() {
             >
               <FileText className="w-5 h-5 shrink-0" />
               {isExpanded && <span className="truncate">Trims PO</span>}
-            </Link>
-          </div>
-
-          {/* Suppliers Link */}
-          <div className="relative">
-            {isSuppliersActive && (
-              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
-            )}
-            <Link
-              href="/suppliers"
-              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
-                isSuppliersActive
-                  ? "text-white bg-white/10"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <Users className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Suppliers</span>}
             </Link>
           </div>
 

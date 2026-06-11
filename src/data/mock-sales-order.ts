@@ -307,14 +307,24 @@ export interface SalesOrderListItem {
   deliveryDate: string;
   status: "Draft" | "Confirmed" | "Cancelled";
   amount: number;
+  category?: string;
+  productName?: string;
 }
 
 export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
-  { id: "1", soNo: "SO-2026-001", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000 },
-  { id: "2", soNo: "SO-2026-002", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000 },
-  { id: "3", soNo: "SO-2026-003", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000 },
-  { id: "4", soNo: "SO-2026-004", orderDate: "2026-06-03", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-06-24", status: "Draft", amount: 320000 },
-  { id: "5", soNo: "SO-2026-005", orderDate: "2026-06-04", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-04", status: "Confirmed", amount: 675000 },
-  { id: "6", soNo: "SO-2026-006", orderDate: "2026-06-04", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-06-04", status: "Confirmed", amount: 1100000 },
-  { id: "7", soNo: "SO-2026-007", orderDate: "2026-06-05", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-28", status: "Cancelled", amount: 250000 },
+  { id: "1", soNo: "SO-2026-001", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000, category: "T-Shirts", productName: "Men's Polo T-Shirt" },
+  { id: "2", soNo: "SO-2026-002", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000, category: "Shirts", productName: "Casual Shirt" },
+  { id: "3", soNo: "SO-2026-003", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000, category: "Jackets", productName: "Denim Jacket" },
+  { id: "4", soNo: "SO-2026-004", orderDate: "2026-06-03", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-06-24", status: "Draft", amount: 320000, category: "Trousers", productName: "Slim Fit Trouser" },
+  { id: "5", soNo: "SO-2026-005", orderDate: "2026-06-04", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-04", status: "Confirmed", amount: 675000, category: "Shirts", productName: "Formal Cotton Shirt" },
+  { id: "6", soNo: "SO-2026-006", orderDate: "2026-06-04", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-06-04", status: "Confirmed", amount: 1100000, category: "Trousers", productName: "Chino Pants" },
+  { id: "7", soNo: "SO-2026-007", orderDate: "2026-06-05", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-28", status: "Cancelled", amount: 250000, category: "T-Shirts", productName: "Graphic Print T-Shirt" },
+  { id: "8", soNo: "SO-2026-008", orderDate: "2026-06-06", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-30", status: "Confirmed", amount: 550000, category: "Jackets", productName: "Bomber Jacket" },
+  { id: "9", soNo: "SO-2026-009", orderDate: "2026-06-07", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-07-10", status: "Draft", amount: 480000, category: "T-Shirts", productName: "Basic Crew Neck" },
+  { id: "10", soNo: "SO-2026-010", orderDate: "2026-06-08", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-07-15", status: "Confirmed", amount: 920000, category: "Shirts", productName: "Linen Summer Shirt" },
+  { id: "11", soNo: "SO-2026-011", orderDate: "2026-06-09", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-20", status: "Draft", amount: 310000, category: "Trousers", productName: "Cargo Pants" },
+  { id: "12", soNo: "SO-2026-012", orderDate: "2026-06-10", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-07-25", status: "Confirmed", amount: 1450000, category: "Jackets", productName: "Winter Coat" },
+  { id: "13", soNo: "SO-2026-013", orderDate: "2026-06-11", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-08-01", status: "Draft", amount: 275000, category: "Shirts", shortName: "Casual Shirt", productName: "Oxford Button-Down" },
+  { id: "14", soNo: "SO-2026-014", orderDate: "2026-06-12", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-08-05", status: "Confirmed", amount: 890000, category: "T-Shirts", productName: "V-Neck Essential" },
+  { id: "15", soNo: "SO-2026-015", orderDate: "2026-06-13", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-08-10", status: "Confirmed", amount: 620000, category: "Trousers", productName: "Regular Fit Jeans" },
 ];

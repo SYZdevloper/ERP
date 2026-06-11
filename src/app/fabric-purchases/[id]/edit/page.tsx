@@ -33,7 +33,7 @@ export default function EditFabricPurchaseOrderPage({ params }: { params: Promis
       initialPo={po} 
       isEditMode={true} 
       type="Fabric"
-      itemLabel="Supplier Sort Number"
+      itemLabel="Fabric PO"
       specLabel="GSM / Content"
       itemOptions={FABRIC_OPTIONS}
       backHref="/fabric-purchases"

@@ -138,22 +138,7 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
 
             {/* Right Column (Information Rail) */}
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
-              {/* Order Info Card */}
-              <div className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">SO No.</span>
-                    <span className="text-sm font-bold text-slate-900">{methods.watch("salesOrderNo")}</span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] uppercase font-bold text-[#0453B8]">Order Date</span>
-                    <span className="text-sm font-bold text-slate-900">
-                      {new Date(methods.watch("orderDate") || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
+              {/* Order Info moved to header */}
               <NotesPanel isReadOnly={isReadOnly} />
               <AttachmentsModal isReadOnly={isReadOnly} />
               <OrderSummaryPanel isReadOnly={isReadOnly} />

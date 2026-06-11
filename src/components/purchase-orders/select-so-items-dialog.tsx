@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProductLineItem } from "@/types/sales-order";
 import { MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 import { X, ArrowRight } from "lucide-react";
@@ -37,8 +38,9 @@ interface SelectSalesOrderItemsDialogProps {
   onOpenChange: (open: boolean) => void;
   buyerId: string; // For Trims this is comma-separated SO IDs; for Fabric it's a single SO ID
   existingPoItems: POItem[];
-  onNext: (selectedSoItem: ProductLineItem & { soItem: string, requiredQtyMtr: number }) => void;
+  onNext: (selectedSoItem: ProductLineItem & { soItem: string, requiredQtyMtr: number }, trimItem?: string) => void;
   type?: "Fabric" | "Trims";
+  supplierName?: string;
 }
 
 export function SelectSalesOrderItemsDialog({
@@ -48,8 +50,10 @@ export function SelectSalesOrderItemsDialog({
   existingPoItems,
   onNext,
   type = "Fabric",
+  supplierName,
 }: SelectSalesOrderItemsDialogProps) {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [trimItem, setTrimItem] = useState<string>("");
 
   const isTrim = type === "Trims";
 
@@ -77,7 +81,7 @@ export function SelectSalesOrderItemsDialog({
     if (!selectedItemId) return;
     const item = soItems.find(i => i.id === selectedItemId);
     if (item) {
-      onNext(item);
+      onNext(item, trimItem);
       setTimeout(() => setSelectedItemId(null), 300);
     }
   };
@@ -108,7 +112,20 @@ export function SelectSalesOrderItemsDialog({
             />
           </div>
         </td>
-        <td className={`px-4 py-4 font-bold text-center ${isLocked ? 'text-slate-500' : 'text-slate-900'}`}>{(item as any).soItem}</td>
+        <td className="px-4 py-4 text-center">
+          <div className="h-12 w-12 mx-auto relative overflow-hidden bg-slate-100 rounded border border-slate-200 flex items-center justify-center p-1">
+            <img 
+              src={
+                item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
+                item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
+                item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
+                "/men regualr fit shirt.jpeg"
+              } 
+              alt={item.name} 
+              className={`w-full h-full object-contain mix-blend-multiply ${isLocked ? 'opacity-50 grayscale' : ''}`} 
+            />
+          </div>
+        </td>
         <td className="px-4 py-4">
           <div className={`font-bold ${isLocked ? 'text-slate-500' : 'text-[#0453B8]'}`}>{item.productId}</div>
           <div className={`font-medium mt-0.5 ${isLocked ? 'text-slate-400' : 'text-slate-700'}`}>{item.name}</div>
@@ -120,20 +137,6 @@ export function SelectSalesOrderItemsDialog({
             <span className={`font-semibold text-sm ${isLocked ? 'text-slate-400' : 'text-slate-700'}`}>{item.color}</span>
           </div>
         </td>
-        <td className="px-4 py-4">
-          {activeSizes.length > 0 ? (
-            <div className={`grid grid-cols-5 gap-1 mx-auto w-fit ${isLocked ? 'opacity-50' : ''}`}>
-              {activeSizes.map(({ size, qty }) => (
-                <div key={size} className="flex flex-col items-center border border-slate-200 rounded-md overflow-hidden min-w-[32px] bg-white shadow-sm">
-                  <div className="text-[10px] w-full text-center py-0.5 font-bold text-[#0453B8] border-b border-slate-200 px-1.5 leading-tight">{size}</div>
-                  <div className="w-full h-6 flex items-center justify-center text-[13px] font-semibold text-[#0453B8] px-1.5">{qty}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <span className="text-sm text-slate-400 flex justify-center">No sizes</span>
-          )}
-        </td>
         <td className={`px-4 py-4 text-center font-bold text-sm ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>{totalPcs}</td>
         <td className={`px-4 py-4 text-center font-bold text-sm ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>{(item as any).requiredQtyMtr.toFixed(2)}</td>
       </tr>
@@ -143,11 +146,39 @@ export function SelectSalesOrderItemsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] sm:max-w-[1000px] h-[90vh] sm:h-[750px] flex flex-col p-0 overflow-hidden bg-white [&>button]:hidden shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b border-slate-200 flex flex-row items-center justify-between shadow-sm">
-          <DialogTitle className="text-xl font-bold text-[#0F172A]">1. Select Sales Order Items</DialogTitle>
-          <button onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
-            <X className="w-4 h-4" />
-          </button>
+        <DialogHeader className="px-6 py-4 border-b border-slate-200 shadow-sm bg-slate-50/50">
+          <div className="flex flex-row items-center justify-between">
+            <DialogTitle className="text-xl font-bold text-[#0F172A]">
+              1. Select Sales Order Items {supplierName && <span className="text-slate-500 font-medium ml-2">for {supplierName}</span>}
+            </DialogTitle>
+            <button onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {type === "Trims" && (
+            <div className="mt-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-700 bg-blue-50 px-3 py-1.5 rounded-md border border-blue-100">
+                <span className="text-[#0453B8] flex items-center justify-center w-5 h-5 text-xs rounded-full bg-blue-100 mr-1">2</span>
+                Select Trim Item:
+              </div>
+              <Select value={trimItem} onValueChange={setTrimItem}>
+                <SelectTrigger className="w-[300px] bg-white border-slate-200 focus:ring-[#0453B8] font-medium h-10">
+                  <SelectValue placeholder="Select Trim Item (e.g. Button, Label)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Button">Button</SelectItem>
+                  <SelectItem value="Label">Label</SelectItem>
+                  <SelectItem value="Hangtag">Hangtag</SelectItem>
+                </SelectContent>
+              </Select>
+              {!trimItem && (
+                <span className="text-xs text-red-500 font-medium animate-pulse ml-2 flex items-center gap-1">
+                  * Required
+                </span>
+              )}
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
@@ -159,10 +190,9 @@ export function SelectSalesOrderItemsDialog({
               <thead className="bg-[#F8FAFC] border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center w-16">Select</th>
-                  <th className="px-4 py-3 font-bold text-slate-700 text-center">SO Item</th>
+                  <th className="px-4 py-3 font-bold text-slate-700 text-center">Image</th>
                   <th className="px-4 py-3 font-bold text-slate-700">Product / Style</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Color</th>
-                  <th className="px-4 py-3 font-bold text-slate-700 text-center text-xs">Size Breakup</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Total Qty<br/><span className="text-xs text-slate-500 font-medium">(Pcs)</span></th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Required Qty<br/><span className="text-xs text-slate-500 font-medium">(Pcs From System)</span></th>
                 </tr>
@@ -170,16 +200,16 @@ export function SelectSalesOrderItemsDialog({
               <tbody className="divide-y divide-slate-100">
                 {itemsGrouped.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-slate-400 text-sm">
+                    <td colSpan={6} className="px-4 py-10 text-center text-slate-400 text-sm">
                       No Sales Orders selected. Please select at least one Sales Order from the PO form.
                     </td>
                   </tr>
                 ) : (
                   itemsGrouped.map((group) => (
-                    <>
+                    <Fragment key={group.soId}>
                       {/* SO Group Header */}
                       <tr key={`group-${group.soId}`} className="bg-blue-50 border-b border-blue-100">
-                        <td colSpan={7} className="px-4 py-2">
+                        <td colSpan={6} className="px-4 py-2">
                           <span className="text-xs font-bold text-[#0453B8] uppercase tracking-wide">
                             Sales Order: {group.soNo}
                           </span>
@@ -189,13 +219,13 @@ export function SelectSalesOrderItemsDialog({
                         const isLocked = existingPoItems.some(poItem => poItem.soItemId === item.id);
                         return renderRow(item, isLocked);
                       })}
-                    </>
+                    </Fragment>
                   ))
                 )}
               </tbody>
               <tfoot className="bg-slate-50/80 border-t border-slate-200">
                 <tr>
-                  <td colSpan={6} className="px-4 py-4 text-right font-bold text-slate-700">Total Required (From System)</td>
+                  <td colSpan={5} className="px-4 py-4 text-right font-bold text-slate-700">Total Required (From System)</td>
                   <td className="px-4 py-4 text-center font-bold text-slate-900 text-[15px]">{totalRequired.toFixed(2)} Pcs</td>
                 </tr>
               </tfoot>
@@ -203,9 +233,9 @@ export function SelectSalesOrderItemsDialog({
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-200 flex justify-end bg-slate-50 rounded-b-lg flex-shrink-0">
+        <div className="px-6 py-4 border-t border-slate-200 flex justify-end items-center bg-slate-50 rounded-b-lg flex-shrink-0">
           <Button
-            disabled={!selectedItemId}
+            disabled={!selectedItemId || (type === "Trims" && !trimItem)}
             onClick={handleNext}
             className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold px-6 py-2.5 h-auto text-sm shadow-sm transition-all disabled:opacity-50"
           >
