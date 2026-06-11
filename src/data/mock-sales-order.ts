@@ -324,7 +324,7 @@ export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
   { id: "10", soNo: "SO-2026-010", orderDate: "2026-06-08", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-07-15", status: "Confirmed", amount: 920000, category: "Shirts", productName: "Linen Summer Shirt" },
   { id: "11", soNo: "SO-2026-011", orderDate: "2026-06-09", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-20", status: "Draft", amount: 310000, category: "Trousers", productName: "Cargo Pants" },
   { id: "12", soNo: "SO-2026-012", orderDate: "2026-06-10", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-07-25", status: "Confirmed", amount: 1450000, category: "Jackets", productName: "Winter Coat" },
-  { id: "13", soNo: "SO-2026-013", orderDate: "2026-06-11", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-08-01", status: "Draft", amount: 275000, category: "Shirts", shortName: "Casual Shirt", productName: "Oxford Button-Down" },
+  { id: "13", soNo: "SO-2026-013", orderDate: "2026-06-11", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-08-01", status: "Draft", amount: 275000, category: "Shirts", productName: "Oxford Button-Down" },
   { id: "14", soNo: "SO-2026-014", orderDate: "2026-06-12", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-08-05", status: "Confirmed", amount: 890000, category: "T-Shirts", productName: "V-Neck Essential" },
   { id: "15", soNo: "SO-2026-015", orderDate: "2026-06-13", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-08-10", status: "Confirmed", amount: 620000, category: "Trousers", productName: "Regular Fit Jeans" },
 ];
