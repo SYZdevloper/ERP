@@ -35,7 +35,7 @@ export function ViewPODialog({
   const contactName = po.contact || "Rakesh";
   const contactPhone = po.phone || "+91 9810000000";
   const paymentTerms = po.paymentTerms || "30 days credit";
-  const linkedSo = po.linkedSo || "SO-2026-1001";
+  const linkedSo = po.linkedSo || "SO-2026-002";
   const itemDesc = po.material || po.itemDesc || "Cotton";
   const qtyStr = po.qty || "1,200 Pcs";
   const rateVal = po.rate || 180;

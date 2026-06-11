@@ -8,6 +8,73 @@ import { POItem } from "@/types/purchase-order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_TRIM_CATALOG } from "@/data/mock-sales-order";
 
+function getProductDetails(productId: string, name: string) {
+  const code = productId || "";
+  const nameLower = (name || "").toLowerCase();
+  
+  let fabric = "Cotton Poplin";
+  let fit = "Regular";
+  let brandName = "Zara";
+  let sqNumber = "SKU1000293";
+  
+  if (code === "ST001") {
+    fabric = "Cotton Poplin"; fit = "Regular"; brandName = "Zara"; sqNumber = "SKU1000293";
+  } else if (code === "ST003") {
+    fabric = "Linen"; fit = "Slim Fit"; brandName = "Zara"; sqNumber = "SKU1000294";
+  } else if (code === "TS001") {
+    fabric = "Cotton Pique"; fit = "Regular"; brandName = "Zara"; sqNumber = "SKU1000295";
+  } else if (code.startsWith("HM")) {
+    fabric = nameLower.includes("linen") ? "Linen" : "Cotton";
+    fit = "Relaxed Fit";
+    brandName = "H&M";
+    sqNumber = "SKU2000" + code.replace("HM", "");
+  } else if (code.startsWith("DJ") || code.startsWith("LV")) {
+    fabric = "Denim";
+    fit = "Regular Fit";
+    brandName = code.startsWith("DJ") ? "Zara" : "Levi's";
+    sqNumber = "SKU3000" + code.replace(/\D/g, "");
+  } else if (code.startsWith("UQ")) {
+    fabric = nameLower.includes("down") ? "Nylon Down" : "Polyester Fleece";
+    fit = "Regular";
+    brandName = "Uniqlo";
+    sqNumber = "SKU4000" + code.replace("UQ", "");
+  } else if (code.startsWith("MS")) {
+    fabric = nameLower.includes("blazer") ? "Wool Blend" : "Cotton Satin";
+    fit = "Tailored Fit";
+    brandName = "Marks & Spencer";
+    sqNumber = "SKU5000" + code.replace("MS", "");
+  }
+
+  return { fabric, fit, brandName, sqNumber };
+}
+
+function getDateAfterDays(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getDaysDifference(targetDateStr: string): string {
+  if (!targetDateStr) return "custom";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const [year, month, day] = targetDateStr.split("-").map(Number);
+  const targetDate = new Date(year, month - 1, day);
+  targetDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = targetDate.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  
+  if ([15, 30, 45, 60].includes(diffDays)) {
+    return `${diffDays} Days`;
+  }
+  return "custom";
+}
+
 interface AddItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,6 +87,7 @@ interface AddItemDialogProps {
   type?: "Fabric" | "Trims";
   trimItem?: string; // "Button" | "Label" | "Hangtag"
   soItemTotalPcs?: number; // total garment pcs from selected SO item
+  soItem?: any;
 }
 
 export function AddItemDialog({
@@ -34,6 +102,7 @@ export function AddItemDialog({
   type,
   trimItem: propTrimItem = "",
   soItemTotalPcs = 0,
+  soItem,
 }: AddItemDialogProps) {
   const trimItem = editItem && type === "Trims" ? editItem.material : propTrimItem;
 
@@ -48,6 +117,7 @@ export function AddItemDialog({
     uom: "mtr",
     rate: "",
     gst: "5",
+    deliveryDate: getDateAfterDays(15),
   });
 
   const [images, setImages] = useState<{ name: string; url: string }[]>([]);
@@ -68,6 +138,7 @@ export function AddItemDialog({
         uom: editItem.uom || "mtr",
         rate: editItem.rate?.toString() || "",
         gst: editItem.gst?.toString() || "5",
+        deliveryDate: editItem.deliveryDate || getDateAfterDays(15),
       });
       setImages(editItem.images || []);
       // Pre-select the variant that matches the saved code
@@ -87,7 +158,8 @@ export function AddItemDialog({
         qty: initialValues?.qty?.toString() || "",
         uom: initialValues?.uom || "mtr",
         rate: initialValues?.rate?.toString() || "",
-        gst: initialValues?.gst?.toString() || "5", 
+        gst: initialValues?.gst?.toString() || "5",
+        deliveryDate: initialValues?.deliveryDate || getDateAfterDays(15),
       });
       setImages(initialValues?.images || []);
       // Default to first variant of the selected trim type
@@ -125,23 +197,37 @@ export function AddItemDialog({
   const handleSubmit = () => {
     const gstNum = parseFloat(formData.gst) || 0;
     
-    const trimVariants = type === "Trims" && trimItem ? MOCK_TRIM_CATALOG[trimItem] : undefined;
-    const trimData = trimVariants?.find(v => v.code === selectedVariantCode) || trimVariants?.[0];
+    let effectiveCode = undefined;
+    let effectiveColor = formData.colorShade;
+    let effectiveMaterial = formData.material;
 
-    // For Trims: color comes from the variant, not from user input
-    const effectiveColor = type === "Trims" ? (trimData?.color || "") : formData.colorShade;
-    const effectiveMaterial = type === "Trims" ? (trimItem || formData.material) : formData.material;
+    if (type === "Trims" && trimItem) {
+      effectiveMaterial = trimItem;
+      const trimKey = (() => {
+        if (trimItem.toLowerCase().includes("button")) return "buttons";
+        if (trimItem.toLowerCase().includes("label")) return "label";
+        if (trimItem.toLowerCase().includes("hangtag") || trimItem.toLowerCase().includes("hang tag")) return "hangTag";
+        return "";
+      })();
+      
+      const configuredTrim = soItem?.trims?.[trimKey];
+      const trimVariants = MOCK_TRIM_CATALOG[trimItem] || [];
+      const systemDefault = trimVariants[0];
 
-    if (!effectiveMaterial || (type !== "Trims" && !effectiveColor) || qtyNum <= 0 || rateNum <= 0) {
-      alert(`Please fill in all required fields (${itemLabel}, Color/Shade, valid QTY and RATE)`);
+      effectiveCode = configuredTrim?.code || systemDefault?.code;
+      effectiveColor = configuredTrim?.color || systemDefault?.color || "";
+    }
+
+    if (!effectiveMaterial || (type !== "Trims" && !effectiveColor) || qtyNum <= 0 || rateNum <= 0 || !formData.deliveryDate) {
+      alert(`Please fill in all required fields (${itemLabel}, Color/Shade, valid QTY, RATE, and Delivery Date)`);
       return;
     }
 
     const newItem: POItem = {
       id: editItem ? editItem.id : `item-${Date.now()}`,
       material: effectiveMaterial,
-      code: trimData?.code,
-      gsmContent: type === "Fabric" || itemLabel === "Material" ? `${formData.gsm} / ${formData.width}` : formData.gsmContent,
+      code: effectiveCode,
+      gsmContent: type === "Fabric" || itemLabel === "Material" || itemLabel === "Supplier Sort Number" ? `${formData.gsm} / ${formData.width}` : formData.gsmContent,
       gsm: formData.gsm,
       width: formData.width,
       colorShade: effectiveColor,
@@ -153,6 +239,7 @@ export function AddItemDialog({
       gst: gstNum,
       amount: qtyNum * rateNum,
       images: images,
+      deliveryDate: formData.deliveryDate,
     };
 
     onAddItem(newItem);
@@ -186,10 +273,104 @@ export function AddItemDialog({
           </button>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar relative" onKeyDown={handleKeyDown}>
-          <div className="flex flex-col gap-4">
-            {type === "Fabric" || itemLabel === "Material" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar relative" onKeyDown={handleKeyDown}>
+          <div className="flex flex-col gap-3">
+            {/* Product Details Card */}
+            {soItem && (
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-left">
+                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-3">Product Details</p>
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-[#F5F6F8] rounded-lg shrink-0 border border-slate-100 flex items-center justify-center p-1 overflow-hidden">
+                    <img
+                      src={(() => {
+                        const nameLower = (soItem.name || "").toLowerCase();
+                        if (nameLower.includes("t-shirt") || (soItem.productId || "").startsWith("MT") || (soItem.productId || "").startsWith("TS")) {
+                          return "/men casual tshirt.jpeg";
+                        }
+                        if (nameLower.includes("formal") || (soItem.productId || "").startsWith("MS")) {
+                          return (soItem.type || "").toLowerCase().includes("full")
+                            ? "/mens casual full sleeve shirt.jpg"
+                            : "/men regualr fit shirt.jpeg";
+                        }
+                        return "/men casual half shirt.jpg";
+                      })()}
+                      alt={soItem.name}
+                      className="w-full h-full object-contain mix-blend-multiply"
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-extrabold text-slate-900">{soItem.productId || soItem.name}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {soItem.name} &bull; {soItem.type || "Standard"}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-bold text-[#0453B8]">
+                          {Object.values(soItem.sizeBreakdown || {}).reduce(
+                            (a: number, v: any) => a + (parseInt(String(v)) || 0),
+                            0
+                          )} pcs
+                        </p>
+                        <p className="text-[10px] text-slate-500">total qty</p>
+                      </div>
+                    </div>
+
+                    {/* Attribute chips */}
+                    <div className="flex flex-wrap gap-1.5 mt-2.5">
+                      {(() => {
+                        const details = getProductDetails(soItem.productId, soItem.name);
+                        return [
+                          { label: "Color",  val: soItem.color },
+                          { label: "Fabric", val: details.fabric },
+                          { label: "Fit",    val: details.fit },
+                          { label: "Brand",  val: details.brandName },
+                          { label: "Buyer Design No", val: details.sqNumber },
+                        ].map(item => (
+                          <span
+                            key={item.label}
+                            className="inline-flex gap-1 bg-slate-50 border border-slate-200 text-slate-600 font-medium text-[10px] px-2 py-0.5 rounded-md"
+                          >
+                            <span className="text-slate-400">{item.label}:</span>
+                            <span className="font-bold text-slate-700">{item.val}</span>
+                          </span>
+                        ));
+                      })()}
+                    </div>
+
+                    {/* Size breakdown */}
+                    {soItem.sizeBreakdown && (
+                      <div className="flex flex-wrap items-center gap-1 mt-2 pt-2 border-t border-slate-100">
+                        <span className="text-[10px] text-slate-400 font-bold mr-0.5">SIZES:</span>
+                        {Object.entries(soItem.sizeBreakdown)
+                          .filter(([, q]) => (q as number) > 0)
+                          .map(([s, q]) => (
+                            <span key={s} className="bg-blue-50 text-[#0453B8] font-bold text-[10px] px-1.5 py-0.5 rounded">
+                              {s}: {q as number}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {type === "Fabric" || itemLabel === "Material" || itemLabel === "Supplier Sort Number" ? (
+              <div className="flex flex-col gap-4">
+                {soItem && (
+                  <div className="border-t border-slate-200/60 pt-4 mt-2 text-left">
+                    <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                      Fabric Material Configurations
+                    </p>
+                    <p className="text-[11px] text-slate-500 mb-1">
+                      Enter details for the fabric material required for this order.
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">{itemLabel} <span className="text-red-500">*</span></Label>
                   <Select value={formData.material} onValueChange={(val) => handleInputChange("material", val)}>
@@ -271,21 +452,9 @@ export function AddItemDialog({
                   />
                 </div>
               </div>
-            ) : (
+            </div>
+          ) : (
               (() => {
-                const trimVariants = MOCK_TRIM_CATALOG[trimItem] || [];
-                const trimData = trimVariants.find(v => v.code === selectedVariantCode) || trimVariants[0];
-                // Per-garment counts from product catalog (system values)
-                const PER_GARMENT: Record<string, number> = {
-                  "Button": 7,
-                  "Label": 1,
-                  "Hangtag": 1,
-                };
-                const perGarment = PER_GARMENT[trimItem] ?? 1;
-                // Calculate garments based on requiredQty instead of assuming 0 when no SO is selected
-                const computedGarments = Math.round((parseFloat(formData.requiredQty) || 0) / perGarment);
-                const autoQty = computedGarments * perGarment;
-
                 if (!trimItem) {
                   return (
                     <div className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-10 text-center shadow-inner">
@@ -298,73 +467,125 @@ export function AddItemDialog({
                   );
                 }
 
+                const trimVariants = MOCK_TRIM_CATALOG[trimItem] || [];
+                const systemDefault = trimVariants[0];
+
+                const trimKey = (() => {
+                  if (trimItem.toLowerCase().includes("button")) return "buttons";
+                  if (trimItem.toLowerCase().includes("label")) return "label";
+                  if (trimItem.toLowerCase().includes("hangtag") || trimItem.toLowerCase().includes("hang tag")) return "hangTag";
+                  return "";
+                })();
+
+                const configuredTrim = soItem?.trims?.[trimKey];
+
+                const effectiveCode = configuredTrim?.code || systemDefault?.code || "";
+                const effectiveColor = configuredTrim?.color || systemDefault?.color || "";
+                const effectiveImage = configuredTrim?.image || systemDefault?.image || "";
+                const trimDescription = systemDefault?.description || "";
+
+                // Per-garment counts from product catalog (system values)
+                const PER_GARMENT: Record<string, number> = {
+                  "Button": 7,
+                  "Label": 1,
+                  "Hangtag": 1,
+                };
+                const perGarment = PER_GARMENT[trimItem] ?? 1;
+                // Calculate garments based on requiredQty instead of assuming 0 when no SO is selected
+                const computedGarments = Math.round((parseFloat(formData.requiredQty) || 0) / perGarment);
+                const autoQty = computedGarments * perGarment;
+
                 return (
-                  <div className="flex flex-col gap-5">
-                    {/* Trim Image + Info */}
-                    <div className="flex gap-5 items-start bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <div className="w-36 h-36 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-sm">
-                        {trimData?.image ? (
-                          <img src={trimData.image} alt={trimItem} className="w-full h-full object-cover" />
-                        ) : (
-                          <ImageIcon className="w-10 h-10 text-slate-300" />
-                        )}
+                  <div className="flex flex-col gap-3">
+                    {soItem && (
+                      <div className="border-t border-slate-200/60 pt-3 mt-1 text-left">
+                        <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-0.5">
+                          Trim Material Configurations
+                        </p>
+                        <p className="text-[11px] text-slate-500 mb-1">
+                          Using the exact specifications and variant configured for this garment.
+                        </p>
                       </div>
-                      <div className="flex flex-col gap-3 flex-1">
-                        <div>
-                          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Trim Type</span>
-                          <p className="text-xl font-bold text-slate-900 mt-0.5">{trimItem || "—"}</p>
-                          {trimData?.description && <p className="text-xs text-slate-500 mt-0.5">{trimData.description}</p>}
-                          {/* Variant Picker — all variants from system */}
-                          <div className="mt-3">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Select Variant</span>
-                              <span className="text-[10px] bg-slate-200 text-slate-500 rounded px-1.5 py-0.5 font-bold">From System</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {trimVariants.map((variant) => {
-                                const isSelected = (selectedVariantCode || trimVariants[0]?.code) === variant.code;
-                                return (
-                                  <button
-                                    key={variant.code}
-                                    type="button"
-                                    onClick={() => setSelectedVariantCode(variant.code)}
-                                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer
-                                      ${isSelected
-                                        ? "bg-[#0453B8] border-[#0453B8] text-white shadow-md ring-2 ring-blue-300"
-                                        : "bg-white border-slate-200 text-slate-700 hover:border-[#0453B8] hover:bg-blue-50"
-                                      }`}
-                                  >
-                                    <div
-                                      className="w-3 h-3 rounded-full border border-white/40 shrink-0"
-                                      style={{ backgroundColor: variant.color.split(' / ')[0].toLowerCase() }}
-                                    />
-                                    <span className="font-mono">{variant.code}</span>
-                                    <span className={isSelected ? "text-blue-100" : "text-slate-400"}>·</span>
-                                    <span>{variant.color}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Garments (Pcs)</span>
-                            <p className="text-lg font-bold text-slate-800 mt-0.5">{computedGarments.toLocaleString('en-IN')}</p>
-                          </div>
-                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className="text-xs font-semibold text-[#0453B8] uppercase tracking-wide">
-                                × {perGarment} per garment
+                    )}
+                    
+                    <div className="group relative flex flex-col md:flex-row gap-4 items-stretch bg-gradient-to-br from-white to-slate-50/50 rounded-xl border border-slate-200/80 p-4 pl-5 shadow-sm hover:shadow-md hover:border-[#0453B8]/30 transition-all duration-300 overflow-hidden text-left">
+                      {/* Left border gradient accent */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-[#0453B8]" />
+                      
+                      {/* Image container with premium overlay and shadow */}
+                      <div className="relative w-24 h-24 rounded-xl border border-slate-200/80 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-[1.02] transition-transform duration-300">
+                        {effectiveImage ? (
+                          <img src={effectiveImage} alt={trimItem} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="w-8 h-8 text-slate-300" />
+                        )}
+                        <span className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm text-[9px] text-white px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider leading-none">
+                          {trimItem}
+                        </span>
+                      </div>
+
+                      {/* Content block */}
+                      <div className="flex flex-col justify-between flex-1 min-w-0">
+                        {/* Title and Metadata */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-extrabold text-slate-900 tracking-tight leading-none">
+                                {trimItem || "—"}
+                              </h3>
+                              <span className="font-mono text-[10px] font-bold text-[#0453B8] bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 leading-none">
+                                {effectiveCode || "—"}
                               </span>
-                              <span className="text-[10px] bg-[#0453B8] text-white rounded px-1 py-0.5 font-bold leading-none">From System</span>
                             </div>
-                            <p className="text-lg font-bold text-[#0453B8]">{autoQty.toLocaleString('en-IN')} pcs</p>
+                            <p className="text-xs text-slate-500 font-medium mt-1">
+                              {trimDescription || "Standard system specification"}
+                            </p>
+                          </div>
+                          
+                          {/* Color Swatch & Value */}
+                          <div className="flex items-center gap-1.5 bg-slate-100/80 px-2.5 py-1 rounded-lg border border-slate-200/40 shrink-0 self-start sm:self-center">
+                            {effectiveColor && effectiveColor !== "-" && (
+                              <div
+                                className="w-3.5 h-3.5 rounded-full border border-white shadow-sm shrink-0"
+                                style={{
+                                  backgroundColor: (() => {
+                                    const col = effectiveColor.split(" / ")[0].toLowerCase();
+                                    return col === "white" ? "#ffffff" : col === "navy" ? "#000080" : col === "black" ? "#000000" : col === "red" ? "#ef4444" : col === "grey" ? "#808080" : col === "blue" ? "#3b82f6" : col === "khaki" ? "#C3A882" : col;
+                                  })()
+                                }}
+                              />
+                            )}
+                            <span className="text-xs font-bold text-slate-700 leading-none">
+                              {effectiveColor || "—"}
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-100">
-                          <span className="text-sm font-semibold">System Qty: {autoQty.toLocaleString('en-IN')} pcs</span>
-                          <span className="text-xs text-emerald-600">({computedGarments} garments × {perGarment} {trimItem?.toLowerCase()}s/garment)</span>
+
+                        {/* Calculation Grid */}
+                        <div className="grid grid-cols-3 gap-2.5 mt-2">
+                          <div className="bg-slate-100/50 hover:bg-slate-100 rounded-lg p-2 border border-slate-200/50 transition-colors">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Garments</span>
+                            <p className="text-base font-black text-slate-800 mt-0.5 leading-none">
+                              {computedGarments.toLocaleString("en-IN")}
+                            </p>
+                            <span className="text-[9px] text-slate-500 font-semibold block mt-0.5">pcs to make</span>
+                          </div>
+
+                          <div className="bg-slate-100/50 hover:bg-slate-100 rounded-lg p-2 border border-slate-200/50 transition-colors">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Usage Ratio</span>
+                            <p className="text-base font-black text-slate-800 mt-0.5 leading-none">
+                              ×{perGarment}
+                            </p>
+                            <span className="text-[9px] text-slate-500 font-semibold block mt-0.5">per garment</span>
+                          </div>
+
+                          <div className="bg-gradient-to-br from-blue-50 to-blue-100/40 hover:from-blue-100/50 hover:to-blue-100 rounded-lg p-2 border border-blue-200/60 shadow-sm transition-colors">
+                            <span className="text-[9px] font-bold text-[#0453B8] uppercase tracking-wider block">System Qty</span>
+                            <p className="text-base font-black text-[#0453B8] mt-0.5 leading-none">
+                              {autoQty.toLocaleString("en-IN")}
+                            </p>
+                            <span className="text-[9px] text-[#0453B8]/80 font-bold block mt-0.5">pcs required</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -376,7 +597,7 @@ export function AddItemDialog({
             {/* Form fields below */}
             {(!type || type === "Fabric" || (type === "Trims" && trimItem)) && (
               <>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600 whitespace-nowrap text-ellipsis overflow-hidden">Quantity Required</Label>
                     <Input 
@@ -403,10 +624,45 @@ export function AddItemDialog({
                       <Input 
                         readOnly 
                         value={((parseFloat(formData.qty) || 0) - (parseFloat(formData.requiredQty) || 0)).toFixed(2)} 
-                        className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0" 
+                        className="bg-slate-50 text-slate-700 font-semibold h-10 border-slate-200 cursor-default focus-visible:ring-0 flex-1" 
                       />
                       <div className="w-12 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
                         {formData.uom}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">Delivery Date <span className="text-red-500">*</span></Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Select 
+                          value={getDaysDifference(formData.deliveryDate)} 
+                          onValueChange={(val) => {
+                            if (val !== "custom") {
+                              const days = parseInt(val);
+                              handleInputChange("deliveryDate", getDateAfterDays(days));
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full h-10 border-slate-200 text-xs focus:ring-[#0453B8] bg-white font-medium">
+                            <SelectValue placeholder="Days" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="15 Days">15 Days</SelectItem>
+                            <SelectItem value="30 Days">30 Days</SelectItem>
+                            <SelectItem value="45 Days">45 Days</SelectItem>
+                            <SelectItem value="60 Days">60 Days</SelectItem>
+                            <SelectItem value="custom">Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex-1">
+                        <Input 
+                          type="date"
+                          value={formData.deliveryDate}
+                          onChange={(e) => handleInputChange("deliveryDate", e.target.value)}
+                          className="bg-white h-10 text-[13px] font-medium px-2 w-full"
+                        />
                       </div>
                     </div>
                   </div>

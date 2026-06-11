@@ -14,7 +14,7 @@ export default function CreateFabricPurchaseOrderPage() {
   return (
     <PurchaseOrderForm 
       type="Fabric"
-      itemLabel="Material"
+      itemLabel="Supplier Sort Number"
       specLabel="GSM / Content"
       itemOptions={FABRIC_OPTIONS}
       backHref="/fabric-purchases"

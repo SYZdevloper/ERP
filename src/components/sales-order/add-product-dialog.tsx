@@ -3,12 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, ChevronDown, ChevronUp, Plus, ArrowLeft, Calculator, ImagePlus, X as XIcon } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Plus, ArrowLeft, Calculator, ImagePlus, X as XIcon, Eye, EyeOff } from "lucide-react";
 import { MOCK_CATALOG_PRODUCTS } from "@/data/mock-sales-order";
 import { INITIAL_MASTER_PATTERNS } from "@/data/mock-masters";
 import { CatalogProduct } from "@/types/sales-order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ColorDialog } from "@/components/masters/color-dialog";
+import { FabricDialog } from "@/components/masters/fabric-dialog";
+import { FitDialog } from "@/components/masters/fit-dialog";
+import { PatternDialog } from "@/components/masters/pattern-dialog";
+import { BrandDialog } from "@/components/masters/brand-dialog";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -31,6 +36,7 @@ const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Round Neck", "V-Neck"
 export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct }: AddProductDialogProps) {
   const [catalogItems, setCatalogItems] = useState<CatalogProduct[]>(MOCK_CATALOG_PRODUCTS);
   const [viewMode, setViewMode] = useState<'search' | 'create'>('search');
+  const [showSearch, setShowSearch] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeAudience, setActiveAudience] = useState<AudienceFilter>("Men's Shirt");
@@ -55,6 +61,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [ratios, setRatios] = useState<Record<string, number>>({});
   const [adjustmentSize, setAdjustmentSize] = useState<string>("XL");
   const [newProductImage, setNewProductImage] = useState<string | null>(null);
+
+  const [isColorDialogOpen, setIsColorDialogOpen] = useState(false);
+  const [isFabricDialogOpen, setIsFabricDialogOpen] = useState(false);
+  const [isFitDialogOpen, setIsFitDialogOpen] = useState(false);
+  const [isPatternMasterOpen, setIsPatternMasterOpen] = useState(false);
+  const [isBrandDialogOpen, setIsBrandDialogOpen] = useState(false);
+  const [showTags, setShowTags] = useState(true);
 
   // Keep adjustmentSize in visible bounds when showMoreSizes changes
   useEffect(() => {
@@ -124,6 +137,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       const hasExtendedSizes = Object.keys(editProduct.sizeBreakdown || {}).some(k => EXTENDED_SIZES.includes(k as any) && editProduct.sizeBreakdown[k] > 0);
       setShowMoreSizes(hasExtendedSizes);
       setViewMode('search');
+      setShowSearch(false);
     } else if (open) {
       setSelectedProductId(null);
       setSearchQuery("");
@@ -137,6 +151,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setBrandName("");
       setShowMoreSizes(false);
       setViewMode('search');
+      setShowSearch(true);
+      setShowTags(true);
       setCustomImage(null);
       setRatios({});
       setTotalOrderQty("");
@@ -251,11 +267,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     setViewMode('search');
     setSearchQuery("");
     setIsProductDropdownOpen(false);
+    setShowSearch(false);
   };
 
   const handleClose = () => {
     setSearchQuery("");
     setSelectedProductId(null);
+    setShowSearch(true);
     setIsProductDropdownOpen(false);
     setQuantities({});
     setShowMoreSizes(false);
@@ -267,6 +285,27 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     setSelectedPattern("");
     setViewMode('search');
     onOpenChange(false);
+  };
+
+  const handleSaveColor = (color: any) => {
+    setSelectedColor(color.name);
+    setIsColorDialogOpen(false);
+  };
+  const handleSaveFabric = (fabric: any) => {
+    setSelectedFabric(fabric.name);
+    setIsFabricDialogOpen(false);
+  };
+  const handleSaveFit = (fit: any) => {
+    setSelectedFit(fit.name);
+    setIsFitDialogOpen(false);
+  };
+  const handleSavePattern = (pattern: any) => {
+    setSelectedPattern(pattern.code);
+    setIsPatternMasterOpen(false);
+  };
+  const handleSaveBrand = (brand: any) => {
+    setBrandName(brand.name);
+    setIsBrandDialogOpen(false);
   };
 
   return (
@@ -296,10 +335,14 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4 custom-scrollbar relative">
 
           {viewMode === 'search' && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col">
 
               {/* Audience Filter Tabs */}
-              <div className="flex flex-col gap-3 min-h-[70px]">
+              <div
+                className={`transition-all duration-300 ease-in-out overflow-hidden flex flex-col gap-3 ${
+                  !selectedProduct || showSearch ? "max-h-[200px] opacity-100 mb-4" : "max-h-0 opacity-0 m-0 !gap-0"
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   {AUDIENCE_FILTERS.map(audience => (
                     <button
@@ -320,7 +363,14 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   ))}
                 </div>
 
-                <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">Search Catalog</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">Search Catalog</Label>
+                  {selectedProduct && showSearch && (
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-slate-500 hover:text-slate-800 px-2 -mr-2" onClick={() => setShowSearch(false)}>
+                      <ChevronUp className="w-3.5 h-3.5 mr-1" /> Hide Search & Tabs
+                    </Button>
+                  )}
+                </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <Input
@@ -336,10 +386,21 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         e.preventDefault();
                         setSelectedProductId(filteredProducts[0].id);
                         setSearchQuery("");
+                        setShowSearch(false);
                       }
                     }}
                   />
                 </div>
+              </div>
+
+              <div
+                className={`flex justify-end transition-all duration-300 ease-in-out overflow-hidden ${
+                  selectedProduct && !showSearch ? "max-h-[40px] opacity-100 mb-4" : "max-h-0 opacity-0 m-0"
+                }`}
+              >
+                <Button variant="ghost" size="sm" className="h-8 rounded-full bg-blue-50 text-[#0453B8] hover:bg-blue-100 font-semibold px-4 text-xs" onClick={() => setShowSearch(true)}>
+                  <Search className="w-3.5 h-3.5 mr-1.5" /> Show Search & Tabs
+                </Button>
               </div>
 
               {/* Product Selection Area */}
@@ -379,7 +440,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           <button
                             key={p.id}
                             type="button"
-                            onClick={() => setSelectedProductId(p.id)}
+                            onClick={() => { setSelectedProductId(p.id); setShowSearch(false); }}
                             className="flex flex-col text-left border border-slate-200 rounded-xl bg-white p-3 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all group"
                           >
                             <div className="w-full aspect-[4/5] bg-[#F5F6F8] rounded-lg overflow-hidden mb-3 p-2 flex items-center justify-center">
@@ -435,13 +496,24 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                             <span className="text-sm font-semibold text-slate-700">
                               {selectedProduct.name} {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}
                             </span>
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.category.replace("'s", "").replace(" Wear", "")}</span>
-                              <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory}</span>
-                              <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.type}</span>
-                              <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
-                              {selectedProduct.buttons && (
-                                <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.buttons} Buttons</span>
+                            <div className="flex flex-wrap items-center gap-2 mt-2 min-h-[30px]">
+                              {showTags ? (
+                                <>
+                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.category.replace("'s", "").replace(" Wear", "")}</span>
+                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory}</span>
+                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.type}</span>
+                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
+                                  {selectedProduct.buttons && (
+                                    <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.buttons} Buttons</span>
+                                  )}
+                                  <button onClick={(e) => { e.stopPropagation(); setShowTags(false); }} className="text-slate-400 hover:text-slate-600 ml-1 transition-colors" title="Hide Tags">
+                                    <EyeOff className="w-4 h-4" />
+                                  </button>
+                                </>
+                              ) : (
+                                <button onClick={(e) => { e.stopPropagation(); setShowTags(true); }} className="text-slate-500 hover:text-[#0453B8] flex items-center gap-1.5 text-xs font-semibold bg-slate-50 hover:bg-blue-50 px-2.5 py-1.5 rounded-md transition-colors" title="Show Tags">
+                                  <Eye className="w-3.5 h-3.5" /> Show Attributes
+                                </button>
                               )}
                             </div>
                           </div>
@@ -465,107 +537,128 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       />
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Color <span className="text-red-500">*</span></Label>
-                      <Select value={selectedColor} onValueChange={setSelectedColor}>
-                        <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                          <SelectValue placeholder="Select Color" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[
-                            { label: "White", hex: "white" },
-                            { label: "Black", hex: "black" },
-                            { label: "Navy", hex: "#000080" },
-                            { label: "Red", hex: "#ef4444" },
-                            { label: "Grey", hex: "#808080" },
-                          ].map(c => (
-                            <SelectItem key={c.label} value={c.label}>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
-                                <span>{c.label}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex-1 flex items-center gap-1">
+                        <Select value={selectedColor} onValueChange={setSelectedColor}>
+                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectValue placeholder="Select Color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              { label: "White", hex: "white" },
+                              { label: "Black", hex: "black" },
+                              { label: "Navy", hex: "#000080" },
+                              { label: "Red", hex: "#ef4444" },
+                              { label: "Grey", hex: "#808080" },
+                            ].map(c => (
+                              <SelectItem key={c.label} value={c.label}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
+                                  <span>{c.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsColorDialogOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fabric <span className="text-red-500">*</span></Label>
-                      <Select value={selectedFabric} onValueChange={setSelectedFabric}>
-                        <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                          <SelectValue placeholder="Select Fabric" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
-                          <SelectItem value="Linen">Linen</SelectItem>
-                          <SelectItem value="Denim">Denim</SelectItem>
-                          <SelectItem value="Polyester">Polyester</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex-1 flex items-center gap-1">
+                        <Select value={selectedFabric} onValueChange={setSelectedFabric}>
+                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectValue placeholder="Select Fabric" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
+                            <SelectItem value="Linen">Linen</SelectItem>
+                            <SelectItem value="Denim">Denim</SelectItem>
+                            <SelectItem value="Polyester">Polyester</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFabricDialogOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fit <span className="text-red-500">*</span></Label>
-                      <Select value={selectedFit} onValueChange={setSelectedFit}>
-                        <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                          <SelectValue placeholder="Select Fit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Regular">Regular</SelectItem>
-                          <SelectItem value="Slim Fit">Slim Fit</SelectItem>
-                          <SelectItem value="Oversized">Oversized</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex-1 flex items-center gap-1">
+                        <Select value={selectedFit} onValueChange={setSelectedFit}>
+                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectValue placeholder="Select Fit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Regular">Regular</SelectItem>
+                            <SelectItem value="Slim Fit">Slim Fit</SelectItem>
+                            <SelectItem value="Oversized">Oversized</SelectItem>
+                            <SelectItem value="Casual Fit">Casual Fit</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFitDialogOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Pattern</Label>
-                      <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-10 flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
-                            {selectedPattern ? selectedPattern : "Pattern"}
-                            <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start">
-                          <div className="flex flex-col">
-                            <div className="flex items-center border-b px-3">
-                              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
-                              <Input
-                                placeholder="Search brand or code..."
-                                className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
-                                value={patternSearch}
-                                onChange={(e) => setPatternSearch(e.target.value)}
-                              />
+                      <div className="flex-1 flex items-center gap-1">
+                        <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-10 flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
+                              {selectedPattern ? selectedPattern : "Pattern"}
+                              <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0" align="start">
+                            <div className="flex flex-col">
+                              <div className="flex items-center border-b px-3">
+                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
+                                <Input
+                                  placeholder="Search brand or code..."
+                                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
+                                  value={patternSearch}
+                                  onChange={(e) => setPatternSearch(e.target.value)}
+                                />
+                              </div>
+                              <div className="max-h-[300px] overflow-y-auto py-2">
+                                {INITIAL_MASTER_PATTERNS
+                                  .filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase()))
+                                  .map(pattern => (
+                                    <button
+                                      key={pattern.code}
+                                      className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
+                                      onClick={() => { setSelectedPattern(pattern.code); setIsPatternOpen(false); }}
+                                    >
+                                      <div className="flex items-center justify-between w-full">
+                                        <span className="font-bold text-[13px] text-slate-900">{pattern.code}</span>
+                                        <span className="font-semibold text-[11px] text-slate-500">{pattern.fit}</span>
+                                      </div>
+                                      <span className="text-[11px] font-semibold text-[#0453B8]">{pattern.brand}</span>
+                                    </button>
+                                  ))}
+                                {INITIAL_MASTER_PATTERNS.filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase())).length === 0 && (
+                                  <div className="py-6 text-center text-sm text-slate-500 font-medium">No pattern found.</div>
+                                )}
+                              </div>
                             </div>
-                            <div className="max-h-[300px] overflow-y-auto py-2">
-                              {INITIAL_MASTER_PATTERNS
-                                .filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase()))
-                                .map(pattern => (
-                                  <button
-                                    key={pattern.code}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
-                                    onClick={() => { setSelectedPattern(pattern.code); setIsPatternOpen(false); }}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <span className="font-bold text-[13px] text-slate-900">{pattern.code}</span>
-                                      <span className="font-semibold text-[11px] text-slate-500">{pattern.fit}</span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold text-[#0453B8]">{pattern.brand}</span>
-                                  </button>
-                                ))}
-                              {INITIAL_MASTER_PATTERNS.filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase())).length === 0 && (
-                                <div className="py-6 text-center text-sm text-slate-500 font-medium">No pattern found.</div>
-                              )}
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                          </PopoverContent>
+                        </Popover>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsPatternMasterOpen(true)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">SKU No</Label>
+                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Buyer Design No</Label>
                       <Input
                         value={sqNumber}
                         onChange={(e) => setSqNumber(e.target.value)}
@@ -575,53 +668,19 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     </div>
                   </div>
 
-                  {/* Ratio / Qty Mode + Brand */}
-                  <div className="flex items-center justify-between mt-1 mb-2">
-                    <div className="flex items-center gap-2 relative h-9 min-w-[500px]">
-                      <div className={`absolute left-0 top-0 flex items-center gap-2 transition-all duration-300 ease-in-out ${isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"}`}>
-                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
-                        <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
-                          <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
-                            <SelectValue placeholder="Size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
-                              <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap ml-2">Total Qty</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={totalOrderQty}
-                          onChange={(e) => setTotalOrderQty(e.target.value)}
-                          placeholder="0"
-                          className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
-                        />
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={handleCalculate}
-                          disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
-                          className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
-                        >
-                          <Calculator className="w-4 h-4 mr-1" /> Calculate
-                        </Button>
-                      </div>
-                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium italic select-none transition-all duration-300 ease-in-out ${!isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none translate-x-2"}`}>
-                        Manual quantity mode. Click "Ratio" to distribute quantities.
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Brand</Label>
-                      <div className="flex items-center gap-2 flex-wrap whitespace-nowrap">
+                  {/* Brand */}
+                  <div className="flex items-center justify-start mt-3 mb-4 bg-blue-50/50 p-3 rounded-xl border border-blue-100 relative">
+                    <div className="flex items-center gap-4 flex-1">
+                      <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider min-w-[80px]">Select Brand</Label>
+                      <div className="flex items-center gap-2.5 flex-wrap whitespace-nowrap flex-1 pr-10">
                         {["Zara", "H&M", "Levi's", "No Brand"].map((brand) => (
                           <button
                             key={brand}
                             type="button"
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md border transition-colors whitespace-nowrap ${brandName === brand ? 'bg-[#0453B8] text-white border-[#0453B8]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${brandName === brand
+                                ? "bg-white text-[#0453B8] shadow-sm border border-blue-200"
+                                : "bg-transparent text-slate-600 hover:bg-white/60 hover:text-slate-800"
+                              }`}
                             onClick={() => setBrandName(brand)}
                           >
                             {brand}
@@ -629,6 +688,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         ))}
                       </div>
                     </div>
+                    <Button variant="ghost" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 text-[#0453B8] hover:bg-blue-100 hover:text-blue-800 rounded-md" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
+                      <Plus className="w-4 h-4" />
+                    </Button>
                   </div>
 
                   {/* Size / Ratio Inputs */}
@@ -716,6 +778,44 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           </div>
                         </div>
                       ))}
+                    </div>
+
+                    {/* Advanced Calculator */}
+                    <div className="flex items-center gap-2 relative h-9 mt-2">
+                      <div className={`absolute left-0 top-0 flex items-center gap-2 transition-all duration-300 ease-in-out ${isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"}`}>
+                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
+                        <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
+                          <SelectTrigger className="w-[85px] h-9 text-xs bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
+                            <SelectValue placeholder="Size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
+                              <SelectItem key={size} value={size} className="text-xs">{size}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Label className="text-xs font-bold text-slate-700 whitespace-nowrap ml-2">Total Qty</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={totalOrderQty}
+                          onChange={(e) => setTotalOrderQty(e.target.value)}
+                          placeholder="0"
+                          className="h-9 w-20 bg-white border-slate-200 shadow-sm rounded-lg text-xs font-semibold px-2 focus-visible:ring-[#0453B8]"
+                        />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleCalculate}
+                          disabled={!totalOrderQty || Object.values(ratios).every(r => !r)}
+                          className="h-9 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
+                        >
+                          <Calculator className="w-4 h-4 mr-1" /> Calculate
+                        </Button>
+                      </div>
+                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium italic select-none transition-all duration-300 ease-in-out ${!isRatioMode ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none translate-x-2"}`}>
+                        Manual quantity mode. Click "Ratio" to distribute quantities.
+                      </div>
                     </div>
 
                   </div>
@@ -880,6 +980,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
           </div>
         )}
       </DialogContent>
+
+      {/* Render Master Dialogs outside of the main DialogContent so they overlay correctly */}
+      <ColorDialog open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen} initialData={null} onSave={handleSaveColor} />
+      <FabricDialog open={isFabricDialogOpen} onOpenChange={setIsFabricDialogOpen} initialData={null} onSave={handleSaveFabric} />
+      <FitDialog open={isFitDialogOpen} onOpenChange={setIsFitDialogOpen} initialData={null} onSave={handleSaveFit} />
+      <PatternDialog open={isPatternMasterOpen} onOpenChange={setIsPatternMasterOpen} initialData={null} onSave={handleSavePattern} />
+      <BrandDialog open={isBrandDialogOpen} onOpenChange={setIsBrandDialogOpen} initialData={null} onSave={handleSaveBrand} />
     </Dialog>
   );
 }

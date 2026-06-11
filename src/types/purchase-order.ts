@@ -15,4 +15,5 @@ export interface POItem {
   soItemId?: string; // Links this PO item to a specific Sales Order Item
   images?: { name: string; url: string }[];
   code?: string; // Item code (mostly used for Trims)
+  deliveryDate?: string;
 }

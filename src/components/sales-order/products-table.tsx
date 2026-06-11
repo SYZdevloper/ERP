@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 
 export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: { isReadOnly?: boolean, hideEditDetails?: boolean }) {
   const { control, register, watch } = useFormContext<SalesOrder>();
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, prepend, remove, update } = useFieldArray({
     control,
     name: "products",
   });
@@ -50,10 +50,10 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
             <TableRow>
               <TableHead className="w-10 text-center px-2">#</TableHead>
               <TableHead className="px-2">Product</TableHead>
-              <TableHead className="w-[140px] pl-6 pr-2">Brand &bull; SKU</TableHead>
+              <TableHead className="w-[140px] pl-6 pr-2">Brand &bull; Buyer Design No</TableHead>
               <TableHead className="w-[110px] pl-6 pr-2">Color</TableHead>
               <TableHead className="w-[110px] px-2">Fabric</TableHead>
-              <TableHead className="w-[130px] px-2">Fit</TableHead>
+              <TableHead className="w-[130px] px-2">Pattern</TableHead>
               <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>
               <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>
               <TableHead className="w-[100px] text-center px-2">Rate (₹)</TableHead>
@@ -125,11 +125,13 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                   </TableCell>
                   <TableCell className="px-2 py-2">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-slate-700">{product.fit || "Regular"}</span>
-                      {product.pattern && (
-                        <div className="text-[11px] text-slate-500">
-                          <span className="font-semibold text-slate-800">{product.pattern.code}</span> {product.pattern.brand} - {product.pattern.fit}
-                        </div>
+                      {product.pattern ? (
+                        <>
+                          <span className="text-sm font-medium text-slate-700">{product.pattern.code}</span>
+                          <span className="text-[11px] text-slate-500">{product.pattern.brand} - {product.pattern.fit}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-medium text-slate-700">N/A</span>
                       )}
                     </div>
                   </TableCell>
@@ -232,7 +234,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
               update(editingIndex, product);
               setEditingIndex(null);
             } else {
-              append(product);
+              prepend(product);
             }
           }}
           editProduct={editingIndex !== null ? products[editingIndex] : undefined}
@@ -276,7 +278,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                   <p className="text-lg font-bold text-slate-900">{viewingProduct.name}</p>
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Brand & SKU</h3>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Brand & Buyer Design No</h3>
                   <p className="text-md font-semibold text-slate-700">{viewingProduct.brandName || "No Brand"} {viewingProduct.sqNumber ? `• ${viewingProduct.sqNumber}` : ''}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -300,8 +302,10 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Fit</h3>
-                    <p className="text-md font-semibold text-slate-700">{viewingProduct.fit || "Regular"}</p>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pattern</h3>
+                    <p className="text-md font-semibold text-slate-700">
+                      {viewingProduct.pattern ? `${viewingProduct.pattern.code} (${viewingProduct.pattern.brand} - ${viewingProduct.pattern.fit})` : "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">

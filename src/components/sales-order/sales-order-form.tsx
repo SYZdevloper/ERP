@@ -33,6 +33,17 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
   const [isTopSectionEditable, setIsTopSectionEditable] = useState(false);
   const topSectionReadOnly = isReadOnly && !isTopSectionEditable;
 
+  const products = methods.watch("products");
+  const [showAddress, setShowAddress] = useState(true);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setShowAddress(false);
+    } else {
+      setShowAddress(true);
+    }
+  }, [products?.length]);
+
   // Reset form when initialValues change
   useEffect(() => {
     if (initialValues) {
@@ -99,10 +110,25 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
                   onToggleEdit={isReadOnly && !hideEditDetails ? () => setIsTopSectionEditable(!isTopSectionEditable) : undefined}
                 />
 
-                <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch">
-                  <BillingAddressCard isReadOnly={topSectionReadOnly} />
-                  <ShippingAddressCard isReadOnly={topSectionReadOnly} />
+                <div className="flex items-center justify-between mt-4">
+                  <h3 className="text-sm font-bold text-slate-800">Address Details</h3>
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowAddress(!showAddress)}
+                    className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                  >
+                    {showAddress ? "Hide Addresses" : "Unhide Addresses"}
+                  </Button>
                 </div>
+                
+                {showAddress && (
+                  <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch animate-in fade-in duration-300">
+                    <BillingAddressCard isReadOnly={topSectionReadOnly} />
+                    <ShippingAddressCard isReadOnly={topSectionReadOnly} />
+                  </div>
+                )}
               </div>
 
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -153,7 +179,7 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
               Save Draft
             </Button>
             <Button type="submit" className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
-              Save & Confirm
+              Save
               <ChevronDown className="w-4 h-4 ml-2 opacity-80" />
             </Button>
           </div>

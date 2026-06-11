@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check } from "lucide-react";
+import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
@@ -14,7 +14,7 @@ import { AddItemDialog } from "@/components/purchase-orders/add-item-dialog";
 import { POItemsTable } from "@/components/purchase-orders/po-items-table";
 import { POItem } from "@/types/purchase-order";
 import { useRouter } from "next/navigation";
-import { SelectSalesOrderItemsDialog } from "@/components/purchase-orders/select-so-items-dialog";
+import { SelectSalesOrderItemsDialog, ALL_SO_ITEMS } from "@/components/purchase-orders/select-so-items-dialog";
 import {
   Select,
   SelectContent,
@@ -68,6 +68,13 @@ export function PurchaseOrderForm({
   const [isLinkedToSo, setIsLinkedToSo] = useState<boolean>(true);
   const [selectedTrimItem, setSelectedTrimItem] = useState<string>("");
 
+  const [showAddress, setShowAddress] = useState(true);
+
+  useEffect(() => {
+    if (poItems.length > 0) setShowAddress(false);
+    else setShowAddress(true);
+  }, [poItems.length]);
+
   useEffect(() => {
     if (initialPo) {
       methods.reset({
@@ -101,7 +108,8 @@ export function PurchaseOrderForm({
       const qty1 = Math.floor(numericQty * 0.4);
       const qty2 = Math.floor(numericQty * 0.4);
       const qty3 = numericQty - qty1 - qty2;
-
+      const defaultDeliveryDate = initialPo?.delivery || "2026-06-21";
+      
       setPoItems([
         {
           id: "item-1",
@@ -117,6 +125,7 @@ export function PurchaseOrderForm({
           rate: rate,
           gst: initialPo?.gst || 5,
           amount: qty1 * rate,
+          deliveryDate: defaultDeliveryDate,
         },
         {
           id: "item-2",
@@ -132,6 +141,7 @@ export function PurchaseOrderForm({
           rate: rate,
           gst: initialPo?.gst || 5,
           amount: qty2 * rate,
+          deliveryDate: defaultDeliveryDate,
         },
         {
           id: "item-3",
@@ -147,6 +157,7 @@ export function PurchaseOrderForm({
           rate: rate,
           gst: initialPo?.gst || 5,
           amount: qty3 * rate,
+          deliveryDate: defaultDeliveryDate,
         }
       ]);
     } else {
@@ -177,17 +188,21 @@ export function PurchaseOrderForm({
               : i
           );
         } else {
-          return [...prev, { ...item, soItemId: selectedSoItemContext?.id }];
+          return [{ ...item, soItemId: selectedSoItemContext?.id }, ...prev];
         }
       });
     } else {
-      setPoItems(prev => [...prev, { ...item, soItemId: selectedSoItemContext?.id }]);
+      setPoItems(prev => [{ ...item, soItemId: selectedSoItemContext?.id }, ...prev]);
     }
   };
 
 
   const handleEditClick = (item: POItem) => {
     setEditingItem(item);
+    if (item.soItemId) {
+      const found = ALL_SO_ITEMS.find(so => so.id === item.soItemId);
+      if (found) setSelectedSoItemContext(found);
+    }
     setIsAddDialogOpen(true);
   };
 
@@ -287,7 +302,7 @@ export function PurchaseOrderForm({
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
                 </div>
                 
-                <div className={`grid grid-cols-1 md:grid-cols-3 ${type === "Trims" ? "xl:grid-cols-7" : "xl:grid-cols-6"} gap-5 mb-6`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 ${type === "Trims" ? "xl:grid-cols-5" : "xl:grid-cols-4"} gap-5 mb-6`}>
                   {/* Supplier */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
@@ -360,68 +375,103 @@ export function PurchaseOrderForm({
                       </span>
                     </Label>
                     <div className="relative">
-                      {type === "Trims" ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              disabled={!isLinkedToSo || !selectedBuyerId}
-                              className="w-full justify-between h-10 border-slate-200 text-sm font-normal truncate disabled:opacity-50 disabled:cursor-not-allowed bg-white px-3"
-                            >
-                              {selectedSoIds.length > 0 
-                                ? `${selectedSoIds.length} order${selectedSoIds.length > 1 ? "s" : ""} selected` 
-                                : <span className="text-muted-foreground">Select Sales Orders</span>}
-                              <ChevronDown className="h-4 w-4 opacity-50" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
-                            {MOCK_SALES_ORDERS_LIST
-                              .filter(so => !selectedBuyerId || so.buyer === selectedBuyerId)
-                              .map((so, i) => {
-                                const soName = `${so.soNo} — ${["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}`;
-                                return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            disabled={!isLinkedToSo || !selectedBuyerId}
+                            className="w-full justify-between h-10 border-slate-200 text-sm font-normal truncate disabled:opacity-50 disabled:cursor-not-allowed bg-white px-3"
+                          >
+                            {selectedSoIds.length > 0 
+                              ? `${selectedSoIds.length} order${selectedSoIds.length > 1 ? "s" : ""} selected` 
+                              : <span className="text-muted-foreground">Select Sales Orders</span>}
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-[600px] max-h-[500px] flex flex-col p-0 shadow-2xl rounded-xl border-slate-200 overflow-hidden" align="start">
+                          {(() => {
+                            const filteredSalesOrders = MOCK_SALES_ORDERS_LIST.filter(so => !selectedBuyerId || so.buyer === selectedBuyerId);
+                            const allSelected = filteredSalesOrders.length > 0 && selectedSoIds.length === filteredSalesOrders.length;
+                            
+                            return (
+                              <>
+                                <div className="overflow-y-auto p-4 flex-1 custom-scrollbar">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    {filteredSalesOrders.map((so, i) => {
+                                      const soName = `${so.soNo} — ${["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}`;
+                                      const imgUrls = [
+                                        "/men casual tshirt.jpeg",
+                                        "/men casual half shirt.jpg",
+                                        "/mens casual full sleeve shirt.jpg",
+                                        "/men regualr fit shirt.jpeg"
+                                      ];
+                                      const imgUrl = imgUrls[i % 4];
+                                      const isSelected = selectedSoIds.includes(so.id);
+                                      
+                                      return (
+                                        <DropdownMenuItem
+                                          key={so.id}
+                                          onSelect={(e) => {
+                                            e.preventDefault();
+                                            const newIds = !isSelected 
+                                              ? [...selectedSoIds, so.id] 
+                                              : selectedSoIds.filter((id: string) => id !== so.id);
+                                            methods.setValue("buyerId", newIds.join(","));
+                                          }}
+                                          className={`relative p-0 flex flex-col items-start rounded-xl overflow-hidden cursor-pointer transition-all border-2 !bg-transparent focus:!bg-transparent ${
+                                            isSelected ? 'border-[#0453B8] ring-4 ring-[#0453B8]/10' : 'border-slate-200 hover:border-[#0453B8]/50 hover:shadow-lg'
+                                          }`}
+                                        >
+                                          <div className="h-44 w-full relative group overflow-hidden bg-slate-100 flex items-center justify-center p-2">
+                                            <img src={imgUrl} alt={soName} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 mix-blend-multiply" />
+                                            
+                                            <div className="absolute top-3 right-3 z-10">
+                                              <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors shadow-md ${isSelected ? 'bg-[#0453B8] text-white border border-[#0453B8]' : 'bg-white/90 border border-slate-300'}`}>
+                                                {isSelected && <Check className="w-4 h-4" />}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="w-full p-3.5 bg-white flex flex-col items-start border-t border-slate-100">
+                                            <span className="text-[#0453B8] font-bold text-[11px] uppercase tracking-wider mb-1">{so.soNo}</span>
+                                            <span className="text-slate-900 font-bold text-[15px] truncate w-full leading-tight">{["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}</span>
+                                          </div>
+                                        </DropdownMenuItem>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-between shrink-0 items-center">
+                                  <label className="flex items-center gap-2.5 cursor-pointer text-sm font-bold text-slate-700 hover:text-[#0453B8] transition-colors" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                      type="checkbox"
+                                      className="w-4 h-4 rounded border-slate-300 text-[#0453B8] focus:ring-[#0453B8] cursor-pointer"
+                                      checked={allSelected}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          methods.setValue("buyerId", filteredSalesOrders.map(so => so.id).join(","));
+                                        } else {
+                                          methods.setValue("buyerId", "");
+                                        }
+                                      }}
+                                    />
+                                    Select All Orders
+                                  </label>
+                                  
                                   <DropdownMenuItem
-                                    key={so.id}
-                                    onSelect={(e) => {
-                                      e.preventDefault();
-                                      const isChecked = selectedSoIds.includes(so.id);
-                                      const newIds = !isChecked 
-                                        ? [...selectedSoIds, so.id] 
-                                        : selectedSoIds.filter((id: string) => id !== so.id);
-                                      methods.setValue("buyerId", newIds.join(","));
-                                    }}
+                                    disabled={selectedSoIds.length === 0}
+                                    onSelect={() => setIsSelectSoItemDialogOpen(true)}
+                                    className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-md flex items-center justify-center cursor-pointer transition-colors focus:bg-blue-700 focus:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
-                                    <div className="flex items-center gap-2.5 w-full">
-                                      <div className={`w-4 h-4 border rounded-sm flex items-center justify-center shrink-0 transition-colors ${selectedSoIds.includes(so.id) ? 'bg-[#0453B8] border-[#0453B8]' : 'border-slate-300 bg-white'}`}>
-                                        {selectedSoIds.includes(so.id) && <Check className="w-3 h-3 text-white" />}
-                                      </div>
-                                      <span className="truncate">{soName}</span>
-                                    </div>
+                                    Save & Select Items <ArrowRight className="w-4 h-4 ml-2" />
                                   </DropdownMenuItem>
-                                );
-                              })}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <Select
-                          value={methods.watch("buyerId") || ""}
-                          onValueChange={(val) => methods.setValue("buyerId", val)}
-                          disabled={!isLinkedToSo || !selectedBuyerId}
-                        >
-                          <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50">
-                            <SelectValue placeholder="Select Sales Order" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MOCK_SALES_ORDERS_LIST
-                              .filter(so => !selectedBuyerId || so.buyer === selectedBuyerId)
-                              .map((so, i) => (
-                                <SelectItem key={so.id} value={so.id}>
-                                  {so.soNo} — {["Men's Polo T-Shirt", "Casual Shirt", "Denim Jacket", "Slim Fit Trouser"][i % 4]}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     {methods.watch("buyerId") && (
                       <span className="text-[11px] font-bold text-emerald-600 tracking-tight px-0.5">Payment Terms: 30 days credit</span>
@@ -447,28 +497,7 @@ export function PurchaseOrderForm({
                     </div>
                   )}
 
-                  {/* Required Delivery */}
-                  <div className="flex flex-col gap-2 xl:col-span-2">
-                    <Label className="text-xs font-bold text-slate-600">Required Delivery <span className="text-red-500">*</span></Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Select defaultValue="15 Days">
-                          <SelectTrigger className="w-full h-10 border-slate-200 text-[13px] focus:ring-[#0453B8] bg-white font-medium">
-                            <SelectValue placeholder="Days" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="15 Days">15 Days</SelectItem>
-                            <SelectItem value="30 Days">30 Days</SelectItem>
-                            <SelectItem value="45 Days">45 Days</SelectItem>
-                            <SelectItem value="60 Days">60 Days</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="relative flex-1">
-                        <Input type="date" defaultValue={initialPo?.delivery || "2026-06-21"} className="h-10 text-[13px] font-medium px-2 bg-white" />
-                      </div>
-                    </div>
-                  </div>
+
 
                   {/* Agent / Broker */}
                   <div className="flex flex-col gap-2">
@@ -478,33 +507,47 @@ export function PurchaseOrderForm({
                 </div>
 
 
-                <div className="flex flex-col md:flex-row gap-5 items-stretch mt-2">
-                  {/* Supplier Address */}
-                  <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
-                    <div className="flex items-center justify-between mb-4 h-8">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                          <MapPin className="w-4 h-4 text-[#0453B8]" />
+                <div className="flex items-center justify-between mt-4">
+                  <h3 className="text-sm font-bold text-slate-800">Supplier Address</h3>
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowAddress(!showAddress)}
+                    className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                  >
+                    {showAddress ? "Hide Address" : "Unhide Address"}
+                  </Button>
+                </div>
+                
+                {showAddress && (
+                  <div className="flex flex-col md:flex-row gap-5 items-stretch mt-2 animate-in fade-in duration-300">
+                    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
+                      <div className="flex items-center justify-between mb-4 h-8">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                            <MapPin className="w-4 h-4 text-[#0453B8]" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+                            Address Details <span className="text-red-500">*</span>
+                          </h3>
                         </div>
-                        <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                          Supplier Address <span className="text-red-500">*</span>
-                        </h3>
                       </div>
+                      {selectedSupplier ? (
+                        <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
+                          <p className="font-medium text-slate-900">{selectedSupplier}</p>
+                          <p>{supplierAddressInfo.line1}</p>
+                          <p>{supplierAddressInfo.line2}</p>
+                          <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
+                          Please select a supplier to view their address details.
+                        </div>
+                      )}
                     </div>
-                    {selectedSupplier ? (
-                      <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
-                        <p className="font-medium text-slate-900">{selectedSupplier}</p>
-                        <p>{supplierAddressInfo.line1}</p>
-                        <p>{supplierAddressInfo.line2}</p>
-                        <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
-                        Please select a supplier to view their address details.
-                      </div>
-                    )}
                   </div>
-</div>
+                )}
               </div>
 
               {/* 2. Items Table (REUSED COMPONENT) */}
@@ -613,6 +656,7 @@ export function PurchaseOrderForm({
           onOpenChange={setIsAddDialogOpen}
           onAddItem={handleAddItem}
           editItem={editingItem}
+          soItem={selectedSoItemContext}
           itemOptions={type === "Fabric" ? ["Cotton Fabric", "Linen"] : itemOptions}
           itemLabel={itemLabel}
           specLabel={specLabel}

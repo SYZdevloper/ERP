@@ -82,6 +82,8 @@ export const AttachmentSchema = z.object({
   name: z.string(),
   size: z.number(),
   type: z.string(),
+  category: z.string().optional(),
+  title: z.string().optional(),
 });
 
 export type Attachment = z.infer<typeof AttachmentSchema>;

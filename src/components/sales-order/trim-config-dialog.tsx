@@ -219,7 +219,7 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
                     { label: "Fabric", val: (product as any).fabric  || "N/A" },
                     { label: "Fit",    val: (product as any).fit     || "N/A" },
                     { label: "Brand",  val: product.brandName        || "No Brand" },
-                    { label: "SKU",    val: product.sqNumber         || "N/A" },
+                    { label: "Buyer Design No",    val: product.sqNumber         || "N/A" },
                   ].map(item => (
                     <span
                       key={item.label}

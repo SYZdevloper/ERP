@@ -63,6 +63,7 @@ export function POItemsTable({
                 </>
               )}
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Color / Shade</TableHead>
+              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Delivery Date</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">UOM</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Required Qty</TableHead>
               <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Total Qty</TableHead>
@@ -125,6 +126,9 @@ export function POItemsTable({
                       )}
                       <span className="font-semibold text-slate-700">{item.colorShade || '-'}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center py-3">
+                    <span className="font-semibold text-slate-700">{item.deliveryDate || '—'}</span>
                   </TableCell>
                   <TableCell className="text-center text-slate-700 py-3">{item.uom || 'mtr'}</TableCell>
                   <TableCell className="text-center font-medium text-slate-600 py-3">
@@ -229,6 +233,10 @@ export function POItemsTable({
                   <div>
                     <h3 className="text-xs font-bold text-slate-500 mb-1">Required Qty</h3>
                     <p className="text-md font-semibold text-slate-700">{viewingItem.requiredQty ? viewingItem.requiredQty.toLocaleString('en-IN') : '-'} {viewingItem.uom}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 mb-1">Delivery Date</h3>
+                    <p className="text-md font-semibold text-slate-700">{viewingItem.deliveryDate || '—'}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

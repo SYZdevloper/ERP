@@ -250,7 +250,7 @@ export default function FabricPurchasesPage() {
     <PurchaseOrderListPage 
       title="Fabric POs"
       description="Manage all your fabric purchase orders"
-      itemNameLabel="Fabric"
+      itemNameLabel="Supplier Sort Number"
       newItemHref="/fabric-purchases/create"
       editItemHrefPrefix="/fabric-purchases"
       mockData={MOCK_FABRIC_POS}

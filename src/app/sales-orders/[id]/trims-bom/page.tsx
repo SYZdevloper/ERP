@@ -2,14 +2,17 @@
 
 import { use } from "react";
 import { SalesOrderForm } from "@/components/sales-order/sales-order-form";
-import { INITIAL_SALES_ORDER } from "@/data/mock-sales-order";
+import { INITIAL_SALES_ORDER, MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 
 export default function TrimsBomPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
+  // In a real app, you would fetch data for this specific ID.
+  const listOrder = MOCK_SALES_ORDERS_LIST.find(o => o.id === id);
+
   const mockOrderData = {
     ...INITIAL_SALES_ORDER,
-    salesOrderNo: `SO-${id}`,
+    salesOrderNo: listOrder ? listOrder.soNo : `SO-${id}`,
   };
 
   return (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, Scissors, Tag, Droplet, LayoutTemplate } from "lucide-react";
 
 export default function MastersPage() {
   return (
@@ -21,13 +21,73 @@ export default function MastersPage() {
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
-                      <FileText className="w-6 h-6" />
+                      <LayoutTemplate className="w-6 h-6" />
                     </div>
                     <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-800">Patterns</h3>
                   <p className="text-sm text-slate-500 mt-2 flex-1">
                     Manage pattern codes, brand names, and fit descriptions used for adding products.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/masters/fit" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Scissors className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Fits</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage fit types (e.g., Slim Fit, Regular) used across your products.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/masters/fabric" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Fabrics</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage fabric types and compositions for your garments.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/masters/brand" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Tag className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Brands</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage the list of brands you manufacture or sell.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/masters/color" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Droplet className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Colors</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage color options and their corresponding hex codes.
                   </p>
                 </div>
               </Link>

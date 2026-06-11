@@ -262,7 +262,7 @@ export function getTrimVariantByCode(trimType: string, code: string): TrimVarian
 }
 
 export const INITIAL_SALES_ORDER = {
-  salesOrderNo: "SO-26-000125",
+  salesOrderNo: "SO-2026-001",
   orderDate: new Date("2026-06-06"),
   status: "Draft" as const,
   buyerId: "b-1",
@@ -271,9 +271,9 @@ export const INITIAL_SALES_ORDER = {
   deliveryDate: new Date("2026-06-21"),
   products: MOCK_PRODUCTS,
   attachments: [
-    { id: "att-1", name: "Buyer_PO_4587.pdf", size: 245000, type: "pdf" },
-    { id: "att-2", name: "Spec_Sheet_V2.xlsx", size: 120000, type: "xlsx" },
-    { id: "att-3", name: "Product_Image.jpg", size: 532000, type: "image" },
+    { id: "att-1", name: "Buyer_PO_4587.pdf", size: 245000, type: "pdf", category: "buyer_po" },
+    { id: "att-2", name: "Spec_Sheet_V2.xlsx", size: 120000, type: "xlsx", category: "spec_sheet" },
+    { id: "att-3", name: "Product_Image.jpg", size: 532000, type: "image", category: "other", title: "Product Reference" },
   ],
   discountPercentage: 5,
   cgstRate: 9,
@@ -282,7 +282,7 @@ export const INITIAL_SALES_ORDER = {
 };
 
 export const EMPTY_SALES_ORDER = {
-  salesOrderNo: "SO-26-000126",
+  salesOrderNo: "SO-2026-008",
   orderDate: new Date(),
   status: "Draft" as const,
   buyerId: "",
@@ -310,11 +310,11 @@ export interface SalesOrderListItem {
 }
 
 export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
-  { id: "1", soNo: "SO-2026-1015", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000 },
-  { id: "2", soNo: "SO-2026-1001", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000 },
-  { id: "3", soNo: "SO-2026-1002", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000 },
-  { id: "4", soNo: "SO-2026-1003", orderDate: "2026-06-03", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-06-24", status: "Draft", amount: 320000 },
-  { id: "5", soNo: "SO-2026-1004", orderDate: "2026-06-04", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-04", status: "Confirmed", amount: 675000 },
-  { id: "6", soNo: "SO-2026-1005", orderDate: "2026-06-04", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-06-04", status: "Confirmed", amount: 1100000 },
-  { id: "7", soNo: "SO-2026-1008", orderDate: "2026-06-05", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-28", status: "Cancelled", amount: 250000 },
+  { id: "1", soNo: "SO-2026-001", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000 },
+  { id: "2", soNo: "SO-2026-002", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000 },
+  { id: "3", soNo: "SO-2026-003", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000 },
+  { id: "4", soNo: "SO-2026-004", orderDate: "2026-06-03", buyer: "Levi's", location: "New Delhi, Delhi", deliveryDate: "2026-06-24", status: "Draft", amount: 320000 },
+  { id: "5", soNo: "SO-2026-005", orderDate: "2026-06-04", buyer: "Uniqlo", location: "Pune, Maharashtra", deliveryDate: "2026-07-04", status: "Confirmed", amount: 675000 },
+  { id: "6", soNo: "SO-2026-006", orderDate: "2026-06-04", buyer: "Marks & Spencer", location: "Kolkata, West Bengal", deliveryDate: "2026-06-04", status: "Confirmed", amount: 1100000 },
+  { id: "7", soNo: "SO-2026-007", orderDate: "2026-06-05", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-28", status: "Cancelled", amount: 250000 },
 ];
