@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Scissors, ImagePlus, X } from "lucide-react";
 import { ProductLineItem } from "@/types/sales-order";
 
@@ -22,18 +23,27 @@ interface TrimValues {
   hangTag: TrimData;
 }
 
+interface FabricBomData {
+  gsm: string;
+  width: string;
+  color: string;
+  type: string;
+  image?: string;
+}
+
 const EMPTY_TRIM: TrimData = { code: "", color: "", image: "" };
 const EMPTY_TRIMS: TrimValues = {
   buttons: { ...EMPTY_TRIM },
   label:   { ...EMPTY_TRIM },
   hangTag: { ...EMPTY_TRIM },
 };
+const EMPTY_FABRIC_BOM: FabricBomData = { gsm: "", width: "", color: "", type: "", image: "" };
 
-interface TrimConfigDialogProps {
+interface BomConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product: ProductLineItem | null;
-  /** Called when the user saves; receives the updated product with trims attached */
+  /** Called when the user saves; receives the updated product with BOM attached */
   onSave: (updated: ProductLineItem) => void;
 }
 
@@ -131,25 +141,41 @@ function TrimCard({
 }
 
 // ─── Main Dialog ──────────────────────────────────────────────────────────────
-export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimConfigDialogProps) {
+export function BomConfigDialog({ open, onOpenChange, product, onSave }: BomConfigDialogProps) {
   const [trims, setTrims] = useState<TrimValues>(EMPTY_TRIMS);
+  const [fabricBom, setFabricBom] = useState<FabricBomData>(EMPTY_FABRIC_BOM);
+  const fabricFileRef = useRef<HTMLInputElement>(null);
 
-  // Restore saved trims when the dialog opens for a product
+  // Restore saved trims and fabric when the dialog opens for a product
   useEffect(() => {
     if (open && product) {
       setTrims((product as any).trims ?? EMPTY_TRIMS);
+      setFabricBom((product as any).fabricBom ?? EMPTY_FABRIC_BOM);
     } else {
       setTrims(EMPTY_TRIMS);
+      setFabricBom(EMPTY_FABRIC_BOM);
     }
   }, [open, product]);
 
-  const handleChange = (key: keyof TrimValues, field: keyof TrimData, value: string) => {
+  const handleTrimChange = (key: keyof TrimValues, field: keyof TrimData, value: string) => {
     setTrims(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  };
+
+  const handleFabricChange = (field: keyof FabricBomData, value: string) => {
+    setFabricBom(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFabricFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => handleFabricChange("image", reader.result as string);
+      reader.readAsDataURL(e.target.files[0]);
+    }
   };
 
   const handleSave = () => {
     if (!product) return;
-    onSave({ ...product, trims } as any);
+    onSave({ ...product, trims, fabricBom } as any);
     onOpenChange(false);
   };
 
@@ -174,7 +200,7 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
           <div className="flex items-center gap-2.5">
             <Scissors className="w-4 h-4 text-[#0453B8] shrink-0" />
             <DialogTitle className="text-base font-bold text-slate-900">
-              Trim Config
+              Material BOM Config
               <span className="ml-2 text-sm font-semibold text-slate-400">
                 — {product.productId || product.name}
               </span>
@@ -220,6 +246,7 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
                     { label: "Fit",    val: (product as any).fit     || "N/A" },
                     { label: "Brand",  val: product.brandName        || "No Brand" },
                     { label: "Buyer Design No",    val: product.sqNumber         || "N/A" },
+                    { label: "Pattern", val: product.pattern?.code || "N/A" },
                   ].map(item => (
                     <span
                       key={item.label}
@@ -231,27 +258,97 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
                   ))}
                 </div>
 
-                {/* Size breakdown */}
-                {product.sizeBreakdown && (
-                  <div className="flex flex-wrap items-center gap-1 mt-2 pt-2 border-t border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-bold mr-0.5">SIZES:</span>
-                    {Object.entries(product.sizeBreakdown)
-                      .filter(([, q]) => (q as number) > 0)
-                      .map(([s, q]) => (
-                        <span key={s} className="bg-blue-50 text-[#0453B8] font-bold text-[10px] px-1.5 py-0.5 rounded">
-                          {s}: {q as number}
-                        </span>
-                      ))}
-                  </div>
-                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Fabric BOM Section */}
+          <div>
+            <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+              Fabric Material Configuration
+            </p>
+            <p className="text-[11px] text-slate-500 mb-4">
+              Enter details for the fabric material used in this garment.
+            </p>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-end gap-5 flex-wrap">
+              {/* Image upload */}
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Image</Label>
+                <div
+                  onClick={() => fabricFileRef.current?.click()}
+                  className="relative w-[72px] h-[72px] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-colors group overflow-hidden"
+                >
+                  {fabricBom.image ? (
+                    <>
+                      <img src={fabricBom.image} alt="Fabric" className="w-full h-full object-cover rounded-xl" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleFabricChange("image", ""); }}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus className="w-6 h-6 text-slate-300 group-hover:text-[#0453B8] transition-colors" />
+                      <span className="text-[9px] font-bold text-slate-400 group-hover:text-[#0453B8] mt-1 transition-colors">Upload</span>
+                    </>
+                  )}
+                </div>
+                <input ref={fabricFileRef} type="file" accept="image/*" className="hidden" onChange={handleFabricFile} />
+              </div>
+
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 min-w-[300px]">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fabric Type</Label>
+                  <Select value={fabricBom.type} onValueChange={(val) => handleFabricChange("type", val)}>
+                    <SelectTrigger className="h-10 bg-white border-slate-200 rounded-lg text-sm font-semibold focus-visible:ring-[#0453B8]">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cotton">Cotton</SelectItem>
+                      <SelectItem value="Cotton poplin">Cotton poplin</SelectItem>
+                      <SelectItem value="Linen">Linen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">GSM</Label>
+                  <Input
+                    value={fabricBom.gsm}
+                    onChange={(e) => handleFabricChange("gsm", e.target.value)}
+                    placeholder="e.g. 180"
+                    className="h-10 bg-white border-slate-200 rounded-lg text-sm font-semibold focus-visible:ring-[#0453B8]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Width (inches)</Label>
+                  <Input
+                    value={fabricBom.width}
+                    onChange={(e) => handleFabricChange("width", e.target.value)}
+                    placeholder="e.g. 44"
+                    className="h-10 bg-white border-slate-200 rounded-lg text-sm font-semibold focus-visible:ring-[#0453B8]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Color</Label>
+                  <Input
+                    value={fabricBom.color}
+                    onChange={(e) => handleFabricChange("color", e.target.value)}
+                    placeholder="e.g. Navy Blue"
+                    className="h-10 bg-white border-slate-200 rounded-lg text-sm font-semibold focus-visible:ring-[#0453B8]"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Trim Configs Section */}
-          <div>
+          <div className="mt-2">
             <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
-              Trim Material Configurations
+              Trim Material Configuration
             </p>
             <p className="text-[11px] text-slate-500 mb-4">
               Enter details for each trim material used in this garment.
@@ -261,17 +358,17 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
               <TrimCard
                 title="Buttons"
                 data={trims.buttons}
-                onChange={(f, v) => handleChange("buttons", f, v)}
+                onChange={(f, v) => handleTrimChange("buttons", f, v)}
               />
               <TrimCard
                 title="Label"
                 data={trims.label}
-                onChange={(f, v) => handleChange("label", f, v)}
+                onChange={(f, v) => handleTrimChange("label", f, v)}
               />
               <TrimCard
                 title="Hang Tag"
                 data={trims.hangTag}
-                onChange={(f, v) => handleChange("hangTag", f, v)}
+                onChange={(f, v) => handleTrimChange("hangTag", f, v)}
               />
             </div>
           </div>
@@ -286,7 +383,7 @@ export function TrimConfigDialog({ open, onOpenChange, product, onSave }: TrimCo
             onClick={handleSave}
             className="h-11 px-8 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold shadow-sm"
           >
-            Save Trim Config
+            Save BOM Config
           </Button>
         </div>
 

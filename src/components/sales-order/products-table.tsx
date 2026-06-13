@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Image as ImageIcon, X, Scissors } from "lucide-react";
 import { SizeBreakdownRow } from "./size-breakdown-row";
 import { AddProductDialog } from "./add-product-dialog";
-import { TrimConfigDialog } from "./trim-config-dialog";
+import { BomConfigDialog } from "./bom-config-dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -23,6 +23,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
   const [trimConfigIndex, setTrimConfigIndex] = useState<number | null>(null);
 
   const products = watch("products");
+  const salesOrderNo = watch("salesOrderNo") || "Draft SO";
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -49,16 +50,17 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           <TableHeader className="bg-slate-50">
             <TableRow>
               <TableHead className="w-10 text-center px-2">#</TableHead>
-              <TableHead className="px-2">Product</TableHead>
-              <TableHead className="w-[140px] pl-6 pr-2">Brand &bull; Buyer Design No</TableHead>
+              <TableHead className="w-[280px] min-w-[280px] px-2">Product</TableHead>
+              <TableHead className="w-[100px] pl-6 pr-2">Line No.</TableHead>
               <TableHead className="w-[110px] pl-6 pr-2">Color</TableHead>
-              <TableHead className="w-[110px] px-2">Fabric</TableHead>
-              <TableHead className="w-[130px] px-2">Pattern</TableHead>
-              <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>
-              <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>
-              <TableHead className="w-[100px] text-center px-2">Rate (₹)</TableHead>
-              <TableHead className="w-[130px] text-right pr-6 pl-2">Amount (₹)</TableHead>
-              {isReadOnly && <TableHead className="w-[110px] text-center px-2">Trim Config</TableHead>}
+              {!hideEditDetails && <TableHead className="w-[130px] px-2">Pattern</TableHead>}
+              {!hideEditDetails && <TableHead className="w-[280px] text-center px-2">Size Breakup (Qty)</TableHead>}
+              {!hideEditDetails && <TableHead className="w-[80px] text-center px-2">Total Qty</TableHead>}
+              {!hideEditDetails && <TableHead className="w-[100px] text-center px-2">Rate (₹)</TableHead>}
+              {!hideEditDetails && <TableHead className="w-[130px] text-right pr-6 pl-2">Amount (₹)</TableHead>}
+              {hideEditDetails && <TableHead className="px-2 w-[25%]">Fabric Config</TableHead>}
+              {hideEditDetails && <TableHead className="px-2 w-[30%]">Trim Config</TableHead>}
+              {isReadOnly && <TableHead className="w-[100px] text-center px-2">Material BOM</TableHead>}
               {!isReadOnly && <TableHead className="w-[80px] text-center px-2">Action</TableHead>}
             </TableRow>
           </TableHeader>
@@ -94,22 +96,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                     </div>
                   </TableCell>
                   <TableCell className="pl-6 pr-2 py-2">
-                    <div className="flex flex-col gap-0.5">
-                      {isReadOnly ? (
-                        <span className="text-sm font-medium text-slate-700">{product.brandName || "No Brand"}</span>
-                      ) : (
-                        <Input
-                          {...register(`products.${index}.brandName`)}
-                          placeholder="No Brand"
-                          className="h-5 py-0 w-[112px] rounded-none border-0 bg-transparent px-0 text-sm font-medium shadow-none focus-visible:border-0 focus-visible:ring-0"
-                        />
-                      )}
-                      {product.sqNumber && (
-                        <span className="text-[11px] font-semibold text-slate-500">
-                          {product.sqNumber}
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-sm font-bold text-slate-700">L{index + 1}</span>
                   </TableCell>
                   <TableCell className="pl-6 pr-2 py-2">
                     <div className="flex items-center gap-2">
@@ -120,57 +107,125 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                       <span className="text-sm text-slate-700">{product.color}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-2 py-2">
-                    <span className="text-sm font-medium text-slate-700">{product.fabric || "Cotton Poplin"}</span>
-                  </TableCell>
-                  <TableCell className="px-2 py-2">
-                    <div className="flex flex-col gap-0.5">
-                      {product.pattern ? (
-                        <>
-                          <span className="text-sm font-medium text-slate-700">{product.pattern.code}</span>
-                          <span className="text-[11px] text-slate-500">{product.pattern.brand} - {product.pattern.fit}</span>
-                        </>
+                  {!hideEditDetails && (
+                    <TableCell className="px-2 py-2">
+                      <div className="flex flex-col gap-0.5">
+                        {product.pattern ? (
+                          <>
+                            <span className="text-sm font-medium text-slate-700">{product.pattern.code}</span>
+                            <span className="text-[11px] text-slate-500">{product.pattern.brand} - {product.pattern.fit}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-700">N/A</span>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {!hideEditDetails && (
+                    <TableCell className="flex justify-center px-2 py-2">
+                      <SizeBreakdownRow index={index} />
+                    </TableCell>
+                  )}
+                  {!hideEditDetails && (
+                    <TableCell className="text-center font-semibold text-slate-800 px-2 py-2">
+                      {isReadOnly ? (
+                        <div 
+                          className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-sm font-semibold text-slate-900 cursor-pointer hover:bg-blue-100 transition-colors"
+                          onClick={() => handleEdit(index)}
+                        >
+                          {totalQty}
+                        </div>
                       ) : (
-                        <span className="text-sm font-medium text-slate-700">N/A</span>
+                        <button
+                          type="button"
+                          className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-sm font-semibold text-slate-900 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0453B8]/30"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEdit(index);
+                          }}
+                        >
+                          {totalQty}
+                        </button>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="flex justify-center px-2 py-2">
-                    <SizeBreakdownRow index={index} />
-                  </TableCell>
-                  <TableCell className="text-center font-semibold text-slate-800 px-2 py-2">
-                    {isReadOnly && hideEditDetails ? (
-                      <div 
-                        className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-sm font-semibold text-slate-900"
-                      >
-                        {totalQty}
-                      </div>
-                    ) : isReadOnly ? (
-                      <div 
-                        className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-sm font-semibold text-slate-900 cursor-pointer hover:bg-blue-100 transition-colors"
-                        onClick={() => handleEdit(index)}
-                      >
-                        {totalQty}
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="mx-auto flex h-[30px] w-[64px] items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-sm font-semibold text-slate-900 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0453B8]/30"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleEdit(index);
-                        }}
-                      >
-                        {totalQty}
-                      </button>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center px-2 py-2">
-                    <span className="text-sm font-medium text-slate-800">{product.rate}</span>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-slate-800 pr-6 pl-2 py-2">
-                    {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </TableCell>
+                    </TableCell>
+                  )}
+                  {!hideEditDetails && (
+                    <TableCell className="text-center px-2 py-2">
+                      <span className="text-sm font-medium text-slate-800">{product.rate}</span>
+                    </TableCell>
+                  )}
+                  {!hideEditDetails && (
+                    <TableCell className="text-right font-semibold text-slate-800 pr-6 pl-2 py-2">
+                      {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                  )}
+                  {hideEditDetails && (
+                    <TableCell className="px-2 py-2">
+                      {(product as any).fabricBom ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-bold text-slate-800">{(product as any).fabricBom.type || 'N/A'}</span>
+                          <span className="text-[11px] text-slate-500">{(product as any).fabricBom.gsm || '-'} GSM • {(product as any).fabricBom.width || '-'} Width • {(product as any).fabricBom.color || '-'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Not Configured</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {hideEditDetails && (
+                    <TableCell className="px-2 py-2">
+                      {(product as any).trims ? (
+                        <div className="flex flex-col gap-1">
+                          {((product as any).trims.buttons?.code || (product as any).trims.buttons?.color) && (
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                              <span className="font-medium text-slate-500 w-14">Button</span>
+                              <span className="font-semibold text-slate-700 truncate max-w-[80px]">{(product as any).trims.buttons.code || '-'}</span>
+                              {(product as any).trims.buttons?.color && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <div className="flex items-center gap-1 truncate">
+                                    <div className="w-2 h-2 rounded-full border border-slate-300 shrink-0 shadow-sm" style={{ backgroundColor: (product as any).trims.buttons.color.toLowerCase() === 'navy' ? '#000080' : (product as any).trims.buttons.color }} />
+                                    <span className="text-slate-500 truncate">{(product as any).trims.buttons.color}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {((product as any).trims.label?.code || (product as any).trims.label?.color) && (
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                              <span className="font-medium text-slate-500 w-14">Label</span>
+                              <span className="font-semibold text-slate-700 truncate max-w-[80px]">{(product as any).trims.label.code || '-'}</span>
+                              {(product as any).trims.label?.color && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <div className="flex items-center gap-1 truncate">
+                                    <div className="w-2 h-2 rounded-full border border-slate-300 shrink-0 shadow-sm" style={{ backgroundColor: (product as any).trims.label.color.toLowerCase() === 'navy' ? '#000080' : (product as any).trims.label.color }} />
+                                    <span className="text-slate-500 truncate">{(product as any).trims.label.color}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {((product as any).trims.hangTag?.code || (product as any).trims.hangTag?.color) && (
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                              <span className="font-medium text-slate-500 w-14">Hang Tag</span>
+                              <span className="font-semibold text-slate-700 truncate max-w-[80px]">{(product as any).trims.hangTag.code || '-'}</span>
+                              {(product as any).trims.hangTag?.color && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <div className="flex items-center gap-1 truncate">
+                                    <div className="w-2 h-2 rounded-full border border-slate-300 shrink-0 shadow-sm" style={{ backgroundColor: (product as any).trims.hangTag.color.toLowerCase() === 'navy' ? '#000080' : (product as any).trims.hangTag.color }} />
+                                    <span className="text-slate-500 truncate">{(product as any).trims.hangTag.color}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Not Configured</span>
+                      )}
+                    </TableCell>
+                  )}
                   {isReadOnly && (
                     <TableCell className="px-2 py-2">
                       <div className="flex items-center justify-center">
@@ -178,11 +233,10 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                           variant="outline"
                           size="sm"
                           type="button"
-                          className="h-8 px-3 text-xs font-bold border-[#0453B8] text-[#0453B8] hover:bg-blue-50 gap-1.5"
+                          className="h-8 px-4 text-xs font-bold border-[#0453B8] text-[#0453B8] hover:bg-blue-50 transition-colors"
                           onClick={() => { setTrimConfigProduct(product); setTrimConfigIndex(index); }}
                         >
-                          <Scissors className="w-3 h-3" />
-                          Config
+                          Edit
                         </Button>
                       </div>
                     </TableCell>
@@ -202,19 +256,23 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           </TableBody>
           <TableFooter className="bg-slate-50 border-t border-slate-200">
             <TableRow className="hover:bg-slate-50/50">
-              <TableCell colSpan={6} className="pl-6 py-3 text-sm text-slate-600 font-semibold">
+              <TableCell colSpan={hideEditDetails ? 6 : 6} className="pl-6 py-3 text-sm text-slate-600 font-semibold">
                 Total Items: <span>{products.length}</span>
               </TableCell>
-              <TableCell className="text-right pr-4 py-3 text-sm font-bold text-slate-700">
-                Total Qty
-              </TableCell>
-              <TableCell className="text-center py-3">
-                <span className="text-sm font-bold text-slate-900">
-                  {products.reduce((acc, p) => acc + (p.sizeBreakdown.XS || 0) + (p.sizeBreakdown.S || 0) + (p.sizeBreakdown.M || 0) + (p.sizeBreakdown.L || 0) + (p.sizeBreakdown.XL || 0) + (p.sizeBreakdown.XXL || 0) + (p.sizeBreakdown["3XL"] || 0) + (p.sizeBreakdown["4XL"] || 0) + (p.sizeBreakdown["5XL"] || 0) + (p.sizeBreakdown["6XL"] || 0), 0)}
-                </span>
-              </TableCell>
-              <TableCell />
-              <TableCell />
+              {!hideEditDetails && (
+                <>
+                  <TableCell className="text-right pr-4 py-3 text-sm font-bold text-slate-700">
+                    Total Qty
+                  </TableCell>
+                  <TableCell className="text-center py-3">
+                    <span className="text-sm font-bold text-slate-900">
+                      {products.reduce((acc, p) => acc + (p.sizeBreakdown.XS || 0) + (p.sizeBreakdown.S || 0) + (p.sizeBreakdown.M || 0) + (p.sizeBreakdown.L || 0) + (p.sizeBreakdown.XL || 0) + (p.sizeBreakdown.XXL || 0) + (p.sizeBreakdown["3XL"] || 0) + (p.sizeBreakdown["4XL"] || 0) + (p.sizeBreakdown["5XL"] || 0) + (p.sizeBreakdown["6XL"] || 0), 0)}
+                    </span>
+                  </TableCell>
+                  <TableCell />
+                  <TableCell />
+                </>
+              )}
               {!isReadOnly && <TableCell />}
             </TableRow>
           </TableFooter>
@@ -241,7 +299,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
         />
       )}
 
-      <TrimConfigDialog
+      <BomConfigDialog
         open={!!trimConfigProduct}
         onOpenChange={(o) => { if (!o) { setTrimConfigProduct(null); setTrimConfigIndex(null); } }}
         product={trimConfigProduct}

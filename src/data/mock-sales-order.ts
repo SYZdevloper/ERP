@@ -162,12 +162,18 @@ export const MOCK_PRODUCTS: ProductLineItem[] = [
     type: "Half Sleeves",
     brandName: "Zara",
     color: "Black",
-    fabric: "Cotton Poplin",
+    fabric: "Cotton",
     fit: "Regular",
     pattern: { code: "PAT001", brand: "Allen Solly", fit: "Slim Fit" },
     sqNumber: "SKU1000293",
     sizeBreakdown: { S: 10, M: 20, L: 15, XL: 5, XXL: 0, "3XL": 5, "4XL": 0 },
     rate: 250.00,
+    fabricBom: { type: "Cotton", gsm: "180", width: "44", color: "Black" },
+    trims: {
+      buttons: { code: "BTN-18L-BLK", color: "Black", image: "" },
+      label: { code: "LBL-WVN-ZRA", color: "Navy / White", image: "" },
+      hangTag: { code: "HTG-PRM-BLK", color: "Black", image: "" }
+    }
   },
   {
     id: "line-2",
@@ -184,6 +190,12 @@ export const MOCK_PRODUCTS: ProductLineItem[] = [
     sqNumber: "SKU1000294",
     sizeBreakdown: { S: 5, M: 10, L: 8, XL: 2, XXL: 0 },
     rate: 250.00,
+    fabricBom: { type: "Linen", gsm: "160", width: "58", color: "Navy" },
+    trims: {
+      buttons: { code: "BTN-18L-NVY", color: "Navy", image: "" },
+      label: { code: "LBL-WVN-BLK", color: "Black / Gold", image: "" },
+      hangTag: { code: "HTG-PRM-WHT", color: "White", image: "" }
+    }
   },
   {
     id: "line-3",
@@ -194,12 +206,18 @@ export const MOCK_PRODUCTS: ProductLineItem[] = [
     type: "Half Sleeves",
     brandName: "No Brand",
     color: "Grey",
-    fabric: "Polyester",
+    fabric: "Cotton",
     fit: "Oversized",
     pattern: { code: "PAT003", brand: "Customer A", fit: "Special Fit" },
     sqNumber: "SKU1000295",
     sizeBreakdown: { S: 5, M: 10, L: 10, XL: 5, XXL: 0, "3XL": 2 },
     rate: 600.00,
+    fabricBom: { type: "Cotton Poplin", gsm: "140", width: "60", color: "Grey" },
+    trims: {
+      buttons: { code: "BTN-18L-WHT", color: "White", image: "" },
+      label: { code: "LBL-PRT-WHT", color: "White", image: "" },
+      hangTag: { code: "HTG-ECO-KFT", color: "Kraft", image: "" }
+    }
   }
 ];
 

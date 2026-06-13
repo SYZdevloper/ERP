@@ -10,9 +10,9 @@ import { POItem } from "@/types/purchase-order";
 // All mock SO items we use across SOs
 export const ALL_SO_ITEMS: (ProductLineItem & { soItem: string, requiredQtyMtr: number, soId: string, soNo: string })[] = [
   // SO-2026-001 (id: "1") — Zara
-  { id: "line-1", productId: "ST001", name: "Men's Casual Shirt", type: "Half Sleeve Regular Collar", color: "White", sizeBreakdown: { XS: 50, S: 100, M: 150, L: 120, XL: 80, XXL: 0 }, rate: 250, soItem: "SO001-01", requiredQtyMtr: 900.00, soId: "1", soNo: "SO-2026-001" } as any,
-  { id: "line-2", productId: "ST003", name: "Men's Casual Shirt", type: "Half Sleeve Cuban Collar", color: "Navy", sizeBreakdown: { XS: 30, S: 80, M: 120, L: 100, XL: 70, XXL: 0 }, rate: 250, soItem: "SO001-02", requiredQtyMtr: 760.00, soId: "1", soNo: "SO-2026-001" } as any,
-  { id: "line-3", productId: "TS001", name: "Men's Polo T-Shirt", type: "Half Sleeve", color: "Black", sizeBreakdown: { XS: 40, S: 80, M: 120, L: 100, XL: 60, XXL: 0 }, rate: 250, soItem: "SO001-03", requiredQtyMtr: 640.00, soId: "1", soNo: "SO-2026-001" } as any,
+  { id: "line-1", productId: "ST001", name: "Men's Casual Shirt", type: "Half Sleeve Regular Collar", color: "White", sizeBreakdown: { XS: 50, S: 100, M: 150, L: 120, XL: 80, XXL: 0 }, rate: 250, soItem: "SO001-01", requiredQtyMtr: 900.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "180", width: "44", color: "White", type: "Cotton Poplin" }, trims: { buttons: { code: "B001", color: "White", image: "" } } } as any,
+  { id: "line-2", productId: "ST003", name: "Men's Casual Shirt", type: "Half Sleeve Cuban Collar", color: "Navy", sizeBreakdown: { XS: 30, S: 80, M: 120, L: 100, XL: 70, XXL: 0 }, rate: 250, soItem: "SO001-02", requiredQtyMtr: 760.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "160", width: "44", color: "Navy", type: "Linen Blend" }, trims: { buttons: { code: "B002", color: "Navy", image: "" } } } as any,
+  { id: "line-3", productId: "TS001", name: "Men's Polo T-Shirt", type: "Half Sleeve", color: "Black", sizeBreakdown: { XS: 40, S: 80, M: 120, L: 100, XL: 60, XXL: 0 }, rate: 250, soItem: "SO001-03", requiredQtyMtr: 640.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "220", width: "44", color: "Black", type: "Pique Cotton" }, trims: { buttons: { code: "B003", color: "Black", image: "" } } } as any,
   // SO-2026-002 (id: "2") — H&M
   { id: "line-7", productId: "HM001", name: "Women's Linen Blouse", type: "Relaxed Fit", color: "Ivory", sizeBreakdown: { XS: 60, S: 120, M: 140, L: 100, XL: 50, XXL: 0 }, rate: 230, soItem: "SO004-01", requiredQtyMtr: 700.00, soId: "2", soNo: "SO-2026-002" } as any,
   { id: "line-8", productId: "HM002", name: "Men's Chino Trouser", type: "Slim Fit", color: "Beige", sizeBreakdown: { XS: 20, S: 70, M: 110, L: 90, XL: 40, XXL: 0 }, rate: 290, soItem: "SO004-02", requiredQtyMtr: 480.00, soId: "2", soNo: "SO-2026-002" } as any,
@@ -151,6 +151,31 @@ export function SelectSalesOrderItemsDialog({
           </div>
         </td>
         <td className={`px-4 py-4 text-center font-bold text-sm ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>{totalPcs}</td>
+        {type === "Fabric" && (
+          <td className="px-4 py-4">
+            {item.fabricBom ? (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-slate-800">{item.fabricBom.type || 'N/A'}</span>
+                <span className="text-[11px] text-slate-500">{item.fabricBom.gsm || '-'} GSM • {item.fabricBom.width || '-'} Width • {item.fabricBom.color || '-'}</span>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 italic">Not Configured</span>
+            )}
+          </td>
+        )}
+        {type === "Trims" && (
+          <td className="px-4 py-4">
+            {item.trims ? (
+              <div className="flex flex-wrap gap-1">
+                {item.trims.buttons?.code && <span className="bg-slate-100 text-slate-600 text-[10px] font-medium px-2 py-0.5 rounded">Btn: {item.trims.buttons.code}</span>}
+                {item.trims.label?.code && <span className="bg-slate-100 text-slate-600 text-[10px] font-medium px-2 py-0.5 rounded">Lbl: {item.trims.label.code}</span>}
+                {item.trims.hangTag?.code && <span className="bg-slate-100 text-slate-600 text-[10px] font-medium px-2 py-0.5 rounded">Tag: {item.trims.hangTag.code}</span>}
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 italic">Not Configured</span>
+            )}
+          </td>
+        )}
         <td className={`px-4 py-4 text-center font-bold text-sm ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>{(item as any).requiredQtyMtr.toFixed(2)}</td>
       </tr>
     );
@@ -213,6 +238,8 @@ export function SelectSalesOrderItemsDialog({
                   <th className="px-4 py-3 font-bold text-slate-700">Product / Style</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Color</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Total Qty<br/><span className="text-xs text-slate-500 font-medium">(Pcs)</span></th>
+                  {type === "Fabric" && <th className="px-4 py-3 font-bold text-slate-700">Fabric Config (From SO)</th>}
+                  {type === "Trims" && <th className="px-4 py-3 font-bold text-slate-700">Trim Config (From SO)</th>}
                   <th className="px-4 py-3 font-bold text-slate-700 text-center">Required Qty<br/><span className="text-xs text-slate-500 font-medium">(Pcs From System)</span></th>
                 </tr>
               </thead>
@@ -244,7 +271,7 @@ export function SelectSalesOrderItemsDialog({
               </tbody>
               <tfoot className="bg-slate-50/80 border-t border-slate-200">
                 <tr>
-                  <td colSpan={5} className="px-4 py-4 text-right font-bold text-slate-700">Total Required (From System)</td>
+                  <td colSpan={type === "Fabric" || type === "Trims" ? 6 : 5} className="px-4 py-4 text-right font-bold text-slate-700">Total Required (From System)</td>
                   <td className="px-4 py-4 text-center font-bold text-slate-900 text-[15px]">{totalRequired.toFixed(2)} Pcs</td>
                 </tr>
               </tfoot>

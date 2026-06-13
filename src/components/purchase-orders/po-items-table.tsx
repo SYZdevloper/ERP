@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ interface POItemsTableProps {
   onEditClick: (item: POItem) => void;
   onDeleteClick: (id: string) => void;
   onOpenAddDialog: () => void;
+  onOpenManualEntry?: () => void;
   onQtyChange?: (id: string, newQty: number) => void;
   onRateChange?: (id: string, newRate: number) => void;
   onDateChange?: (id: string, newDate: string) => void;
@@ -34,6 +35,7 @@ export function POItemsTable({
   onEditClick,
   onDeleteClick,
   onOpenAddDialog,
+  onOpenManualEntry,
   onQtyChange,
   onRateChange,
   onDateChange,
@@ -59,9 +61,14 @@ export function POItemsTable({
           {headerContent}
         </div>
         {!isReadOnly && (
-          <Button onClick={onOpenAddDialog} size="sm" className="bg-[#0453B8] hover:bg-blue-700 text-white font-medium h-8">
-            <Plus className="w-4 h-4 mr-2" /> Add {itemLabel}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={onOpenAddDialog} className="h-8 text-xs font-bold border-slate-200 text-slate-700">
+              <Plus className="w-4 h-4 mr-1.5" /> Add Sales Order
+            </Button>
+            <Button onClick={() => onOpenManualEntry && onOpenManualEntry()} size="sm" className="bg-[#10B981] hover:bg-emerald-600 text-white font-bold h-8 text-xs border-0">
+              <Plus className="w-4 h-4 mr-1.5" /> Manual Fabric
+            </Button>
+          </div>
         )}
       </div>
 
@@ -69,253 +76,257 @@ export function POItemsTable({
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">#</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold py-2.5">Image</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-left py-2.5 min-w-[200px]">Product Details</TableHead>
-              {type === "Trims" && (
-                <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Item Code</TableHead>
-              )}
-              {type !== "Trims" && (
-                <>
-                  <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">{specLabel}</TableHead>
-                  <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Width</TableHead>
-                </>
-              )}
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Color / Shade</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Delivery Date</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Required Qty</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Your Quantity</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Rate (₹)</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">GST %</TableHead>
-              <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Amount (₹)</TableHead>
-              {!isReadOnly && <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">Action</TableHead>}
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Sr</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">SO No.</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Line</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Image</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Fabric Details</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">GSM / Content</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Width</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Color / Shade</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Required Qty<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Already Ordered<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Balance Qty<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">PO Qty<br/><span className="font-normal text-[9px] text-red-500">*</span></TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Rate (₹)</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">GST %</TableHead>
+              <TableHead className="text-slate-700 text-[11px] font-bold text-right py-2.5 px-2">Amount (₹)</TableHead>
+              {!isReadOnly && <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Action</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody className="text-sm">
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isReadOnly ? 11 : 12} className="py-8 text-center text-slate-500">
-                  No {itemLabel.toLowerCase()}s added yet. {!isReadOnly && `Click "Add ${itemLabel}" to start.`}
+                <TableCell colSpan={isReadOnly ? 15 : 16} className="py-8 text-center text-slate-500">
+                  No {itemLabel.toLowerCase()}s added yet. {!isReadOnly && `Click "Add Sales Order" or "Manual Fabric" to start.`}
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item, index) => (
-                <TableRow key={item.id} className="hover:bg-slate-50/50">
-                  <TableCell className="text-center text-slate-500 py-3">{index + 1}</TableCell>
-                  <TableCell className="py-3">
-                    <div className="flex justify-center">
-                      {type === "Fabric" && !isReadOnly ? (
-                        <label className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer hover:border-[#0453B8] transition-colors relative group">
-                          {item.fabricImage ? (
-                            <img src={item.fabricImage} alt="Fabric" className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
-                          )}
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file && onImageChange) {
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  onImageChange(item.id, event.target?.result as string);
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                        </label>
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden">
-                          {item.fabricImage ? (
-                            <img src={item.fabricImage} alt="Fabric" className="w-full h-full object-cover" />
-                          ) : (item.material || "").toLowerCase().includes("button") ? (
-                            <img src="/buttons .jpeg" alt="Button" className="w-full h-full object-cover" />
-                          ) : (item.material || "").toLowerCase().includes("label") ? (
-                            <img src="/label.png" alt="Label" className="w-full h-full object-cover" />
-                          ) : (item.material || "").toLowerCase().includes("tag") ? (
-                            <img src="/hangtag.jpeg" alt="Hangtag" className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon className="w-5 h-5 text-slate-400" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-left py-3 relative">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1.5 group relative">
-                        <span className="font-bold text-slate-900 text-sm truncate max-w-[180px]">{item.productName || "Product"}</span>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <button className="cursor-help w-5 h-5 flex items-center justify-center text-slate-400 hover:text-[#0453B8] focus:outline-none focus:ring-2 focus:ring-[#0453B8] rounded-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                            </button>
-                          </PopoverTrigger>
+              (() => {
+                let globalIndex = 1;
+                
+                // Group items
+                const groupedItems = items.reduce((acc, item) => {
+                  const key = item.soNo || "MANUAL";
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(item);
+                  return acc;
+                }, {} as Record<string, POItem[]>);
+
+                const soGroups = Object.keys(groupedItems).filter(key => key !== "MANUAL");
+                const manualGroup = groupedItems["MANUAL"] || [];
+
+                return (
+                  <>
+                    {soGroups.map(soNo => {
+                      const groupItems = groupedItems[soNo];
+                      // Use the first item's product name as the group header if available
+                      const soName = groupItems[0]?.productName || "Product";
+                      
+                      return (
+                        <React.Fragment key={`group-${soNo}`}>
+                          {/* Group Header */}
+                          <TableRow className="bg-[#f8fafd]">
+                            <TableCell colSpan={16} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
+                              {soNo} - {soName}
+                            </TableCell>
+                          </TableRow>
                           
-                          <PopoverContent side="top" className="w-[280px] p-3 bg-white border border-slate-200 shadow-xl rounded-xl z-50">
-                            <div className="flex items-start gap-3 w-full">
-                              {item.productImage && (
-                                <div className="w-12 h-12 rounded bg-slate-50 border border-slate-100 flex-shrink-0 overflow-hidden">
-                                  <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover mix-blend-multiply" />
-                                </div>
-                              )}
-                              <div className="flex flex-col text-left">
-                                <span className="text-xs font-bold text-slate-900 whitespace-normal">{item.productName}</span>
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-1">SO Details</span>
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1.5">
-                                  <span className="text-[10px] font-medium text-slate-500">SO No.</span>
-                                  <span className="text-xs font-semibold text-slate-800">{item.soNo || "-"}</span>
-                                  <span className="text-[10px] font-medium text-slate-500">Code</span>
-                                  <span className="text-xs font-semibold text-slate-800">{item.productCode || "-"}</span>
-                                  <span className="text-[10px] font-medium text-slate-500">Fit/Pattern</span>
-                                  <span className="text-xs font-semibold text-slate-800">{item.productFit || "-"}</span>
-                                  <span className="text-[10px] font-medium text-slate-500">Color</span>
-                                  <span className="text-xs font-semibold text-slate-800">{item.colorShade || "-"}</span>
-                                </div>
+                          {/* Group Items */}
+                          {groupItems.map((item, lineIndex) => {
+                            const reqQty = item.requiredQty || 0;
+                            const alreadyOrdered = Math.floor(reqQty * 0.4); // Mock data logic
+                            const balance = reqQty - alreadyOrdered;
+                            
+                            return (
+                              <TableRow key={item.id} className="hover:bg-slate-50/50">
+                                <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs font-semibold">{globalIndex++}</TableCell>
+                                <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs">{item.soNo}</TableCell>
+                                <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs">L{lineIndex + 1}</TableCell>
+                                
+                                <TableCell className="py-2.5 px-2">
+                                  <div className="w-9 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 mx-auto">
+                                    <img src={item.fabricImage || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg"} alt="Fabric" className="w-full h-full object-cover" />
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="py-2.5 px-2">
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.material || "Cotton"}</span>
+                                    <span className="text-[10px] text-slate-500 leading-tight">Fabric</span>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="py-2.5 px-2">
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.gsm || item.gsmContent || "180 GSM"}</span>
+                                    <span className="text-[10px] text-slate-500 leading-tight">100% {item.material?.split(' ')[0] || 'Cotton'}</span>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
+                                  {item.width || '58"'}
+                                </TableCell>
+
+                                <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
+                                  {item.colorShade || '-'}
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-700">
+                                  {reqQty.toFixed(2)}
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-emerald-600">
+                                  {alreadyOrdered.toFixed(2)}
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-[#0453B8]">
+                                  {balance.toFixed(2)}
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2">
+                                  <input
+                                    type="number"
+                                    value={item.qty || ""}
+                                    onChange={(e) => onQtyChange && onQtyChange(item.id, Number(e.target.value))}
+                                    className="w-20 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
+                                  />
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2">
+                                  <input
+                                    type="number"
+                                    value={item.rate || ""}
+                                    onChange={(e) => onRateChange && onRateChange(item.id, Number(e.target.value))}
+                                    className="w-16 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
+                                  />
+                                </TableCell>
+
+                                <TableCell className="text-center py-2.5 px-2">
+                                  <Select value={(item.gst || 5).toString()} onValueChange={(val) => {}}>
+                                    <SelectTrigger className="w-[60px] h-7 text-[11px] font-bold mx-auto border-slate-200 focus:ring-[#0453B8]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="5">5%</SelectItem>
+                                      <SelectItem value="12">12%</SelectItem>
+                                      <SelectItem value="18">18%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+
+                                <TableCell className="text-right py-2.5 px-2 text-[11px] font-bold text-slate-800">
+                                  {(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </TableCell>
+
+                                {!isReadOnly && (
+                                  <TableCell className="text-center py-2.5 px-2">
+                                    <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors mx-auto block">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
+
+                    {manualGroup.length > 0 && (
+                      <React.Fragment key="group-MANUAL">
+                        <TableRow className="bg-[#f0fdf4]">
+                          <TableCell colSpan={16} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                            Manual Entry
+                          </TableCell>
+                        </TableRow>
+                        {manualGroup.map((item) => (
+                          <TableRow key={item.id} className="hover:bg-slate-50/50">
+                            <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs font-semibold">{globalIndex++}</TableCell>
+                            <TableCell className="text-center text-slate-600 py-2.5 px-2 text-[11px] font-bold">MANUAL</TableCell>
+                            <TableCell className="text-center text-slate-400 py-2.5 px-2 text-xs">-</TableCell>
+                            
+                            <TableCell className="py-2.5 px-2">
+                              <div className="w-9 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 mx-auto">
+                                <img src={item.fabricImage || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg"} alt="Fabric" className="w-full h-full object-cover" />
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <span className="text-xs font-bold text-[#0453B8] uppercase tracking-wide mt-0.5">{item.material}</span>
-                    </div>
-                  </TableCell>
-                  {type === "Trims" && (
-                    <TableCell className="text-center py-3">
-                      <span className="font-mono font-semibold text-slate-700 text-xs tracking-wide bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                        {item.code || '-'}
-                      </span>
-                    </TableCell>
-                  )}
-                  {type !== "Trims" && (
-                    <>
-                      <TableCell className="text-center py-3">
-                        {isReadOnly || !onGsmChange ? (
-                          <span className="font-semibold text-slate-700">{item.gsm || item.gsmContent || '-'}</span>
-                        ) : (
-                          <input 
-                            type="text"
-                            value={item.gsmContent || item.gsm || ""}
-                            onChange={(e) => onGsmChange(item.id, e.target.value)}
-                            className="w-[120px] px-2 py-1 text-left border border-slate-200 rounded-md text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0453B8] focus:border-transparent transition-all"
-                            placeholder="GSM"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center py-3">
-                        {isReadOnly || !onWidthChange ? (
-                          <span className="font-semibold text-slate-700">{item.width || '-'}</span>
-                        ) : (
-                          <input 
-                            type="text"
-                            value={item.width || ""}
-                            onChange={(e) => onWidthChange(item.id, e.target.value)}
-                            className="w-[70px] px-2 py-1 text-center border border-slate-200 rounded-md text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0453B8] focus:border-transparent transition-all"
-                            placeholder='44"'
-                          />
-                        )}
-                      </TableCell>
-                    </>
-                  )}
-                  <TableCell className="text-center py-3">
-                    {isReadOnly || !onColorChange ? (
-                      <div className="flex items-center justify-center gap-2">
-                        {item.colorShade && item.colorShade !== '-' && (
-                          <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: item.colorShade.toLowerCase() === 'navy' ? '#000080' : item.colorShade.toLowerCase() === 'white' ? '#ffffff' : item.colorShade.toLowerCase() === 'black' ? '#000000' : item.colorShade.toLowerCase() === 'red' ? '#ef4444' : item.colorShade.toLowerCase() === 'grey' ? '#555555' : item.colorShade.toLowerCase() === 'natural' ? '#f5f5dc' : '#cccccc' }} />
-                        )}
-                        <span className="font-semibold text-slate-700">{item.colorShade || '-'}</span>
-                      </div>
-                    ) : (
-                      <Select 
-                        value={item.colorShade || ""}
-                        onValueChange={(val) => onColorChange(item.id, val)}
-                      >
-                        <SelectTrigger className="w-[100px] h-8 text-xs font-semibold focus:ring-2 focus:ring-[#0453B8] focus:ring-offset-0">
-                          <div className="flex items-center gap-2">
-                            {item.colorShade && (
-                              <div className="w-2.5 h-2.5 rounded-full border border-slate-300 shadow-sm shrink-0" style={{ backgroundColor: item.colorShade.toLowerCase() === 'navy' ? '#000080' : item.colorShade.toLowerCase() === 'white' ? '#ffffff' : item.colorShade.toLowerCase() === 'black' ? '#000000' : item.colorShade.toLowerCase() === 'red' ? '#ef4444' : item.colorShade.toLowerCase() === 'grey' ? '#555555' : item.colorShade.toLowerCase() === 'natural' ? '#f5f5dc' : '#cccccc' }} />
+                            </TableCell>
+
+                            <TableCell className="py-2.5 px-2">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.material || "Linen Slub"}</span>
+                                <span className="text-[10px] text-slate-500 leading-tight">Manual</span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="py-2.5 px-2">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.gsm || item.gsmContent || "150 GSM"}</span>
+                                <span className="text-[10px] text-slate-500 leading-tight">100% {item.material?.split(' ')[0] || 'Linen'}</span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
+                              {item.width || '54"'}
+                            </TableCell>
+
+                            <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
+                              {item.colorShade || 'Beige'}
+                            </TableCell>
+
+                            <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
+                            <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
+                            <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
+
+                            <TableCell className="text-center py-2.5 px-2">
+                              <input
+                                type="number"
+                                value={item.qty || ""}
+                                onChange={(e) => onQtyChange && onQtyChange(item.id, Number(e.target.value))}
+                                className="w-20 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
+                              />
+                            </TableCell>
+
+                            <TableCell className="text-center py-2.5 px-2">
+                              <input
+                                type="number"
+                                value={item.rate || ""}
+                                onChange={(e) => onRateChange && onRateChange(item.id, Number(e.target.value))}
+                                className="w-16 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
+                              />
+                            </TableCell>
+
+                            <TableCell className="text-center py-2.5 px-2">
+                              <Select value={(item.gst || 5).toString()} onValueChange={(val) => {}}>
+                                <SelectTrigger className="w-[60px] h-7 text-[11px] font-bold mx-auto border-slate-200 focus:ring-[#0453B8]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="5">5%</SelectItem>
+                                  <SelectItem value="12">12%</SelectItem>
+                                  <SelectItem value="18">18%</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+
+                            <TableCell className="text-right py-2.5 px-2 text-[11px] font-bold text-slate-800">
+                              {(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                            </TableCell>
+
+                            {!isReadOnly && (
+                              <TableCell className="text-center py-2.5 px-2">
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors mx-auto block">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </TableCell>
                             )}
-                            <SelectValue placeholder="Color" />
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent className="z-[60]">
-                          <SelectItem value="White">White</SelectItem>
-                          <SelectItem value="Black">Black</SelectItem>
-                          <SelectItem value="Navy">Navy</SelectItem>
-                          <SelectItem value="Red">Red</SelectItem>
-                          <SelectItem value="Grey">Grey</SelectItem>
-                          <SelectItem value="Natural">Natural</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          </TableRow>
+                        ))}
+                      </React.Fragment>
                     )}
-                  </TableCell>
-                  <TableCell className="text-center py-3">
-                    {isReadOnly ? (
-                      <span className="font-semibold text-slate-700">{item.deliveryDate || '—'}</span>
-                    ) : (
-                      <input 
-                        type="date"
-                        value={item.deliveryDate || ""}
-                        onChange={(e) => onDateChange && onDateChange(item.id, e.target.value)}
-                        className="w-[125px] px-2 py-1 border border-slate-200 rounded-md text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0453B8] focus:border-transparent transition-all"
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center font-medium text-slate-600 py-3">
-                    {item.requiredQty ? `${item.requiredQty.toLocaleString('en-IN')} ${item.uom || 'mtr'}` : '-'}
-                  </TableCell>
-                  <TableCell className="text-center py-3">
-                    {isReadOnly ? (
-                      <span className="font-bold text-[#0453B8]">{item.qty} {item.uom || 'mtr'}</span>
-                    ) : (
-                      <div className="flex items-center justify-center gap-0.5 mx-auto w-fit border border-[#cbe1fc] bg-[#f0f6ff] rounded-md px-1.5 focus-within:ring-2 focus-within:ring-[#0453B8] focus-within:border-transparent transition-all">
-                        <input
-                          type="number"
-                          value={item.qty === 0 ? "" : item.qty}
-                          onChange={(e) => onQtyChange && onQtyChange(item.id, Number(e.target.value))}
-                          placeholder="0"
-                          className="w-10 h-[26px] bg-transparent text-sm font-bold text-[#0453B8] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="text-xs font-bold text-[#0453B8] opacity-70 select-none">{item.uom || 'mtr'}</span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center font-medium text-slate-900 py-3">
-                    {isReadOnly ? (
-                      <span>{(item.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                    ) : (
-                      <div className="flex items-center justify-center gap-0.5 mx-auto w-fit border border-slate-200 bg-white rounded-md px-1.5 focus-within:ring-2 focus-within:ring-[#0453B8] focus-within:border-transparent transition-all">
-                        <span className="text-xs font-medium text-slate-500">₹</span>
-                        <input
-                          type="number"
-                          value={item.rate || ""}
-                          onChange={(e) => onRateChange && onRateChange(item.id, Number(e.target.value))}
-                          placeholder="0.00"
-                          className="w-12 h-[26px] bg-transparent text-sm font-medium text-slate-900 text-left focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center font-medium text-slate-900 py-3">
-                    {item.gst || 0}%
-                  </TableCell>
-                  <TableCell className="text-right font-bold text-slate-900 py-3">
-                    {(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  {!isReadOnly && (
-                    <TableCell className="text-center py-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
+                  </>
+                );
+              })()
             )}
           </TableBody>
         </Table>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check, ArrowRight } from "lucide-react";
+import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check, ArrowRight, X } from "lucide-react";
 import Link from "next/link";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
@@ -62,17 +62,41 @@ export function PurchaseOrderForm({
   const [editingItem, setEditingItem] = useState<POItem | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSoItemContext, setSelectedSoItemContext] = useState<any | null>(null);
-  const [selectedTrimItem, setSelectedTrimItem] = useState<string>(type === "Fabric" ? "Cotton Fabric" : "Button");
+  const [selectedTrimItem, setSelectedTrimItem] = useState<string>(type === "Fabric" ? "All Fabrics" : "Button");
   const [selectedBuyerId, setSelectedBuyerId] = useState<string | null>(null);
   const [isLinkedToSo, setIsLinkedToSo] = useState(true);
   const [sortCategory, setSortCategory] = useState<string>("All Categories");
 
   const [showAddress, setShowAddress] = useState(true);
+  const [viewMode, setViewMode] = useState<"address" | "so-table">("address");
+  const [activeSoForLines, setActiveSoForLines] = useState<any | null>(null);
+  const [orderQuantities, setOrderQuantities] = useState<Record<string, string>>({});
+  
+  const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+  const [manualFormData, setManualFormData] = useState({
+    type: "Cotton Fabric",
+    description: "",
+    gsm: "",
+    width: "",
+    color: "",
+    qty: "",
+    rate: "",
+    gst: "5",
+    image: ""
+  });
 
   useEffect(() => {
     if (poItems.length > 0) setShowAddress(false);
     else setShowAddress(true);
   }, [poItems.length]);
+
+  useEffect(() => {
+    if (selectedBuyerId) {
+      setViewMode("so-table");
+    } else {
+      setViewMode("address");
+    }
+  }, [selectedBuyerId]);
 
   useEffect(() => {
     if (initialPo) {
@@ -230,15 +254,19 @@ export function PurchaseOrderForm({
                      soName.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
                      
       if (isFabric) {
-        const materialCategory = selectedTrimItem || "Cotton Fabric";
+        const materialCategory = soItem.fabricBom?.type || selectedTrimItem || "Cotton Fabric";
+        const gsm = soItem.fabricBom?.gsm || "180";
+        const width = soItem.fabricBom?.width || "44";
+        const color = soItem.fabricBom?.color || "White";
+        
         newItems.push({
           id: "item-" + Math.random().toString(36).substr(2, 9),
           soItemId: soItem.id,
           material: materialCategory,
           code: undefined,
-          gsmContent: "180gsm CO",
-          width: "44\"",
-          colorShade: "White",
+          gsmContent: `${gsm}gsm`,
+          width: `${width}"`,
+          colorShade: color,
           requiredQty: baseQty,
           qty: 0,
           buffer: 0,
@@ -255,17 +283,35 @@ export function PurchaseOrderForm({
           soNo: soItem.soNo,
         });
       } else {
-        ["Button", "Label", "Hangtag"].forEach(mat => {
-          const multiplier = mat === "Button" ? 7 : 1;
+        const trimItems = [];
+        if (selectedTrimItem === "Button" || !selectedTrimItem) {
+          if (soItem.trims?.buttons?.code) trimItems.push({ material: "Button", code: soItem.trims.buttons.code, color: soItem.trims.buttons.color });
+          else if (selectedTrimItem === "Button") trimItems.push({ material: "Button", code: "TRM-001", color: "Black" });
+        }
+        if (selectedTrimItem === "Label" || !selectedTrimItem) {
+          if (soItem.trims?.label?.code) trimItems.push({ material: "Label", code: soItem.trims.label.code, color: soItem.trims.label.color });
+          else if (selectedTrimItem === "Label") trimItems.push({ material: "Label", code: "TRM-002", color: "Black" });
+        }
+        if (selectedTrimItem === "Hangtag" || !selectedTrimItem) {
+          if (soItem.trims?.hangTag?.code) trimItems.push({ material: "Hangtag", code: soItem.trims.hangTag.code, color: soItem.trims.hangTag.color });
+          else if (selectedTrimItem === "Hangtag") trimItems.push({ material: "Hangtag", code: "TRM-003", color: "Black" });
+        }
+        
+        if (trimItems.length === 0) {
+           trimItems.push({ material: selectedTrimItem || "Button", code: "TRM-001", color: "Black" });
+        }
+
+        trimItems.forEach(trim => {
+          const multiplier = trim.material === "Button" ? 7 : 1;
           const reqQty = baseQty * multiplier;
           newItems.push({
             id: "item-" + Math.random().toString(36).substr(2, 9),
             soItemId: soItem.id,
-            material: mat,
-            code: "TRM-001",
+            material: trim.material,
+            code: trim.code,
             gsmContent: "Standard",
             width: undefined,
-            colorShade: "Black",
+            colorShade: trim.color,
             requiredQty: reqQty,
             qty: 0,
             buffer: 0,
@@ -334,9 +380,15 @@ export function PurchaseOrderForm({
     ));
   };
 
-  const filteredPoItems = poItems.filter(item => 
-    !selectedTrimItem || item.material === selectedTrimItem
-  );
+  const filteredPoItems = poItems.filter(item => {
+    if (type === "Fabric") {
+      if (!selectedTrimItem || selectedTrimItem === "All Fabrics") return true;
+      const mat = (item.material || "").toLowerCase();
+      const filter = selectedTrimItem.toLowerCase().replace(" fabric", "");
+      return mat.includes(filter);
+    }
+    return !selectedTrimItem || item.material === selectedTrimItem;
+  });
 
   const qtyByUom = filteredPoItems.reduce((acc, item) => {
     const uom = item.uom || (type === 'Fabric' ? 'mtr' : 'pcs');
@@ -390,42 +442,7 @@ export function PurchaseOrderForm({
                     <h1 className="text-xl font-semibold text-slate-900">
                       {isEditMode ? `Edit ${type} Purchase Order` : `New ${type} Purchase Order`}
                     </h1>
-                    <div className="flex items-stretch gap-4">
-                      {/* PO Number Badge */}
-                      <div className="flex flex-col bg-blue-50/80 border border-blue-100 rounded-lg px-5 py-3 shadow-sm min-w-[140px]">
-                        <span className="text-[11px] font-bold text-[#0453B8]/80 uppercase tracking-wider mb-1.5">PO NUMBER</span>
-                        <span className="text-lg font-black text-[#0453B8] tracking-wide leading-none">
-                          {initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}
-                        </span>
-                      </div>
-                      
-                      {/* PO Date Badge */}
-                      <div className="flex flex-col bg-slate-50 border border-slate-200 rounded-lg px-5 py-3 shadow-sm min-w-[140px]">
-                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                          PO DATE
-                        </span>
-                        <div className="flex flex-col">
-                          <span className="text-lg font-black text-slate-700 tracking-wide leading-none mb-1.5">
-                            {isEditMode ? initialPo?.date || "06-JUN-2026" : "06-JUN-2026"}
-                          </span>
-                          <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider leading-none">
-                            SATURDAY
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Status Badge */}
-                      {isEditMode && (
-                        <div className="flex flex-col bg-emerald-50 border border-emerald-100 rounded-lg px-5 py-3 shadow-sm min-w-[140px]">
-                          <span className="text-[11px] font-bold text-emerald-600/80 uppercase tracking-wider mb-1.5">
-                            STATUS
-                          </span>
-                          <span className="text-lg font-black text-emerald-700 tracking-wide leading-none">
-                            {initialPo?.status || "Draft"}
-                          </span>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -451,7 +468,7 @@ export function PurchaseOrderForm({
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
                 </div>
                 
-                <div className={`grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5 mb-6`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 mb-6`}>
                   {/* Supplier */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
@@ -476,7 +493,7 @@ export function PurchaseOrderForm({
 
                   {/* Buyer */}
                   <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">Buyer <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-slate-600">Buyer <span className="text-slate-400 font-normal">(Optional)</span></Label>
                     <div className="relative">
                       <Select
                         value={selectedBuyerId || ""}
@@ -502,131 +519,10 @@ export function PurchaseOrderForm({
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  {/* Sales Order */}
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        checked={isLinkedToSo} 
-                        onChange={(e) => {
-                          setIsLinkedToSo(e.target.checked);
-                          if (!e.target.checked) {
-                            methods.setValue("buyerId", "");
-                          }
-                        }}
-                        className="w-3.5 h-3.5 rounded border-slate-300 text-[#0453B8] focus:ring-[#0453B8] cursor-pointer"
-                      />
-                      <span className="text-slate-700">
-                        Add Products {isLinkedToSo && <span className="text-red-500">*</span>}
-                      </span>
-                    </Label>
-                    <div className="relative">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            disabled={!isLinkedToSo || !selectedBuyerId || !selectedTrimItem}
-                            className="w-full justify-between h-10 border-slate-200 text-sm font-normal truncate disabled:opacity-50 disabled:cursor-not-allowed bg-white px-3"
-                          >
-                            {poItems.filter(i => i.soItemId).length > 0 
-                              ? `${poItems.filter(i => i.soItemId).length} product${poItems.filter(i => i.soItemId).length > 1 ? "s" : ""} selected` 
-                              : <span className="text-muted-foreground">{!selectedTrimItem ? "Select Category First" : "Select Products"}</span>}
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-[600px] max-h-[500px] flex flex-col p-0 shadow-2xl rounded-xl border-slate-200 overflow-hidden" align="start">
-                          {(() => {
-                            let filteredItems = ALL_SO_ITEMS;
-                            if (selectedBuyerId) {
-                              const buyerSoIds = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
-                              filteredItems = filteredItems.filter(item => buyerSoIds.includes(item.soId));
-                            }
-                            
-                            return (
-                              <>
-                                <div className="overflow-y-auto p-3 flex-1 custom-scrollbar max-h-[400px]">
-                                  <div className="grid grid-cols-3 gap-3">
-                                    {filteredItems.map((item) => {
-                                      const soName = item.name || "Product";
-                                      const imgUrl = soName.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
-                                                     soName.includes("Shirt") ? "/men casual half shirt.jpg" :
-                                                     soName.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                                      const isSelected = poItems.some(i => i.soItemId === item.id);
-                                      
-                                      return (
-                                        <DropdownMenuItem
-                                          key={item.id}
-                                          onSelect={(e) => {
-                                            e.preventDefault();
-                                            if (isSelected) {
-                                              setPoItems(prev => prev.filter(i => i.soItemId !== item.id));
-                                            } else {
-                                              handleSoItemNext([item]);
-                                            }
-                                          }}
-                                          className={`relative p-3 flex flex-col items-center gap-3 rounded-xl overflow-hidden cursor-pointer transition-all border !bg-transparent focus:!bg-transparent ${
-                                            isSelected ? 'border-[#0453B8] bg-blue-50/30 shadow-sm' : 'border-slate-200 hover:border-[#0453B8]/50 hover:bg-slate-50'
-                                          }`}
-                                        >
-                                          <div className="h-24 w-24 shrink-0 relative overflow-hidden bg-white rounded-lg border border-slate-200 flex items-center justify-center p-2 shadow-sm">
-                                            <img src={imgUrl} alt={soName} className="w-full h-full object-contain mix-blend-multiply" />
-                                          </div>
-                                          
-                                          <div className="flex flex-col items-center justify-center w-full text-center">
-                                            <span className="text-[#0453B8] font-bold text-[10px] uppercase tracking-wide mb-0.5">{item.productId}</span>
-                                            <span className="text-slate-900 font-bold text-xs truncate w-full" title={soName}>{soName}</span>
-                                          </div>
-
-                                          <div className="absolute top-2 right-2">
-                                            <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border shadow-sm ${isSelected ? 'bg-[#0453B8] border-[#0453B8] text-white' : 'bg-white border-slate-300'}`}>
-                                              {isSelected && <Check className="w-3.5 h-3.5" />}
-                                            </div>
-                                          </div>
-                                        </DropdownMenuItem>
-                                      );
-                                    })}
-                                    {filteredItems.length === 0 && (
-                                      <div className="py-8 text-center text-slate-500 text-sm font-medium col-span-3">
-                                        No products found for this buyer.
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-between shrink-0 items-center">
-                                  <label className="flex items-center gap-2.5 cursor-pointer text-sm font-bold text-slate-700 hover:text-[#0453B8] transition-colors" onClick={(e) => e.stopPropagation()}>
-                                    <input
-                                      type="checkbox"
-                                      className="w-4 h-4 rounded border-slate-300 text-[#0453B8] focus:ring-[#0453B8] cursor-pointer"
-                                      checked={filteredItems.length > 0 && filteredItems.every(item => poItems.some(i => i.soItemId === item.id))}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          const unselected = filteredItems.filter(item => !poItems.some(i => i.soItemId === item.id));
-                                          if (unselected.length > 0) handleSoItemNext(unselected);
-                                        } else {
-                                          setPoItems(prev => prev.filter(i => !filteredItems.some(f => f.id === i.soItemId)));
-                                        }
-                                      }}
-                                    />
-                                    Select All Products
-                                  </label>
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
                     {methods.watch("buyerId") && (
                       <span className="text-[11px] font-bold text-emerald-600 tracking-tight px-0.5">Payment Terms: 30 days credit</span>
                     )}
                   </div>
-
-
-
-
 
                   {/* Agent / Broker */}
                   <div className="flex flex-col gap-2">
@@ -635,48 +531,129 @@ export function PurchaseOrderForm({
                   </div>
                 </div>
 
-
-                <div className="flex items-center justify-between mt-4">
-                  <h3 className="text-sm font-bold text-slate-800">Supplier Address</h3>
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowAddress(!showAddress)}
-                    className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
-                  >
-                    {showAddress ? "Hide Address" : "Unhide Address"}
-                  </Button>
-                </div>
-                
-                {showAddress && (
-                  <div className="flex flex-col md:flex-row gap-5 items-stretch mt-2 animate-in fade-in duration-300">
-                    <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
-                      <div className="flex items-center justify-between mb-4 h-8">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                            <MapPin className="w-4 h-4 text-[#0453B8]" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                            Address Details <span className="text-red-500">*</span>
-                          </h3>
-                        </div>
-                      </div>
-                      {selectedSupplier ? (
-                        <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
-                          <p className="font-medium text-slate-900">{selectedSupplier}</p>
-                          <p>{supplierAddressInfo.line1}</p>
-                          <p>{supplierAddressInfo.line2}</p>
-                          <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
-                          Please select a supplier to view their address details.
-                        </div>
+                <div className="mt-4 overflow-hidden relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      {viewMode === "address" ? "Supplier Address" : `Available Sales Orders for ${selectedBuyerId}`}
+                    </h3>
+                    <div className="flex gap-2">
+                      {selectedBuyerId && (
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setViewMode(viewMode === "address" ? "so-table" : "address")}
+                          className="h-8 text-xs font-medium border-slate-200"
+                        >
+                          {viewMode === "address" ? "Show Sales Orders" : "Show Address"}
+                        </Button>
+                      )}
+                      {viewMode === "address" && (
+                        <Button 
+                          type="button"
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setShowAddress(!showAddress)}
+                          className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                        >
+                          {showAddress ? "Hide Address" : "Unhide Address"}
+                        </Button>
                       )}
                     </div>
                   </div>
-                )}
+                  
+                  <div className="relative">
+                    {/* Address View */}
+                    <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                      {showAddress && (
+                        <div className="flex flex-col md:flex-row gap-5 items-stretch">
+                          <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
+                            <div className="flex items-center justify-between mb-4 h-8">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                  <MapPin className="w-4 h-4 text-[#0453B8]" />
+                                </div>
+                                <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+                                  Address Details <span className="text-red-500">*</span>
+                                </h3>
+                              </div>
+                            </div>
+                            {selectedSupplier ? (
+                              <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
+                                <p className="font-medium text-slate-900">{selectedSupplier}</p>
+                                <p>{supplierAddressInfo.line1}</p>
+                                <p>{supplierAddressInfo.line2}</p>
+                                <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
+                                Please select a supplier to view their address details.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sales Order Table View */}
+                    <div className={`transition-all duration-500 ease-in-out ${viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <table className="w-full text-sm text-left">
+                          <thead className="bg-[#F8FAFC] border-b border-slate-200">
+                            <tr>
+                              <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">SO Date</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Total Styles</th>
+                              <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map((so) => (
+                              <tr key={so.id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-4 py-3 font-bold text-[#0453B8]">{so.soNo}</td>
+                                <td className="px-4 py-3 text-slate-600">{so.orderDate}</td>
+                                <td className="px-4 py-3 text-slate-600">
+                                  {(() => {
+                                    const totalSoItems = ALL_SO_ITEMS.filter(i => i.soId === so.id).length || 5;
+                                    const soItemsInPo = poItems.filter(i => i.soNo === so.soNo).length;
+                                    return soItemsInPo > 0 
+                                      ? <span className="font-bold text-[#0453B8]">{soItemsInPo} / {totalSoItems} Styles Selected</span>
+                                      : <span>{totalSoItems} Styles</span>;
+                                  })()}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      const initialQty: Record<string, string> = {};
+                                      ALL_SO_ITEMS.filter(i => i.soId === so.id).forEach(item => {
+                                        const existing = poItems.find(p => p.soItemId === item.id);
+                                        if (existing) {
+                                          initialQty[item.id] = existing.qty.toString();
+                                        }
+                                      });
+                                      setOrderQuantities(initialQty);
+                                      setActiveSoForLines(so);
+                                    }}
+                                    className="h-7 text-xs border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
+                                  >
+                                    Select
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                            {MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).length === 0 && (
+                              <tr>
+                                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available sales orders found for this buyer.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* 2. Items Table (REUSED COMPONENT) */}
@@ -685,6 +662,7 @@ export function PurchaseOrderForm({
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteItem}
                 onOpenAddDialog={handleOpenAddDialog}
+                onOpenManualEntry={() => setIsManualEntryOpen(true)}
                 onQtyChange={handleQtyChange}
                 onRateChange={handleRateChange}
                 onDateChange={handleDateChange}
@@ -717,6 +695,7 @@ export function PurchaseOrderForm({
                            </>
                          ) : (
                            <>
+                             <SelectItem value="All Fabrics">All Fabrics</SelectItem>
                              <SelectItem value="Cotton Fabric">Cotton Fabric</SelectItem>
                              <SelectItem value="Linen">Linen</SelectItem>
                            </>
@@ -731,7 +710,35 @@ export function PurchaseOrderForm({
 
             {/* Right Column (Sidebar) */}
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
-              {/* PO Number/Date moved to header */}
+              {/* PO Number/Date Badges */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO NUMBER</span>
+                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                    {initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 invisible">
+                    SPACER
+                  </span>
+                </div>
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO DATE</span>
+                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                    {isEditMode ? initialPo?.date || "06-JUN-2026" : "06-JUN-2026"}
+                  </span>
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                    SATURDAY
+                  </span>
+                </div>
+                {isEditMode && (
+                  <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center col-span-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">STATUS</span>
+                    <span className="text-base font-black text-[#0453B8] tracking-wide">
+                      {initialPo?.status || "Draft"}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               <NotesPanel isReadOnly={false} />
               
@@ -818,8 +825,320 @@ export function PurchaseOrderForm({
             colorShade: type === "Fabric" ? selectedSoItemContext.color : "",
             material: type === "Fabric" ? "Cotton Fabric" : selectedTrimItem,
             uom: type === "Fabric" ? "mtr" : "pcs",
-          } : undefined}
-        />
+            } : undefined}
+          />
+        
+        {/* Floating Panel for SO Lines */}
+        {activeSoForLines && (
+          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900">Select Sales Order Lines</h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">{selectedBuyerId} - {activeSoForLines.soNo}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setActiveSoForLines(null)} className="h-8 w-8 p-0 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto max-h-[60vh] p-4 custom-scrollbar">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-[#F8FAFC] border-b border-slate-200">
+                  <tr>
+                    <th className="px-3 py-2 font-bold text-slate-700 w-12 text-center">Line</th>
+                    <th className="px-3 py-2 font-bold text-slate-700">Fabric Details</th>
+                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Req. Qty<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
+                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Already PO<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
+                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Balance<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
+                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Order Qty<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id).map((item, idx) => {
+                    const reqQty = item.requiredQtyMtr || 500;
+                    const alreadyPo = Math.floor(reqQty * 0.4);
+                    const balance = reqQty - alreadyPo;
+                    
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-3 py-3 text-center font-medium text-slate-600">L{idx + 1}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
+                              <img src="/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex flex-col text-xs">
+                              <span className="font-bold text-slate-800">Fabric: <span className="font-medium text-slate-600">{item.fabricBom?.type || 'Cotton'}</span></span>
+                              <span className="font-bold text-slate-800">GSM: <span className="font-medium text-slate-600">{item.fabricBom?.gsm || '180'}</span></span>
+                              <span className="font-bold text-slate-800">Color: <span className="font-medium text-slate-600">{item.color}</span></span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-center font-medium">{reqQty.toFixed(2)}</td>
+                        <td className="px-3 py-3 text-center font-bold text-emerald-600">{alreadyPo.toFixed(2)}</td>
+                        <td className="px-3 py-3 text-center font-bold text-[#0453B8]">{balance.toFixed(2)}</td>
+                        <td className="px-3 py-3 text-center">
+                          <Input 
+                            type="number" 
+                            className="w-20 h-8 text-xs text-right mx-auto"
+                            placeholder="0.00"
+                            value={orderQuantities[item.id] || ""}
+                            onChange={(e) => setOrderQuantities({...orderQuantities, [item.id]: e.target.value})}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id).length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500">No fabric lines found for this Sales Order.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-between items-center">
+              <Button type="button" variant="outline" size="sm" onClick={() => setActiveSoForLines(null)} className="h-8">
+                Cancel
+              </Button>
+              <Button 
+                type="button"
+                size="sm" 
+                className="h-8 bg-[#0453B8] hover:bg-blue-700 text-white"
+                onClick={() => {
+                  setPoItems(prev => {
+                    const nextPoItems = [...prev];
+                    const itemsToAdd = ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id);
+                    
+                    itemsToAdd.forEach(item => {
+                      const existingQty = poItems.find(p => p.soItemId === item.id)?.qty || 0;
+                      const qty = orderQuantities[item.id] !== undefined ? parseFloat(orderQuantities[item.id]) : existingQty;
+                      const existingIndex = nextPoItems.findIndex(p => p.soItemId === item.id);
+                      
+                      if (qty > 0) {
+                        if (existingIndex >= 0) {
+                          // Update existing
+                          nextPoItems[existingIndex] = {
+                            ...nextPoItems[existingIndex],
+                            qty: qty,
+                            amount: qty * nextPoItems[existingIndex].rate
+                          };
+                        } else {
+                          // Add new
+                          nextPoItems.push({
+                            id: "item-" + Math.random().toString(36).substr(2, 9),
+                            soItemId: item.id,
+                            material: (item.fabricBom?.type === "Cotton" ? "Cotton Fabric" : item.fabricBom?.type) || "Cotton Fabric",
+                            gsmContent: `${item.fabricBom?.gsm || "180"}gsm`,
+                            width: `${item.fabricBom?.width || "44"}""`,
+                            colorShade: item.color,
+                            requiredQty: item.requiredQtyMtr,
+                            qty: qty,
+                            buffer: 0,
+                            uom: "mtr",
+                            rate: item.rate || 180,
+                            gst: 5,
+                            amount: qty * (item.rate || 180),
+                            deliveryDate: "2026-06-21",
+                            productName: item.name,
+                            soNo: activeSoForLines.soNo,
+                          });
+                        }
+                      } else {
+                        // If qty is 0 or NaN, remove it if it existed
+                        if (existingIndex >= 0) {
+                          nextPoItems.splice(existingIndex, 1);
+                        }
+                      }
+                    });
+                    return nextPoItems;
+                  });
+                  setActiveSoForLines(null);
+                  setOrderQuantities({});
+                }}
+              >
+                Add Selected Lines
+              </Button>
+            </div>
+          </div>
+        )}
+        {/* Floating Panel for Add Manual Fabric */}
+        {isManualEntryOpen && (
+          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900">Add Manual Fabric</h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsManualEntryOpen(false)} className="h-8 w-8 p-0 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Fabric Type <span className="text-red-500">*</span></Label>
+                  <Select value={manualFormData.type} onValueChange={(val) => setManualFormData({...manualFormData, type: val})}>
+                    <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cotton Fabric">Cotton Fabric</SelectItem>
+                      <SelectItem value="Linen">Linen</SelectItem>
+                      <SelectItem value="Polyester">Polyester</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Fabric Description</Label>
+                  <Input 
+                    value={manualFormData.description}
+                    onChange={(e) => setManualFormData({...manualFormData, description: e.target.value})}
+                    placeholder="Linen Slub" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">GSM / Content <span className="text-red-500">*</span></Label>
+                  <Input 
+                    value={manualFormData.gsm}
+                    onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
+                    placeholder="150 GSM" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Rate (₹) <span className="text-red-500">*</span></Label>
+                  <Input 
+                    type="number"
+                    value={manualFormData.rate}
+                    onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
+                    placeholder="130.00" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Width <span className="text-red-500">*</span></Label>
+                  <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
+                    <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                      <SelectValue placeholder="Select width" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="44&quot;">44"</SelectItem>
+                      <SelectItem value="54&quot;">54"</SelectItem>
+                      <SelectItem value="58&quot;">58"</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">GST % <span className="text-red-500">*</span></Label>
+                  <Select value={manualFormData.gst} onValueChange={(val) => setManualFormData({...manualFormData, gst: val})}>
+                    <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                      <SelectValue placeholder="Select GST" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5%</SelectItem>
+                      <SelectItem value="12">12%</SelectItem>
+                      <SelectItem value="18">18%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
+                  <Input 
+                    value={manualFormData.color}
+                    onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
+                    placeholder="Beige" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Amount (₹)</Label>
+                  <Input 
+                    disabled 
+                    value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    className="h-10 text-sm bg-slate-50 font-semibold" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Qty (Mtrs) <span className="text-red-500">*</span></Label>
+                  <Input 
+                    type="number"
+                    value={manualFormData.qty}
+                    onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
+                    placeholder="200.00" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-2 col-span-2">
+                  <Label className="text-xs font-bold text-slate-600">Fabric Image (Optional)</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
+                      {manualFormData.image ? (
+                        <img src={manualFormData.image} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-medium">No Image</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Input 
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setManualFormData({...manualFormData, image: url});
+                          }
+                        }}
+                        className="h-10 text-sm bg-white cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#F1F5F9] file:text-slate-700 hover:file:bg-slate-200" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setIsManualEntryOpen(false)} className="font-bold">Cancel</Button>
+              <Button type="button" onClick={() => {
+                const newItem = {
+                  id: Math.random().toString(36).substr(2, 9),
+                  material: manualFormData.type,
+                  gsmContent: manualFormData.gsm || "150 GSM",
+                  width: manualFormData.width || "54\"",
+                  colorShade: manualFormData.color || "Beige",
+                  qty: Number(manualFormData.qty) || 200,
+                  buffer: 0,
+                  uom: "mtr",
+                  rate: Number(manualFormData.rate) || 130,
+                  gst: Number(manualFormData.gst) || 5,
+                  amount: (Number(manualFormData.rate) || 130) * (Number(manualFormData.qty) || 200),
+                  deliveryDate: "",
+                  images: [],
+                  productName: manualFormData.description || manualFormData.type,
+                  soNo: "",
+                  fabricImage: manualFormData.image || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg",
+                };
+                setPoItems(prev => [...prev, newItem]);
+                setIsManualEntryOpen(false);
+                setManualFormData({
+                  type: "Cotton Fabric", description: "", gsm: "", width: "", color: "", qty: "", rate: "", gst: "5", image: ""
+                });
+              }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
+                <Check className="w-4 h-4 mr-2" /> Add to PO
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </FormProvider>
   );

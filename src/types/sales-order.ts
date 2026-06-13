@@ -31,6 +31,17 @@ export const ProductLineItemSchema = z.object({
   pattern: z.any().optional(), // Allow an object for pattern details
   sizeBreakdown: SizeBreakdownSchema,
   rate: z.number().min(0),
+  fabricBom: z.object({
+    gsm: z.string().optional(),
+    width: z.string().optional(),
+    color: z.string().optional(),
+    type: z.string().optional(),
+  }).optional(),
+  trims: z.object({
+    buttons: z.any().optional(),
+    label: z.any().optional(),
+    hangTag: z.any().optional(),
+  }).optional(),
 });
 export type ProductLineItem = z.infer<typeof ProductLineItemSchema>;
 

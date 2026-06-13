@@ -4,6 +4,7 @@ import { SalesOrderSchema, SalesOrder } from "@/types/sales-order";
 import { EMPTY_SALES_ORDER, MOCK_SALES_ORDERS_LIST, MOCK_BUYERS } from "@/data/mock-sales-order";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
@@ -138,7 +139,36 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
 
             {/* Right Column (Information Rail) */}
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
-              {/* Order Info moved to header */}
+              {/* SO Number/Date Badges */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">SO NUMBER</span>
+                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                    {methods.getValues("salesOrderNo")}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 invisible">
+                    SPACER
+                  </span>
+                </div>
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">SO DATE</span>
+                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                    {methods.getValues("orderDate") ? format(methods.getValues("orderDate"), "dd-MMM-yyyy").toUpperCase() : "N/A"}
+                  </span>
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                    {methods.getValues("orderDate") ? format(methods.getValues("orderDate"), "EEEE").toUpperCase() : ""}
+                  </span>
+                </div>
+                {isReadOnly && (
+                  <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center col-span-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">STATUS</span>
+                    <span className="text-base font-black text-[#0453B8] tracking-wide">
+                      {methods.getValues("status") || "Draft"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <NotesPanel isReadOnly={isReadOnly} />
               <AttachmentsModal isReadOnly={isReadOnly} />
               <OrderSummaryPanel isReadOnly={isReadOnly} />
