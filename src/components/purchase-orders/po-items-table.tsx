@@ -185,34 +185,21 @@ export function POItemsTable({
                                 </TableCell>
 
                                 <TableCell className="text-center py-2.5 px-2">
-                                  <input
-                                    type="number"
-                                    value={item.qty || ""}
-                                    onChange={(e) => onQtyChange && onQtyChange(item.id, Number(e.target.value))}
-                                    className="w-20 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
-                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onEditClick(item); }}
+                                    className="px-3 py-1 bg-blue-50 text-[#0453B8] font-bold border border-blue-200 rounded-md hover:bg-blue-100 transition-colors mx-auto block text-xs"
+                                  >
+                                    {item.qty || 0}
+                                  </button>
                                 </TableCell>
 
-                                <TableCell className="text-center py-2.5 px-2">
-                                  <input
-                                    type="number"
-                                    value={item.rate || ""}
-                                    onChange={(e) => onRateChange && onRateChange(item.id, Number(e.target.value))}
-                                    className="w-16 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
-                                  />
+                                <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
+                                  {item.rate || 0}
                                 </TableCell>
 
-                                <TableCell className="text-center py-2.5 px-2">
-                                  <Select value={(item.gst || 5).toString()} onValueChange={(val) => {}}>
-                                    <SelectTrigger className="w-[60px] h-7 text-[11px] font-bold mx-auto border-slate-200 focus:ring-[#0453B8]">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="5">5%</SelectItem>
-                                      <SelectItem value="12">12%</SelectItem>
-                                      <SelectItem value="18">18%</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
+                                  {item.gst || 5}%
                                 </TableCell>
 
                                 <TableCell className="text-right py-2.5 px-2 text-[11px] font-bold text-slate-800">
@@ -279,35 +266,22 @@ export function POItemsTable({
                             <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
 
                             <TableCell className="text-center py-2.5 px-2">
-                              <input
-                                type="number"
-                                value={item.qty || ""}
-                                onChange={(e) => onQtyChange && onQtyChange(item.id, Number(e.target.value))}
-                                className="w-20 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
-                              />
-                            </TableCell>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); onEditClick(item); }}
+                                  className="px-3 py-1 bg-blue-50 text-[#0453B8] font-bold border border-blue-200 rounded-md hover:bg-blue-100 transition-colors mx-auto block text-xs"
+                                >
+                                  {item.qty || 0}
+                                </button>
+                              </TableCell>
 
-                            <TableCell className="text-center py-2.5 px-2">
-                              <input
-                                type="number"
-                                value={item.rate || ""}
-                                onChange={(e) => onRateChange && onRateChange(item.id, Number(e.target.value))}
-                                className="w-16 px-2 py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-800 text-center mx-auto focus:ring-2 focus:ring-[#0453B8] focus:border-[#0453B8] outline-none"
-                              />
-                            </TableCell>
+                            <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
+                                {item.rate || 0}
+                              </TableCell>
 
-                            <TableCell className="text-center py-2.5 px-2">
-                              <Select value={(item.gst || 5).toString()} onValueChange={(val) => {}}>
-                                <SelectTrigger className="w-[60px] h-7 text-[11px] font-bold mx-auto border-slate-200 focus:ring-[#0453B8]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="5">5%</SelectItem>
-                                  <SelectItem value="12">12%</SelectItem>
-                                  <SelectItem value="18">18%</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
+                            <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
+                                {item.gst || 5}%
+                              </TableCell>
 
                             <TableCell className="text-right py-2.5 px-2 text-[11px] font-bold text-slate-800">
                               {(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}

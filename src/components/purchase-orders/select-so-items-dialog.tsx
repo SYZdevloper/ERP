@@ -8,10 +8,18 @@ import { X, ArrowRight } from "lucide-react";
 import { POItem } from "@/types/purchase-order";
 
 // All mock SO items we use across SOs
-export const ALL_SO_ITEMS: (ProductLineItem & { soItem: string, requiredQtyMtr: number, soId: string, soNo: string })[] = [
+export const ALL_SO_ITEMS: (ProductLineItem & { 
+  soItem: string, 
+  requiredQtyMtr: number, 
+  soId: string, 
+  soNo: string,
+  trackingStatus?: 'ACTIVE' | 'CLOSED' | 'COMPLETE',
+  trackingReason?: string,
+  trackingRemarks?: string
+})[] = [
   // SO-2026-001 (id: "1") — Zara
   { id: "line-1", productId: "ST001", name: "Men's Casual Shirt", type: "Half Sleeve Regular Collar", color: "White", sizeBreakdown: { XS: 50, S: 100, M: 150, L: 120, XL: 80, XXL: 0 }, rate: 250, soItem: "SO001-01", requiredQtyMtr: 900.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "180", width: "44", color: "White", type: "Cotton Poplin" }, trims: { buttons: { code: "B001", color: "White", image: "" } } } as any,
-  { id: "line-2", productId: "ST003", name: "Men's Casual Shirt", type: "Half Sleeve Cuban Collar", color: "Navy", sizeBreakdown: { XS: 30, S: 80, M: 120, L: 100, XL: 70, XXL: 0 }, rate: 250, soItem: "SO001-02", requiredQtyMtr: 760.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "160", width: "44", color: "Navy", type: "Linen Blend" }, trims: { buttons: { code: "B002", color: "Navy", image: "" } } } as any,
+  { id: "line-2", productId: "ST003", name: "Men's Casual Shirt", type: "Half Sleeve Cuban Collar", color: "Navy", sizeBreakdown: { XS: 30, S: 80, M: 120, L: 100, XL: 70, XXL: 0 }, rate: 250, soItem: "SO001-02", requiredQtyMtr: 760.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "160", width: "44", color: "Navy", type: "Linen Blend" }, trackingStatus: "CLOSED", trackingReason: "Fabric not available from supplier", trackingRemarks: "Supplier discontinued this color", trims: { buttons: { code: "B002", color: "Navy", image: "" } } } as any,
   { id: "line-3", productId: "TS001", name: "Men's Polo T-Shirt", type: "Half Sleeve", color: "Black", sizeBreakdown: { XS: 40, S: 80, M: 120, L: 100, XL: 60, XXL: 0 }, rate: 250, soItem: "SO001-03", requiredQtyMtr: 640.00, soId: "1", soNo: "SO-2026-001", fabricBom: { gsm: "220", width: "44", color: "Black", type: "Pique Cotton" }, trims: { buttons: { code: "B003", color: "Black", image: "" } } } as any,
   // SO-2026-002 (id: "2") — H&M
   { id: "line-7", productId: "HM001", name: "Women's Linen Blouse", type: "Relaxed Fit", color: "Ivory", sizeBreakdown: { XS: 60, S: 120, M: 140, L: 100, XL: 50, XXL: 0 }, rate: 230, soItem: "SO004-01", requiredQtyMtr: 700.00, soId: "2", soNo: "SO-2026-002" } as any,

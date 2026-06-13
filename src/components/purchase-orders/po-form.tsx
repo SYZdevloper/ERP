@@ -70,7 +70,7 @@ export function PurchaseOrderForm({
   const [showAddress, setShowAddress] = useState(true);
   const [viewMode, setViewMode] = useState<"address" | "so-table">("address");
   const [activeSoForLines, setActiveSoForLines] = useState<any | null>(null);
-  const [orderQuantities, setOrderQuantities] = useState<Record<string, string>>({});
+  const [selectedLines, setSelectedLines] = useState<Record<string, boolean>>({});
   
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
   const [manualFormData, setManualFormData] = useState({
@@ -79,9 +79,9 @@ export function PurchaseOrderForm({
     gsm: "",
     width: "",
     color: "",
-    qty: "",
-    rate: "",
-    gst: "5",
+    qty: "0",
+    rate: "0",
+    gst: "0",
     image: ""
   });
 
@@ -226,7 +226,18 @@ export function PurchaseOrderForm({
       const found = ALL_SO_ITEMS.find(so => so.id === item.soItemId);
       if (found) setSelectedSoItemContext(found);
     }
-    setIsAddDialogOpen(true);
+    setManualFormData({
+      type: item.material || "Cotton Fabric",
+      description: item.productName || "",
+      gsm: item.gsmContent?.replace("gsm", "") || "",
+      width: item.width?.replace("\"", "") || "",
+      color: item.colorShade || "",
+      qty: item.qty.toString(),
+      rate: item.rate.toString(),
+      gst: item.gst.toString(),
+      image: item.fabricImage || ""
+    });
+    setIsManualEntryOpen(true);
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -597,9 +608,9 @@ export function PurchaseOrderForm({
 
                     {/* Sales Order Table View */}
                     <div className={`transition-all duration-500 ease-in-out ${viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'}`}>
-                      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                      <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[240px]">
                         <table className="w-full text-sm text-left">
-                          <thead className="bg-[#F8FAFC] border-b border-slate-200">
+                          <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10">
                             <tr>
                               <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
                               <th className="px-4 py-3 font-bold text-slate-700">SO Date</th>
@@ -614,7 +625,7 @@ export function PurchaseOrderForm({
                                 <td className="px-4 py-3 text-slate-600">{so.orderDate}</td>
                                 <td className="px-4 py-3 text-slate-600">
                                   {(() => {
-                                    const totalSoItems = ALL_SO_ITEMS.filter(i => i.soId === so.id).length || 5;
+                                    const totalSoItems = ALL_SO_ITEMS.filter(i => i.soId === so.id && i.trackingStatus !== "CLOSED").length || 5;
                                     const soItemsInPo = poItems.filter(i => i.soNo === so.soNo).length;
                                     return soItemsInPo > 0 
                                       ? <span className="font-bold text-[#0453B8]">{soItemsInPo} / {totalSoItems} Styles Selected</span>
@@ -626,14 +637,14 @@ export function PurchaseOrderForm({
                                     variant="outline" 
                                     size="sm" 
                                     onClick={() => {
-                                      const initialQty: Record<string, string> = {};
+                                      const initialSelected: Record<string, boolean> = {};
                                       ALL_SO_ITEMS.filter(i => i.soId === so.id).forEach(item => {
                                         const existing = poItems.find(p => p.soItemId === item.id);
                                         if (existing) {
-                                          initialQty[item.id] = existing.qty.toString();
+                                          initialSelected[item.id] = true;
                                         }
                                       });
-                                      setOrderQuantities(initialQty);
+                                      setSelectedLines(initialSelected);
                                       setActiveSoForLines(so);
                                     }}
                                     className="h-7 text-xs border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
@@ -850,11 +861,11 @@ export function PurchaseOrderForm({
                     <th className="px-3 py-2 font-bold text-slate-700 text-center">Req. Qty<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
                     <th className="px-3 py-2 font-bold text-slate-700 text-center">Already PO<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
                     <th className="px-3 py-2 font-bold text-slate-700 text-center">Balance<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
-                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Order Qty<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
+                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Select</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id).map((item, idx) => {
+                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED").map((item, idx) => {
                     const reqQty = item.requiredQtyMtr || 500;
                     const alreadyPo = Math.floor(reqQty * 0.4);
                     const balance = reqQty - alreadyPo;
@@ -878,18 +889,19 @@ export function PurchaseOrderForm({
                         <td className="px-3 py-3 text-center font-bold text-emerald-600">{alreadyPo.toFixed(2)}</td>
                         <td className="px-3 py-3 text-center font-bold text-[#0453B8]">{balance.toFixed(2)}</td>
                         <td className="px-3 py-3 text-center">
-                          <Input 
-                            type="number" 
-                            className="w-20 h-8 text-xs text-right mx-auto"
-                            placeholder="0.00"
-                            value={orderQuantities[item.id] || ""}
-                            onChange={(e) => setOrderQuantities({...orderQuantities, [item.id]: e.target.value})}
-                          />
+                          <div className="flex justify-center">
+                            <input 
+                              type="checkbox" 
+                              className="w-4 h-4 text-[#0453B8] rounded border-slate-300 focus:ring-[#0453B8] cursor-pointer"
+                              checked={!!selectedLines[item.id]}
+                              onChange={(e) => setSelectedLines({...selectedLines, [item.id]: e.target.checked})}
+                            />
+                          </div>
                         </td>
                       </tr>
                     );
                   })}
-                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id).length === 0 && (
+                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-4 py-8 text-center text-slate-500">No fabric lines found for this Sales Order.</td>
                     </tr>
@@ -909,21 +921,20 @@ export function PurchaseOrderForm({
                 onClick={() => {
                   setPoItems(prev => {
                     const nextPoItems = [...prev];
-                    const itemsToAdd = ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id);
+                    const itemsToAdd = ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED");
                     
                     itemsToAdd.forEach(item => {
-                      const existingQty = poItems.find(p => p.soItemId === item.id)?.qty || 0;
-                      const qty = orderQuantities[item.id] !== undefined ? parseFloat(orderQuantities[item.id]) : existingQty;
+                      const isSelected = selectedLines[item.id];
                       const existingIndex = nextPoItems.findIndex(p => p.soItemId === item.id);
                       
-                      if (qty > 0) {
+                      if (isSelected) {
+                        const reqQty = item.requiredQtyMtr || 500;
+                        const alreadyPo = Math.floor(reqQty * 0.4);
+                        const balance = reqQty - alreadyPo;
+                        const defaultQty = balance > 0 ? balance : reqQty;
+                        
                         if (existingIndex >= 0) {
-                          // Update existing
-                          nextPoItems[existingIndex] = {
-                            ...nextPoItems[existingIndex],
-                            qty: qty,
-                            amount: qty * nextPoItems[existingIndex].rate
-                          };
+                          // Keep existing as is
                         } else {
                           // Add new
                           nextPoItems.push({
@@ -934,19 +945,19 @@ export function PurchaseOrderForm({
                             width: `${item.fabricBom?.width || "44"}""`,
                             colorShade: item.color,
                             requiredQty: item.requiredQtyMtr,
-                            qty: qty,
+                            qty: 0,
                             buffer: 0,
                             uom: "mtr",
-                            rate: item.rate || 180,
-                            gst: 5,
-                            amount: qty * (item.rate || 180),
+                            rate: 0,
+                            gst: 0,
+                            amount: 0,
                             deliveryDate: "2026-06-21",
                             productName: item.name,
                             soNo: activeSoForLines.soNo,
                           });
                         }
                       } else {
-                        // If qty is 0 or NaN, remove it if it existed
+                        // If not selected, remove it if it existed
                         if (existingIndex >= 0) {
                           nextPoItems.splice(existingIndex, 1);
                         }
@@ -955,7 +966,7 @@ export function PurchaseOrderForm({
                     return nextPoItems;
                   });
                   setActiveSoForLines(null);
-                  setOrderQuantities({});
+                  setSelectedLines({});
                 }}
               >
                 Add Selected Lines
@@ -967,7 +978,14 @@ export function PurchaseOrderForm({
         {isManualEntryOpen && (
           <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300">
             <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">Add Manual Fabric</h3>
+              <h3 className="font-bold text-slate-900">
+                {editingItem ? "Edit Fabric" : "Add Manual Fabric"}
+                {editingItem?.soItemId && (
+                  <span className="text-slate-500 font-medium ml-2">
+                    - {editingItem.soNo} - L{ALL_SO_ITEMS.filter(i => i.soId === ALL_SO_ITEMS.find(soi => soi.id === editingItem.soItemId)?.soId).findIndex(i => i.id === editingItem.soItemId) + 1}
+                  </span>
+                )}
+              </h3>
               <Button variant="ghost" size="sm" onClick={() => setIsManualEntryOpen(false)} className="h-8 w-8 p-0 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200">
                 <X className="w-4 h-4" />
               </Button>
@@ -977,7 +995,7 @@ export function PurchaseOrderForm({
               <div className="grid grid-cols-2 gap-5">
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Fabric Type <span className="text-red-500">*</span></Label>
-                  <Select value={manualFormData.type} onValueChange={(val) => setManualFormData({...manualFormData, type: val})}>
+                  <Select disabled={!!editingItem?.soItemId} value={manualFormData.type} onValueChange={(val) => setManualFormData({...manualFormData, type: val})}>
                     <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -992,20 +1010,22 @@ export function PurchaseOrderForm({
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Fabric Description</Label>
                   <Input 
+                    disabled={!!editingItem?.soItemId}
                     value={manualFormData.description}
                     onChange={(e) => setManualFormData({...manualFormData, description: e.target.value})}
                     placeholder="Linen Slub" 
-                    className="h-10 text-sm bg-white" 
+                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">GSM / Content <span className="text-red-500">*</span></Label>
                   <Input 
+                    disabled={!!editingItem?.soItemId}
                     value={manualFormData.gsm}
                     onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
                     placeholder="150 GSM" 
-                    className="h-10 text-sm bg-white" 
+                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
                   />
                 </div>
 
@@ -1022,7 +1042,7 @@ export function PurchaseOrderForm({
 
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Width <span className="text-red-500">*</span></Label>
-                  <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
+                  <Select disabled={!!editingItem?.soItemId} value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
                     <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select width" />
                     </SelectTrigger>
@@ -1041,6 +1061,7 @@ export function PurchaseOrderForm({
                       <SelectValue placeholder="Select GST" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="0">0%</SelectItem>
                       <SelectItem value="5">5%</SelectItem>
                       <SelectItem value="12">12%</SelectItem>
                       <SelectItem value="18">18%</SelectItem>
@@ -1051,10 +1072,11 @@ export function PurchaseOrderForm({
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
                   <Input 
+                    disabled={!!editingItem?.soItemId}
                     value={manualFormData.color}
                     onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
                     placeholder="Beige" 
-                    className="h-10 text-sm bg-white" 
+                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
                   />
                 </div>
 
@@ -1090,6 +1112,7 @@ export function PurchaseOrderForm({
                     </div>
                     <div className="flex-1">
                       <Input 
+                        disabled={!!editingItem?.soItemId}
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
@@ -1108,33 +1131,56 @@ export function PurchaseOrderForm({
             </div>
             
             <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => setIsManualEntryOpen(false)} className="font-bold">Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => { setIsManualEntryOpen(false); setEditingItem(null); }} className="font-bold">Cancel</Button>
               <Button type="button" onClick={() => {
-                const newItem = {
-                  id: Math.random().toString(36).substr(2, 9),
-                  material: manualFormData.type,
-                  gsmContent: manualFormData.gsm || "150 GSM",
-                  width: manualFormData.width || "54\"",
-                  colorShade: manualFormData.color || "Beige",
-                  qty: Number(manualFormData.qty) || 200,
-                  buffer: 0,
-                  uom: "mtr",
-                  rate: Number(manualFormData.rate) || 130,
-                  gst: Number(manualFormData.gst) || 5,
-                  amount: (Number(manualFormData.rate) || 130) * (Number(manualFormData.qty) || 200),
-                  deliveryDate: "",
-                  images: [],
-                  productName: manualFormData.description || manualFormData.type,
-                  soNo: "",
-                  fabricImage: manualFormData.image || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg",
-                };
-                setPoItems(prev => [...prev, newItem]);
+                if (editingItem) {
+                  setPoItems(prev => prev.map(item => {
+                    if (item.id === editingItem.id) {
+                      return {
+                        ...item,
+                        material: manualFormData.type,
+                        gsmContent: manualFormData.gsm || item.gsmContent,
+                        width: manualFormData.width || item.width,
+                        colorShade: manualFormData.color || item.colorShade,
+                        qty: Number(manualFormData.qty) || item.qty,
+                        rate: Number(manualFormData.rate) || item.rate,
+                        gst: Number(manualFormData.gst) || item.gst,
+                        amount: (Number(manualFormData.rate) || item.rate) * (Number(manualFormData.qty) || item.qty),
+                        productName: manualFormData.description || item.productName,
+                        fabricImage: manualFormData.image || item.fabricImage,
+                      };
+                    }
+                    return item;
+                  }));
+                } else {
+                  const newItem = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    material: manualFormData.type,
+                    gsmContent: manualFormData.gsm || "150 GSM",
+                    width: manualFormData.width || "54\"",
+                    colorShade: manualFormData.color || "Beige",
+                    qty: Number(manualFormData.qty) || 200,
+                    buffer: 0,
+                    uom: "mtr",
+                    rate: Number(manualFormData.rate) || 130,
+                    gst: Number(manualFormData.gst) || 5,
+                    amount: (Number(manualFormData.rate) || 130) * (Number(manualFormData.qty) || 200),
+                    deliveryDate: "",
+                    images: [],
+                    productName: manualFormData.description || manualFormData.type,
+                    soNo: "",
+                    fabricImage: manualFormData.image || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg",
+                  };
+                  setPoItems(prev => [...prev, newItem]);
+                }
+                
                 setIsManualEntryOpen(false);
+                setEditingItem(null);
                 setManualFormData({
-                  type: "Cotton Fabric", description: "", gsm: "", width: "", color: "", qty: "", rate: "", gst: "5", image: ""
+                  type: "Cotton Fabric", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: ""
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
-                <Check className="w-4 h-4 mr-2" /> Add to PO
+                <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}
               </Button>
             </div>
           </div>
