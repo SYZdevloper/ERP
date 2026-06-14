@@ -855,7 +855,7 @@ export function PurchaseOrderForm({
               setActiveSoForLines(null);
             }}
             type={type}
-            supplierName={selectedBuyerId}
+            supplierName={selectedBuyerId ?? undefined}
           />
         )}
         {/* Floating Panel for Add Manual Fabric */}
