@@ -1,6 +1,6 @@
 "use client";
 
-import { PurchaseOrderForm } from "@/components/purchase-orders/po-form";
+import { TrimsPurchaseOrderForm } from "@/components/purchase-orders/trims-po-form";
 
 export const TRIMS_OPTIONS = [
   "Buttons 18L",
@@ -14,7 +14,7 @@ export const TRIMS_OPTIONS = [
 
 export default function CreateTrimsPurchaseOrderPage() {
   return (
-    <PurchaseOrderForm 
+    <TrimsPurchaseOrderForm 
       type="Trims"
       itemLabel="Trim PO"
       specLabel="Specifications"

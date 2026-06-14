@@ -576,34 +576,36 @@ export function PurchaseOrderForm({
                   <div className="relative">
                     {/* Address View */}
                     <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
-                      {showAddress && (
-                        <div className="flex flex-col md:flex-row gap-5 items-stretch">
-                          <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
-                            <div className="flex items-center justify-between mb-4 h-8">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                  <MapPin className="w-4 h-4 text-[#0453B8]" />
+                      <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                          <div className="flex flex-col md:flex-row gap-5 items-stretch pt-1 pb-1">
+                            <div className="border border-slate-200 rounded-lg p-5 flex-1 flex flex-col bg-white w-full min-h-[164px] text-left">
+                              <div className="flex items-center justify-between mb-4 h-8">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                    <MapPin className="w-4 h-4 text-[#0453B8]" />
+                                  </div>
+                                  <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+                                    Address Details <span className="text-red-500">*</span>
+                                  </h3>
                                 </div>
-                                <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                                  Address Details <span className="text-red-500">*</span>
-                                </h3>
                               </div>
+                              {selectedSupplier ? (
+                                <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
+                                  <p className="font-medium text-slate-900">{selectedSupplier}</p>
+                                  <p>{supplierAddressInfo.line1}</p>
+                                  <p>{supplierAddressInfo.line2}</p>
+                                  <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
+                                  Please select a supplier to view their address details.
+                                </div>
+                              )}
                             </div>
-                            {selectedSupplier ? (
-                              <div className="text-sm text-slate-600 space-y-1 pl-11 flex-1">
-                                <p className="font-medium text-slate-900">{selectedSupplier}</p>
-                                <p>{supplierAddressInfo.line1}</p>
-                                <p>{supplierAddressInfo.line2}</p>
-                                <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">
-                                Please select a supplier to view their address details.
-                              </div>
-                            )}
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Sales Order Table View */}
@@ -839,140 +841,22 @@ export function PurchaseOrderForm({
             } : undefined}
           />
         
-        {/* Floating Panel for SO Lines */}
+        {/* Select SO Items Modal */}
         {activeSoForLines && (
-          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300">
-            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-slate-900">Select Sales Order Lines</h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">{selectedBuyerId} - {activeSoForLines.soNo}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setActiveSoForLines(null)} className="h-8 w-8 p-0 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto max-h-[60vh] p-4 custom-scrollbar">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-[#F8FAFC] border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 font-bold text-slate-700 w-12 text-center">Line</th>
-                    <th className="px-3 py-2 font-bold text-slate-700">Fabric Details</th>
-                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Req. Qty<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
-                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Already PO<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
-                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Balance<br/><span className="text-[10px] font-normal text-slate-500">(Mtrs)</span></th>
-                    <th className="px-3 py-2 font-bold text-slate-700 text-center">Select</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED").map((item, idx) => {
-                    const reqQty = item.requiredQtyMtr || 500;
-                    const alreadyPo = Math.floor(reqQty * 0.4);
-                    const balance = reqQty - alreadyPo;
-                    
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-3 py-3 text-center font-medium text-slate-600">L{idx + 1}</td>
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
-                              <img src="/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex flex-col text-xs">
-                              <span className="font-bold text-slate-800">Fabric: <span className="font-medium text-slate-600">{item.fabricBom?.type || 'Cotton'}</span></span>
-                              <span className="font-bold text-slate-800">GSM: <span className="font-medium text-slate-600">{item.fabricBom?.gsm || '180'}</span></span>
-                              <span className="font-bold text-slate-800">Color: <span className="font-medium text-slate-600">{item.color}</span></span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-center font-medium">{reqQty.toFixed(2)}</td>
-                        <td className="px-3 py-3 text-center font-bold text-emerald-600">{alreadyPo.toFixed(2)}</td>
-                        <td className="px-3 py-3 text-center font-bold text-[#0453B8]">{balance.toFixed(2)}</td>
-                        <td className="px-3 py-3 text-center">
-                          <div className="flex justify-center">
-                            <input 
-                              type="checkbox" 
-                              className="w-4 h-4 text-[#0453B8] rounded border-slate-300 focus:ring-[#0453B8] cursor-pointer"
-                              checked={!!selectedLines[item.id]}
-                              onChange={(e) => setSelectedLines({...selectedLines, [item.id]: e.target.checked})}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED").length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500">No fabric lines found for this Sales Order.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-between items-center">
-              <Button type="button" variant="outline" size="sm" onClick={() => setActiveSoForLines(null)} className="h-8">
-                Cancel
-              </Button>
-              <Button 
-                type="button"
-                size="sm" 
-                className="h-8 bg-[#0453B8] hover:bg-blue-700 text-white"
-                onClick={() => {
-                  setPoItems(prev => {
-                    const nextPoItems = [...prev];
-                    const itemsToAdd = ALL_SO_ITEMS.filter(i => i.soId === activeSoForLines.id && i.trackingStatus !== "CLOSED");
-                    
-                    itemsToAdd.forEach(item => {
-                      const isSelected = selectedLines[item.id];
-                      const existingIndex = nextPoItems.findIndex(p => p.soItemId === item.id);
-                      
-                      if (isSelected) {
-                        const reqQty = item.requiredQtyMtr || 500;
-                        const alreadyPo = Math.floor(reqQty * 0.4);
-                        const balance = reqQty - alreadyPo;
-                        const defaultQty = balance > 0 ? balance : reqQty;
-                        
-                        if (existingIndex >= 0) {
-                          // Keep existing as is
-                        } else {
-                          // Add new
-                          nextPoItems.push({
-                            id: "item-" + Math.random().toString(36).substr(2, 9),
-                            soItemId: item.id,
-                            material: (item.fabricBom?.type === "Cotton" ? "Cotton Fabric" : item.fabricBom?.type) || "Cotton Fabric",
-                            gsmContent: `${item.fabricBom?.gsm || "180"}gsm`,
-                            width: `${item.fabricBom?.width || "44"}""`,
-                            colorShade: item.color,
-                            requiredQty: item.requiredQtyMtr,
-                            qty: 0,
-                            buffer: 0,
-                            uom: "mtr",
-                            rate: 0,
-                            gst: 0,
-                            amount: 0,
-                            deliveryDate: "2026-06-21",
-                            productName: item.name,
-                            soNo: activeSoForLines.soNo,
-                          });
-                        }
-                      } else {
-                        // If not selected, remove it if it existed
-                        if (existingIndex >= 0) {
-                          nextPoItems.splice(existingIndex, 1);
-                        }
-                      }
-                    });
-                    return nextPoItems;
-                  });
-                  setActiveSoForLines(null);
-                  setSelectedLines({});
-                }}
-              >
-                Add Selected Lines
-              </Button>
-            </div>
-          </div>
+          <SelectSalesOrderItemsDialog
+            open={!!activeSoForLines}
+            onOpenChange={(open) => {
+              if (!open) setActiveSoForLines(null);
+            }}
+            buyerId={activeSoForLines.id}
+            existingPoItems={poItems}
+            onNext={(selectedSoItems) => {
+              handleSoItemNext(selectedSoItems);
+              setActiveSoForLines(null);
+            }}
+            type={type}
+            supplierName={selectedBuyerId}
+          />
         )}
         {/* Floating Panel for Add Manual Fabric */}
         {isManualEntryOpen && (

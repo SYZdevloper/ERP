@@ -77,7 +77,6 @@ export function POItemsTable({
           <TableHeader className="bg-slate-50">
             <TableRow>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Sr</TableHead>
-              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">SO No.</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Line</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Image</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Fabric Details</TableHead>
@@ -97,7 +96,7 @@ export function POItemsTable({
           <TableBody className="text-sm">
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isReadOnly ? 15 : 16} className="py-8 text-center text-slate-500">
+                <TableCell colSpan={isReadOnly ? 14 : 15} className="py-8 text-center text-slate-500">
                   No {itemLabel.toLowerCase()}s added yet. {!isReadOnly && `Click "Add Sales Order" or "Manual Fabric" to start.`}
                 </TableCell>
               </TableRow>
@@ -127,7 +126,7 @@ export function POItemsTable({
                         <React.Fragment key={`group-${soNo}`}>
                           {/* Group Header */}
                           <TableRow className="bg-[#f8fafd]">
-                            <TableCell colSpan={16} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
+                            <TableCell colSpan={15} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
                               {soNo} - {soName}
                             </TableCell>
                           </TableRow>
@@ -141,7 +140,6 @@ export function POItemsTable({
                             return (
                               <TableRow key={item.id} className="hover:bg-slate-50/50">
                                 <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs font-semibold">{globalIndex++}</TableCell>
-                                <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs">{item.soNo}</TableCell>
                                 <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs">L{lineIndex + 1}</TableCell>
                                 
                                 <TableCell className="py-2.5 px-2">
@@ -223,14 +221,13 @@ export function POItemsTable({
                     {manualGroup.length > 0 && (
                       <React.Fragment key="group-MANUAL">
                         <TableRow className="bg-[#f0fdf4]">
-                          <TableCell colSpan={16} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                          <TableCell colSpan={15} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
                             Manual Entry
                           </TableCell>
                         </TableRow>
                         {manualGroup.map((item) => (
                           <TableRow key={item.id} className="hover:bg-slate-50/50">
                             <TableCell className="text-center text-slate-600 py-2.5 px-2 text-xs font-semibold">{globalIndex++}</TableCell>
-                            <TableCell className="text-center text-slate-600 py-2.5 px-2 text-[11px] font-bold">MANUAL</TableCell>
                             <TableCell className="text-center text-slate-400 py-2.5 px-2 text-xs">-</TableCell>
                             
                             <TableCell className="py-2.5 px-2">
