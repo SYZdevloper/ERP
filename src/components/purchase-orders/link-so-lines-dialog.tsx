@@ -23,9 +23,7 @@ interface LinkSoLinesDialogProps {
   buyerName?: string; // Only show SOs for this buyer
   trimItemDetails: {
     itemType: string;
-    designNo: string;
-    color: string;
-    sizeSpec: string;
+    description?: string;
   };
   initialLinkedLines: LinkedLine[];
   onSave: (linkedLines: LinkedLine[]) => void;
@@ -132,7 +130,7 @@ export function LinkSoLinesDialog({
       <DialogContent className="sm:max-w-[1000px] max-w-[95vw] p-0 overflow-hidden bg-slate-50 flex flex-col max-h-[85vh]">
         <div className="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
           <DialogTitle className="text-lg font-bold text-slate-800">
-            Select Sales Order Lines for {trimItemDetails.itemType || "Item"} - {trimItemDetails.color || "Color"} - {trimItemDetails.sizeSpec || "Size"}
+            Select Sales Order Lines for {trimItemDetails.itemType || "Item"} {trimItemDetails.description ? `- ${trimItemDetails.description}` : ""}
           </DialogTitle>
           <button onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X className="w-5 h-5" />

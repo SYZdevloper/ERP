@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { X, ChevronDown, Check, FileText } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { POItemsTable } from "@/components/purchase-orders/po-items-table";
 
 interface ViewPODialogProps {
   po: any;
@@ -108,47 +109,31 @@ export function ViewPODialog({
           <div>
             <h3 className="text-sm font-bold text-slate-900 mb-2.5">Items (1)</h3>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead className="text-slate-700 text-xs font-bold w-10 text-center py-2.5">#</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold py-2.5">{itemNameLabel}</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">UOM</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Qty</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Rate</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold text-center py-2.5">GST %</TableHead>
-                    <TableHead className="text-slate-700 text-xs font-bold text-right py-2.5">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="text-[13px]">
-                  <TableRow className="hover:bg-slate-50/50">
-                    <TableCell className="text-center text-slate-500 py-3">1</TableCell>
-                    <TableCell className="font-semibold text-slate-800 py-3">{itemDesc}</TableCell>
-                    <TableCell className="text-center text-slate-600 py-3">pcs</TableCell>
-                    <TableCell className="text-right text-slate-700 font-medium py-3">{numericQty.toLocaleString('en-IN')}</TableCell>
-                    <TableCell className="text-right text-slate-700 font-medium py-3">₹{rateVal}</TableCell>
-                    <TableCell className="text-center text-slate-700 font-medium py-3">{gstPct}%</TableCell>
-                    <TableCell className="text-right font-bold text-slate-900 py-3">₹{subTotal.toLocaleString('en-IN')}</TableCell>
-                  </TableRow>
-                  
-                  {/* Totals Breakdown */}
-                  <TableRow className="bg-slate-50/50 border-t border-slate-200">
-                    <TableCell colSpan={5} className="py-2"></TableCell>
-                    <TableCell className="text-right text-slate-500 font-semibold py-2">SUBTOTAL</TableCell>
-                    <TableCell className="text-right font-bold text-slate-800 py-2">₹{subTotal.toLocaleString('en-IN')}</TableCell>
-                  </TableRow>
-                  <TableRow className="bg-slate-50/50">
-                    <TableCell colSpan={5} className="py-2"></TableCell>
-                    <TableCell className="text-right text-slate-500 font-semibold py-2">IGST</TableCell>
-                    <TableCell className="text-right font-bold text-slate-800 py-2">₹{gstAmount.toLocaleString('en-IN')}</TableCell>
-                  </TableRow>
-                  <TableRow className="bg-slate-50/50">
-                    <TableCell colSpan={5} className="py-2"></TableCell>
-                    <TableCell className="text-right text-slate-700 font-bold py-2">GRAND TOTAL</TableCell>
-                    <TableCell className="text-right font-black text-slate-900 text-sm py-2">₹{grandTotal.toLocaleString('en-IN')}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <POItemsTable
+                items={po.items || [{
+                  id: "item-1",
+                  soItemId: po.linkedSo || "SO-2026-002",
+                  material: itemDesc,
+                  description: "Men's Casual T-Shirt",
+                  gsm: "180",
+                  width: "44\"",
+                  colorShade: "Blue",
+                  qty: numericQty,
+                  uom: "pcs",
+                  rate: rateVal,
+                  gst: gstPct,
+                  amount: subTotal,
+                  deliveryDate: po.delivery || "2026-06-09",
+                  images: []
+                }]}
+                onEditClick={() => {}}
+                onDeleteClick={() => {}}
+                onOpenAddDialog={() => {}}
+                totalQtyDisplay={`${numericQty.toLocaleString('en-IN')} pcs`}
+                itemLabel={itemNameLabel}
+                type={itemNameLabel === "Material" ? "Fabric" : "Trims"}
+                isReadOnly={true}
+              />
             </div>
           </div>
 

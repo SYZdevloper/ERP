@@ -15,5 +15,14 @@ export default function EditSalesOrderPage({ params }: { params: Promise<{ id: s
     salesOrderNo: listOrder ? listOrder.soNo : `SO-${id}`,
   };
 
+  if (id === "16") {
+    mockOrderData.buyerId = "b-6";
+    // Only keep the 2 new products we added for Benaton
+    mockOrderData.products = mockOrderData.products.filter(p => p.id === "line-4" || p.id === "line-5");
+  } else {
+    // For other orders, hide the Benaton products
+    mockOrderData.products = mockOrderData.products.filter(p => p.id !== "line-4" && p.id !== "line-5");
+  }
+
   return <SalesOrderForm initialValues={mockOrderData} isReadOnly={false} isEditMode={true} />;
 }

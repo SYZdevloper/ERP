@@ -80,9 +80,6 @@ export function POItemsTable({
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Line</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2">Image</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Fabric Details</TableHead>
-              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">GSM / Content</TableHead>
-              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Width</TableHead>
-              <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Color / Shade</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Required Qty<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Already Ordered<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight">Balance Qty<br/><span className="font-normal text-[9px] text-slate-500">(Mtrs)</span></TableHead>
@@ -96,7 +93,7 @@ export function POItemsTable({
           <TableBody className="text-sm">
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isReadOnly ? 14 : 15} className="py-8 text-center text-slate-500">
+                <TableCell colSpan={isReadOnly ? 11 : 12} className="py-8 text-center text-slate-500">
                   No {itemLabel.toLowerCase()}s added yet. {!isReadOnly && `Click "Add Sales Order" or "Manual Fabric" to start.`}
                 </TableCell>
               </TableRow>
@@ -126,7 +123,7 @@ export function POItemsTable({
                         <React.Fragment key={`group-${soNo}`}>
                           {/* Group Header */}
                           <TableRow className="bg-[#f8fafd]">
-                            <TableCell colSpan={15} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
+                            <TableCell colSpan={12} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
                               {soNo} - {soName}
                             </TableCell>
                           </TableRow>
@@ -147,27 +144,12 @@ export function POItemsTable({
                                     <img src={item.fabricImage || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg"} alt="Fabric" className="w-full h-full object-cover" />
                                   </div>
                                 </TableCell>
-
                                 <TableCell className="py-2.5 px-2">
-                                  <div className="flex flex-col">
-                                    <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.material || "Cotton"}</span>
-                                    <span className="text-[10px] text-slate-500 leading-tight">Fabric</span>
+                                  <div className="inline-flex flex-col min-w-[150px]">
+                                    <span className="font-bold text-[#0453B8] text-[12px] leading-tight mb-0.5">{item.material || "Fabrics"}</span>
+                                    <span className="text-[11px] text-slate-500 leading-tight mb-1">{item.description || "Fabric Description"}</span>
+                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "180gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '44"'}</span>
                                   </div>
-                                </TableCell>
-
-                                <TableCell className="py-2.5 px-2">
-                                  <div className="flex flex-col">
-                                    <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.gsm || item.gsmContent || "180 GSM"}</span>
-                                    <span className="text-[10px] text-slate-500 leading-tight">100% {item.material?.split(' ')[0] || 'Cotton'}</span>
-                                  </div>
-                                </TableCell>
-
-                                <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
-                                  {item.width || '58"'}
-                                </TableCell>
-
-                                <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
-                                  {item.colorShade || '-'}
                                 </TableCell>
 
                                 <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-700">
@@ -221,7 +203,7 @@ export function POItemsTable({
                     {manualGroup.length > 0 && (
                       <React.Fragment key="group-MANUAL">
                         <TableRow className="bg-[#f0fdf4]">
-                          <TableCell colSpan={15} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                          <TableCell colSpan={12} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
                             Manual Entry
                           </TableCell>
                         </TableRow>
@@ -237,26 +219,12 @@ export function POItemsTable({
                             </TableCell>
 
                             <TableCell className="py-2.5 px-2">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.material || "Linen Slub"}</span>
-                                <span className="text-[10px] text-slate-500 leading-tight">Manual</span>
-                              </div>
-                            </TableCell>
-
-                            <TableCell className="py-2.5 px-2">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-800 text-[11px] leading-tight">{item.gsm || item.gsmContent || "150 GSM"}</span>
-                                <span className="text-[10px] text-slate-500 leading-tight">100% {item.material?.split(' ')[0] || 'Linen'}</span>
-                              </div>
-                            </TableCell>
-
-                            <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
-                              {item.width || '54"'}
-                            </TableCell>
-
-                            <TableCell className="py-2.5 px-2 text-xs font-bold text-slate-800 text-center">
-                              {item.colorShade || 'Beige'}
-                            </TableCell>
+                                  <div className="inline-flex flex-col min-w-[150px]">
+                                    <span className="font-bold text-[#0453B8] text-[12px] leading-tight mb-0.5">{item.material || "Fabrics"}</span>
+                                    <span className="text-[11px] text-slate-500 leading-tight mb-1">{item.description || "Fabric Description"}</span>
+                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "150gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '54"'}</span>
+                                  </div>
+                                </TableCell>
 
                             <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
                             <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>

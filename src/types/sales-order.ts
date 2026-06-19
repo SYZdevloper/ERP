@@ -36,6 +36,7 @@ export const ProductLineItemSchema = z.object({
     width: z.string().optional(),
     color: z.string().optional(),
     type: z.string().optional(),
+    consumption: z.number().optional(),
   }).optional(),
   trims: z.object({
     buttons: z.any().optional(),

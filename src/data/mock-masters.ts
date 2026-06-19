@@ -113,6 +113,20 @@ export const INITIAL_MASTER_BUYERS: MasterBuyer[] = [
     shippingAddress: "North Hub, Gurugram, HR",
     gstNumber: "07AACHM1234K1Z5",
     notes: "Requires specific carton sizes"
+  },
+  {
+    id: "BYR-03",
+    logo: "",
+    accountDeptNo: "ACC-103",
+    warehouseDeptNo: "WH-206",
+    transport: "FedEx",
+    creditTerms: "15 Days",
+    defaultAgent: "Amit Sharma",
+    companyName: "benaton",
+    billingAddress: "Mumbai, MH",
+    shippingAddress: "Mumbai, MH",
+    gstNumber: "27AADCB2230M1B3",
+    notes: "Benaton orders"
   }
 ];
 
@@ -127,5 +141,6 @@ export const INITIAL_MASTER_SUPPLIERS: Supplier[] = [
   { code: "SUP-107", name: "Laxmi Buttons", contactPerson: "Suresh", phone: "+91 9810000067", category: "Trims", onTimePct: 85, rejectionPct: 1.5, openPos: 1, billingAddress: "Mumbai, Maharashtra" },
   { code: "SUP-108", name: "Super Labels", contactPerson: "Anita", phone: "+91 9810000068", category: "Trims", onTimePct: 88, rejectionPct: 2.1, openPos: 3, billingAddress: "Delhi" },
   { code: "SUP-109", name: "Vardhman Threads", contactPerson: "Ravi", phone: "+91 9810000069", category: "Trims", onTimePct: 94, rejectionPct: 0.9, openPos: 5, billingAddress: "Ludhiana, Punjab" },
-  { code: "SUP-110", name: "Reliance Packaging", contactPerson: "Kiran", phone: "+91 9810000070", category: "Trims", onTimePct: 90, rejectionPct: 1.0, openPos: 4, billingAddress: "Mumbai, Maharashtra" }
+  { code: "SUP-110", name: "Reliance Packaging", contactPerson: "Kiran", phone: "+91 9810000070", category: "Trims", onTimePct: 90, rejectionPct: 1.0, openPos: 4, billingAddress: "Mumbai, Maharashtra" },
+  { code: "SUP-111", name: "Salsar Fashion", contactPerson: "Salsar", phone: "+91 9810000071", category: "Fabric", onTimePct: 95, rejectionPct: 0.5, openPos: 1, billingAddress: "Surat, Gujarat" }
 ];

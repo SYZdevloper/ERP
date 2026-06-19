@@ -17,9 +17,7 @@ import { useForm, FormProvider } from "react-hook-form";
 export type TrimItemRow = {
   id: string;
   itemType: string;
-  designNo: string;
-  color: string;
-  sizeSpec: string;
+  description: string;
   linkedLines: LinkedLine[];
   manualTotalQty?: string | number;
   rate?: string | number;
@@ -34,9 +32,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
     {
       id: `trim-${Date.now()}`,
       itemType: "",
-      designNo: "",
-      color: "",
-      sizeSpec: "",
+      description: "",
       linkedLines: [],
       manualTotalQty: "",
       rate: "",
@@ -70,9 +66,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
       {
         id: `trim-${Date.now()}`,
         itemType: "",
-        designNo: "",
-        color: "",
-        sizeSpec: "",
+        description: "",
         linkedLines: [],
         manualTotalQty: "",
         rate: "",
@@ -262,10 +256,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                         <tr>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-12">#</th>
                           <th className="px-4 py-3 font-bold text-slate-600">Item Type</th>
-                          <th className="px-4 py-3 font-bold text-slate-600">Design No.</th>
-                          <th className="px-4 py-3 font-bold text-slate-600">Color</th>
-                          <th className="px-4 py-3 font-bold text-slate-600">Size / Spec</th>
-                          {selectedBuyerId && <th className="px-4 py-3 font-bold text-slate-600 text-center w-[160px]">Linked SO Lines</th>}
+                          <th className="px-4 py-3 font-bold text-slate-600">Description</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[120px]">Total Qty (Pcs)</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">Rate (₹)</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">GST %</th>
@@ -276,7 +267,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                       <tbody className="divide-y divide-slate-100">
                         {trimItems.length === 0 ? (
                           <tr>
-                            <td colSpan={selectedBuyerId ? 11 : 10} className="px-4 py-12 text-center text-slate-500 font-medium">
+                            <td colSpan={8} className="px-4 py-12 text-center text-slate-500 font-medium">
                               No trim items added yet. Click "+ Add Trim Item" to begin.
                             </td>
                           </tr>
@@ -304,60 +295,12 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                 </td>
                                 <td className="px-4 py-3">
                                   <Input
-                                    value={item.designNo}
-                                    onChange={(e) => handleUpdateTrim(item.id, 'designNo', e.target.value)}
-                                    placeholder="e.g. ZR-2450"
+                                    value={item.description}
+                                    onChange={(e) => handleUpdateTrim(item.id, 'description', e.target.value)}
+                                    placeholder="e.g. 5# Nylon Coil, Black"
                                     className="h-9 border-slate-200 bg-white focus:ring-[#0453B8] shadow-sm"
                                   />
                                 </td>
-                                <td className="px-4 py-3">
-                                  <Select value={item.color} onValueChange={(v) => handleUpdateTrim(item.id, 'color', v)}>
-                                    <SelectTrigger className="h-9 border-slate-200 bg-white focus:ring-[#0453B8] shadow-sm">
-                                      <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="White">White</SelectItem>
-                                      <SelectItem value="Black">Black</SelectItem>
-                                      <SelectItem value="Navy">Navy</SelectItem>
-                                      <SelectItem value="-">-</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <Select value={item.sizeSpec} onValueChange={(v) => handleUpdateTrim(item.id, 'sizeSpec', v)}>
-                                    <SelectTrigger className="h-9 border-slate-200 bg-white focus:ring-[#0453B8] shadow-sm">
-                                      <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="18L">18L</SelectItem>
-                                      <SelectItem value="20L">20L</SelectItem>
-                                      <SelectItem value="24L">24L</SelectItem>
-                                      <SelectItem value="-">-</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                                {selectedBuyerId && (
-                                  <td className="px-4 py-3 text-center">
-                                    <div
-                                      className={`flex flex-col items-center justify-center ${!item.itemType ? 'cursor-not-allowed opacity-50' : 'cursor-pointer group'}`}
-                                      onClick={() => {
-                                        if (item.itemType) {
-                                          setActiveTrimIdForLinking(item.id);
-                                        }
-                                      }}
-                                      title={!item.itemType ? "Please select Item Type first" : ""}
-                                    >
-                                      <span className={`${!item.itemType ? 'text-slate-400 font-semibold' : 'text-[#0453B8] font-bold group-hover:underline'} text-[13px]`}>
-                                        {item.linkedLines.length > 0 ? `${item.linkedLines.length} Line${item.linkedLines.length > 1 ? 's' : ''} Selected` : "Select SO Lines"}
-                                      </span>
-                                      {item.linkedLines.length > 0 && (
-                                        <span className="text-[10px] text-slate-500 font-medium tracking-tight mt-0.5 max-w-[120px] truncate">
-                                          {uniqueSOs.join(", ")}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </td>
-                                )}
                                 <td className="px-4 py-3 text-center">
                                   <Input
                                     type="number"
@@ -559,9 +502,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
             buyerName={selectedBuyerId}
             trimItemDetails={{
               itemType: activeTrimDetails.itemType,
-              designNo: activeTrimDetails.designNo,
-              color: activeTrimDetails.color,
-              sizeSpec: activeTrimDetails.sizeSpec
+              description: activeTrimDetails.description,
             }}
             initialLinkedLines={activeTrimDetails.linkedLines}
             onSave={handleSaveLinkedLines}

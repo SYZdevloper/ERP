@@ -216,11 +216,7 @@ export default function SalesOrdersPage() {
                                  <Edit2 className="mr-2 h-4 w-4 text-slate-400" /> Edit Order
                                </Link>
                              </DropdownMenuItem>
-                             <DropdownMenuItem className="p-0 cursor-pointer">
-                               <Link href={`/sales-orders/${order.id}/material-bom`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
-                                 <ClipboardList className="mr-2 h-4 w-4 text-slate-400" /> Material BOM
-                               </Link>
-                             </DropdownMenuItem>
+
                              <DropdownMenuItem className="p-0 cursor-pointer">
                                <Link href={`/sales-orders/${order.id}/tracking`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
                                  <Activity className="mr-2 h-4 w-4 text-slate-400" /> Fabric Tracking

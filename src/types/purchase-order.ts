@@ -1,6 +1,7 @@
 export interface POItem {
   id: string;
   material: string; // The item name/description
+  description?: string; // Fabric description
   gsmContent?: string; // Kept for backward compatibility or trims
   gsm?: string;
   width?: string;

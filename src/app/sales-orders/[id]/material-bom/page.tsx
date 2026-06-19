@@ -15,6 +15,13 @@ export default function TrimsBomPage({ params }: { params: Promise<{ id: string 
     salesOrderNo: listOrder ? listOrder.soNo : `SO-${id}`,
   };
 
+  if (id === "16") {
+    mockOrderData.buyerId = "b-6";
+    mockOrderData.products = mockOrderData.products.filter(p => p.id === "line-4" || p.id === "line-5");
+  } else {
+    mockOrderData.products = mockOrderData.products.filter(p => p.id !== "line-4" && p.id !== "line-5");
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <SalesOrderForm initialValues={mockOrderData} isReadOnly={true} hideEditDetails={true} />

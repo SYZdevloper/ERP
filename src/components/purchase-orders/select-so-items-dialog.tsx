@@ -39,6 +39,9 @@ export const ALL_SO_ITEMS: (ProductLineItem & {
   { id: "line-15", productId: "MS002", name: "Men's Formal Trousers", type: "Straight Fit", color: "Navy", sizeBreakdown: { XS: 0, S: 60, M: 120, L: 110, XL: 70, XXL: 20 }, rate: 520, soItem: "SO007-02", requiredQtyMtr: 760.00, soId: "6", soNo: "SO-2026-006" } as any,
   // SO-2026-007 (id: "7") — Zara (cancelled)
   { id: "line-6", productId: "TS002", name: "Men's Polo T-Shirt", type: "Short Sleeve", color: "White", sizeBreakdown: { XS: 25, S: 65, M: 100, L: 85, XL: 45, XXL: 0 }, rate: 220, soItem: "SO003-01", requiredQtyMtr: 380.00, soId: "7", soNo: "SO-2026-007" } as any,
+  // SO-2026-016 (id: "16") — benaton
+  { id: "line-16-1", productId: "MT004", name: "Men's Casual T-Shirt", type: "Full Sleeves Round Neck", color: "Blue", sizeBreakdown: { S: 50, M: 100, L: 80, XL: 20 }, rate: 350, soItem: "SO016-01", requiredQtyMtr: 375.00, soId: "16", soNo: "SO-2026-016", fabricBom: { gsm: "180", width: "44", color: "Blue", type: "Cotton" }, trims: { buttons: { code: "BTN-18L-NVY", color: "Navy", image: "" }, label: { code: "LBL-WVN-BLK", color: "Black / Gold", image: "" }, hangTag: { code: "HTG-PRM-WHT", color: "White", image: "" } } } as any,
+  { id: "line-16-2", productId: "MH002", name: "Men's Casual Shirt", type: "Half Sleeves Regular Collar", color: "White", sizeBreakdown: { S: 40, M: 90, L: 100, XL: 20 }, rate: 450, soItem: "SO016-02", requiredQtyMtr: 337.50, soId: "16", soNo: "SO-2026-016", fabricBom: { gsm: "160", width: "58", color: "White", type: "Linen" }, trims: { buttons: { code: "BTN-18L-WHT", color: "White", image: "" }, label: { code: "LBL-PRT-WHT", color: "White", image: "" }, hangTag: { code: "HTG-ECO-KFT", color: "Kraft", image: "" } } } as any,
 ];
 
 interface SelectSalesOrderItemsDialogProps {

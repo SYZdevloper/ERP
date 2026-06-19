@@ -149,6 +149,30 @@ export const MOCK_BUYERS: Buyer[] = [
       pincode: "562123",
       country: "India",
     }
+  },
+  {
+    id: "b-6",
+    name: "benaton",
+    creditLimit: 3000000,
+    balance: 0,
+    billingAddress: {
+      companyName: "benaton",
+      addressLine1: "123 Fashion Street",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400001",
+      country: "India",
+      isDefault: true,
+    },
+    shippingAddress: {
+      id: "addr-ben1",
+      companyName: "benaton warehouse",
+      addressLine1: "124 Fashion Street",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400001",
+      country: "India",
+    }
   }
 ];
 
@@ -213,6 +237,48 @@ export const MOCK_PRODUCTS: ProductLineItem[] = [
     sizeBreakdown: { S: 5, M: 10, L: 10, XL: 5, XXL: 0, "3XL": 2 },
     rate: 600.00,
     fabricBom: { type: "Cotton Poplin", gsm: "140", width: "60", color: "Grey" },
+    trims: {
+      buttons: { code: "BTN-18L-WHT", color: "White", image: "" },
+      label: { code: "LBL-PRT-WHT", color: "White", image: "" },
+      hangTag: { code: "HTG-ECO-KFT", color: "Kraft", image: "" }
+    }
+  },
+  {
+    id: "line-4",
+    productId: "MT004",
+    name: "Men's Casual T-Shirt",
+    category: "Men's T-Shirt",
+    subcategory: "T-Shirt",
+    type: "Full Sleeves Round Neck",
+    brandName: "benaton",
+    color: "Blue",
+    fabric: "Cotton",
+    fit: "Regular",
+    sqNumber: "SKU1000296",
+    sizeBreakdown: { S: 50, M: 100, L: 80, XL: 20 },
+    rate: 350.00,
+    fabricBom: { type: "Cotton", gsm: "180", width: "44", color: "Blue", consumption: 1.5 },
+    trims: {
+      buttons: { code: "BTN-18L-NVY", color: "Navy", image: "" },
+      label: { code: "LBL-WVN-BLK", color: "Black / Gold", image: "" },
+      hangTag: { code: "HTG-PRM-WHT", color: "White", image: "" }
+    }
+  },
+  {
+    id: "line-5",
+    productId: "MH002",
+    name: "Men's Casual Shirt",
+    category: "Men's Shirt",
+    subcategory: "Shirt",
+    type: "Half Sleeves Regular Collar",
+    brandName: "benaton",
+    color: "White",
+    fabric: "Linen",
+    fit: "Slim Fit",
+    sqNumber: "SKU1000297",
+    sizeBreakdown: { S: 40, M: 90, L: 100, XL: 20 },
+    rate: 450.00,
+    fabricBom: { type: "Linen", gsm: "160", width: "58", color: "White", consumption: 1.35 },
     trims: {
       buttons: { code: "BTN-18L-WHT", color: "White", image: "" },
       label: { code: "LBL-PRT-WHT", color: "White", image: "" },
@@ -330,6 +396,7 @@ export interface SalesOrderListItem {
 }
 
 export const MOCK_SALES_ORDERS_LIST: SalesOrderListItem[] = [
+  { id: "16", soNo: "SO-2026-016", orderDate: "2026-06-19", buyer: "benaton", location: "Mumbai, Maharashtra", deliveryDate: "2026-08-15", status: "Draft", amount: 204500, category: "Mixed", productName: "Men's Casual T-Shirt, Men's Casual Shirt" },
   { id: "1", soNo: "SO-2026-001", orderDate: "2026-06-01", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-17", status: "Confirmed", amount: 1250000, category: "T-Shirts", productName: "Men's Polo T-Shirt" },
   { id: "2", soNo: "SO-2026-002", orderDate: "2026-06-02", buyer: "H&M", location: "Bengaluru, Karnataka", deliveryDate: "2026-06-11", status: "Confirmed", amount: 450000, category: "Shirts", productName: "Casual Shirt" },
   { id: "3", soNo: "SO-2026-003", orderDate: "2026-06-02", buyer: "Zara Fashion Pvt Limited", location: "Mumbai, Maharashtra", deliveryDate: "2026-06-18", status: "Draft", amount: 890000, category: "Jackets", productName: "Denim Jacket" },

@@ -60,7 +60,6 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
               {!hideEditDetails && <TableHead className="w-[130px] text-right pr-6 pl-2">Amount (₹)</TableHead>}
               {hideEditDetails && <TableHead className="px-2 w-[25%]">Fabric Config</TableHead>}
               {hideEditDetails && <TableHead className="px-2 w-[30%]">Trim Config</TableHead>}
-              {isReadOnly && <TableHead className="w-[100px] text-center px-2">Material BOM</TableHead>}
               {!isReadOnly && <TableHead className="w-[80px] text-center px-2">Action</TableHead>}
             </TableRow>
           </TableHeader>
@@ -226,21 +225,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                       )}
                     </TableCell>
                   )}
-                  {isReadOnly && (
-                    <TableCell className="px-2 py-2">
-                      <div className="flex items-center justify-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          type="button"
-                          className="h-8 px-4 text-xs font-bold border-[#0453B8] text-[#0453B8] hover:bg-blue-50 transition-colors"
-                          onClick={() => { setTrimConfigProduct(product); setTrimConfigIndex(index); }}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
+
                   {!isReadOnly && (
                     <TableCell className="px-2 py-2">
                       <div className="flex items-center justify-center gap-2">
@@ -268,6 +253,17 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                     <span className="text-sm font-bold text-slate-900">
                       {products.reduce((acc, p) => acc + (p.sizeBreakdown.XS || 0) + (p.sizeBreakdown.S || 0) + (p.sizeBreakdown.M || 0) + (p.sizeBreakdown.L || 0) + (p.sizeBreakdown.XL || 0) + (p.sizeBreakdown.XXL || 0) + (p.sizeBreakdown["3XL"] || 0) + (p.sizeBreakdown["4XL"] || 0) + (p.sizeBreakdown["5XL"] || 0) + (p.sizeBreakdown["6XL"] || 0), 0)}
                     </span>
+                    {(() => {
+                      const totalMtrs = products.reduce((acc, p) => {
+                        const q = (p.sizeBreakdown.XS || 0) + (p.sizeBreakdown.S || 0) + (p.sizeBreakdown.M || 0) + (p.sizeBreakdown.L || 0) + (p.sizeBreakdown.XL || 0) + (p.sizeBreakdown.XXL || 0) + (p.sizeBreakdown["3XL"] || 0) + (p.sizeBreakdown["4XL"] || 0) + (p.sizeBreakdown["5XL"] || 0) + (p.sizeBreakdown["6XL"] || 0);
+                        return acc + (q * (p.fabricBom?.consumption || 0));
+                      }, 0);
+                      return totalMtrs > 0 ? (
+                        <span className="text-sm font-medium text-slate-500 ml-1.5">
+                          ({totalMtrs.toFixed(2)} Mtrs)
+                        </span>
+                      ) : null;
+                    })()}
                   </TableCell>
                   <TableCell />
                   <TableCell />

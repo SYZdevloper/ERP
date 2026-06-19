@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database } from "lucide-react";
+import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database, Package } from "lucide-react";
 import Link from "next/link";
 
 export function Sidebar() {
@@ -11,6 +11,7 @@ export function Sidebar() {
 
   const isSalesActive = pathname.startsWith("/sales-orders");
   const isFabricActive = pathname.startsWith("/fabric-purchases");
+  const isStoreActive = pathname.startsWith("/fabric-store");
   const isTrimsActive = pathname.startsWith("/trims-purchases");
   const isMastersActive = pathname.startsWith("/masters");
 
@@ -59,6 +60,24 @@ export function Sidebar() {
             >
               <FileText className="w-5 h-5 shrink-0" />
               {isExpanded && <span className="truncate">Fabric PO</span>}
+            </Link>
+          </div>
+
+          {/* Fabric Store / GRN Link */}
+          <div className="relative">
+            {isStoreActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/fabric-store"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isStoreActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Package className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Fabric GRN</span>}
             </Link>
           </div>
 
