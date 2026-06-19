@@ -24,7 +24,7 @@ export type TrimItemRow = {
   gst?: string;
 };
 
-export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref = "/trims-purchases" }: any) {
+export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMode = false, backHref = "/trims-purchases" }: any) {
   const router = useRouter();
   const methods = useForm();
 
@@ -143,7 +143,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-700">Supplier <span className="text-red-500">*</span></Label>
-                      <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+                      <Select value={selectedSupplier} onValueChange={setSelectedSupplier} disabled={isViewMode}>
                         <SelectTrigger className="w-full h-10 text-sm font-medium focus:ring-[#0453B8] bg-white border-slate-200 shadow-sm truncate">
                           <SelectValue placeholder="Select Supplier" />
                         </SelectTrigger>
@@ -159,7 +159,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
 
                     <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-700">Buyer</Label>
-                      <Select value={selectedBuyerId} onValueChange={setSelectedBuyerId}>
+                      <Select value={selectedBuyerId} onValueChange={setSelectedBuyerId} disabled={isViewMode}>
                         <SelectTrigger className="w-full h-10 text-sm font-medium focus:ring-[#0453B8] bg-white border-slate-200 shadow-sm truncate">
                           <SelectValue placeholder="Select Buyer" />
                         </SelectTrigger>
@@ -173,12 +173,12 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
 
                     <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
-                      <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" />
+                      <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" disabled={isViewMode} />
                     </div>
 
                     <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-700">PO Date</Label>
-                      <Input type="date" defaultValue="2026-06-13" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" />
+                      <Input type="date" defaultValue="2026-06-13" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" disabled={isViewMode} />
                     </div>
                   </div>
 
@@ -243,12 +243,14 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col">
-                  <div className="mb-4">
-                    <Button onClick={handleAddTrim} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Trim Item
-                    </Button>
-                  </div>
+                  {!isViewMode && (
+                    <div className="mb-4">
+                      <Button onClick={handleAddTrim} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Trim Item
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm flex-1">
                     <table className="w-full text-sm text-left">
@@ -261,7 +263,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">Rate (₹)</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">GST %</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">Amount (₹)</th>
-                          <th className="px-4 py-3 font-bold text-slate-600 text-center w-[80px]">Action</th>
+                          {!isViewMode && <th className="px-4 py-3 font-bold text-slate-600 text-center w-[80px]">Action</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -281,7 +283,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                               <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="px-4 py-3 text-center font-bold text-slate-700">{idx + 1}</td>
                                 <td className="px-4 py-3">
-                                  <Select value={item.itemType} onValueChange={(v) => handleUpdateTrim(item.id, 'itemType', v)}>
+                                  <Select value={item.itemType} onValueChange={(v) => handleUpdateTrim(item.id, 'itemType', v)} disabled={isViewMode}>
                                     <SelectTrigger className="h-9 border-slate-200 bg-white focus:ring-[#0453B8] shadow-sm">
                                       <SelectValue placeholder="Select" />
                                     </SelectTrigger>
@@ -295,6 +297,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                 </td>
                                 <td className="px-4 py-3">
                                   <Input
+                                    disabled={isViewMode}
                                     value={item.description}
                                     onChange={(e) => handleUpdateTrim(item.id, 'description', e.target.value)}
                                     placeholder="e.g. 5# Nylon Coil, Black"
@@ -303,6 +306,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <Input
+                                    disabled={isViewMode}
                                     type="number"
                                     value={item.manualTotalQty !== undefined && item.manualTotalQty !== "" ? item.manualTotalQty : (totalQty > 0 ? totalQty : "")}
                                     onChange={(e) => handleUpdateTrim(item.id, 'manualTotalQty', e.target.value)}
@@ -312,6 +316,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <Input
+                                    disabled={isViewMode}
                                     type="number"
                                     value={item.rate || ""}
                                     onChange={(e) => handleUpdateTrim(item.id, 'rate', e.target.value)}
@@ -320,7 +325,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                   />
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                  <Select value={item.gst || "5"} onValueChange={(v) => handleUpdateTrim(item.id, 'gst', v)}>
+                                  <Select value={item.gst || "5"} onValueChange={(v) => handleUpdateTrim(item.id, 'gst', v)} disabled={isViewMode}>
                                     <SelectTrigger className="h-9 w-20 mx-auto border-slate-200 bg-white focus:ring-[#0453B8] shadow-sm">
                                       <SelectValue placeholder="5%" />
                                     </SelectTrigger>
@@ -342,19 +347,21 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                                     })()}
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-center">
-                                  <div className="flex items-center justify-center gap-2">
+                                {!isViewMode && (
+                                  <td className="px-4 py-3 text-center">
+                                    <div className="flex items-center justify-center gap-2">
 
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteTrim(item.id)}
-                                      className="w-8 h-8 p-0 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </td>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteTrim(item.id)}
+                                        className="w-8 h-8 p-0 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                )}
                               </tr>
                             );
                           })
@@ -362,7 +369,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                       </tbody>
                     </table>
 
-                    {trimItems.length > 0 && (
+                    {!isViewMode && trimItems.length > 0 && (
                       <div className="bg-slate-50 border-t border-slate-200 py-3 px-4 flex justify-center">
                         <Button onClick={handleAddTrim} variant="ghost" className="text-[#0453B8] hover:bg-blue-100 font-bold text-sm h-8">
                           <Plus className="w-4 h-4 mr-2" />
@@ -409,14 +416,15 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
                 </div>
                 <div className="p-4">
                   <textarea
-                    className="w-full min-h-[120px] p-3 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-[#0453B8] outline-none resize-none placeholder:text-slate-400"
+                    disabled={isViewMode}
+                    className="w-full min-h-[120px] p-3 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-[#0453B8] outline-none resize-none placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
                     placeholder="Add any internal notes or special instructions for this order..."
                   />
                 </div>
               </div>
 
               {/* Attach Documents */}
-              <AttachmentsModal isReadOnly={false} />
+              <AttachmentsModal isReadOnly={isViewMode} />
 
               {/* Summary */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -481,16 +489,31 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, backHref
 
         {/* Sticky Footer */}
         <div className="bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3 shrink-0 relative z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <Button variant="ghost" onClick={() => router.push(backHref)} className="text-slate-600 font-bold hover:bg-slate-100">
-            Cancel
-          </Button>
-          <Button variant="outline" className="border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-700 bg-white shadow-sm h-10">
-            <Save className="w-4 h-4 mr-2" />
-            Save Draft
-          </Button>
-          <Button className="bg-[#89a8de] hover:bg-blue-500 text-white font-bold px-6 shadow-sm h-10">
-            Send to Supplier
-          </Button>
+          {isViewMode ? (
+            <>
+              <Button onClick={() => router.push(backHref)} variant="outline" className="font-medium h-10 px-6">
+                Back to POs
+              </Button>
+              <Link href={`${backHref}/${initialPo?.id || "TPO-8006"}/edit`}>
+                <Button className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
+                  Edit PO
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={() => router.push(backHref)} className="text-slate-600 font-bold hover:bg-slate-100">
+                Cancel
+              </Button>
+              <Button variant="outline" className="border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-700 bg-white shadow-sm h-10">
+                <Save className="w-4 h-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button className="bg-[#89a8de] hover:bg-blue-500 text-white font-bold px-6 shadow-sm h-10">
+                Send to Supplier
+              </Button>
+            </>
+          )}
         </div>
 
         {activeTrimDetails && (

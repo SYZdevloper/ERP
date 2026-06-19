@@ -77,14 +77,13 @@ export function PurchaseOrderListPage({
     });
   };
 
+  const handleOpenView = (po: any) => {
+    router.push(`${editItemHrefPrefix}/${po.id}/view`);
+  };
+
   const handleEdit = (po: any) => {
     setIsViewOpen(false);
     router.push(`${editItemHrefPrefix}/${po.id}/edit`);
-  };
-
-  const handleOpenView = (po: any) => {
-    setSelectedPo(po);
-    setIsViewOpen(true);
   };
 
   return (

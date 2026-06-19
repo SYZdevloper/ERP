@@ -33,6 +33,7 @@ import {
 interface PurchaseOrderFormProps {
   initialPo?: any;
   isEditMode?: boolean;
+  isViewMode?: boolean;
   type: "Fabric" | "Trims";
   itemLabel: string; // e.g. "Material" or "Trim Item"
   specLabel?: string; // e.g. "GSM / Content" or "Specifications"
@@ -43,6 +44,7 @@ interface PurchaseOrderFormProps {
 export function PurchaseOrderForm({ 
   initialPo, 
   isEditMode = false,
+  isViewMode = false,
   type,
   itemLabel,
   specLabel = "GSM / Content",
@@ -227,14 +229,14 @@ export function PurchaseOrderForm({
       if (found) setSelectedSoItemContext(found);
     }
     setManualFormData({
-      type: item.material || "Cotton Fabric",
-      description: item.productName || "",
-      gsm: item.gsmContent?.replace("gsm", "") || "",
-      width: item.width?.replace("\"", "") || "",
+      type: item.material || "",
+      description: item.description || "",
+      gsm: item.gsm || "",
+      width: item.width || "",
       color: item.colorShade || "",
-      qty: item.qty.toString(),
-      rate: item.rate.toString(),
-      gst: item.gst.toString(),
+      qty: item.qty ? item.qty.toString() : "",
+      rate: item.rate ? item.rate.toString() : "",
+      gst: item.gst ? item.gst.toString() : "5",
       image: item.fabricImage || ""
     });
     setIsManualEntryOpen(true);
@@ -487,6 +489,7 @@ export function PurchaseOrderForm({
                       <Select 
                         value={methods.watch("supplier") || ""}
                         onValueChange={(val) => methods.setValue("supplier", val)}
+                        disabled={isViewMode}
                       >
                         <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium truncate">
                           <SelectValue placeholder="Select Supplier" />
@@ -508,6 +511,7 @@ export function PurchaseOrderForm({
                     <div className="relative">
                       <Select
                         value={selectedBuyerId || ""}
+                        disabled={isViewMode}
                         onValueChange={(val) => {
                           const hasLinkedItems = poItems.some(i => i.soItemId);
                           if (hasLinkedItems && !window.confirm("Changing the buyer will clear all selected products from the table. Continue?")) {
@@ -538,7 +542,7 @@ export function PurchaseOrderForm({
                   {/* Agent / Broker */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
-                    <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white" />
+                    <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white" disabled={isViewMode} />
                   </div>
                 </div>
 
@@ -548,7 +552,7 @@ export function PurchaseOrderForm({
                       {viewMode === "address" ? "Supplier Address" : `Available Sales Orders for ${selectedBuyerId}`}
                     </h3>
                     <div className="flex gap-2">
-                      {selectedBuyerId && (
+                      {selectedBuyerId && !isViewMode && (
                         <Button 
                           type="button"
                           variant="outline" 
@@ -609,7 +613,7 @@ export function PurchaseOrderForm({
                     </div>
 
                     {/* Sales Order Table View */}
-                    <div className={`transition-all duration-500 ease-in-out ${viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                    <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
                       <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[240px]">
                         <table className="w-full text-sm text-left">
                           <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10">
@@ -672,6 +676,7 @@ export function PurchaseOrderForm({
               {/* 2. Items Table (REUSED COMPONENT) */}
               <POItemsTable
                 items={filteredPoItems}
+                isReadOnly={isViewMode}
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteItem}
                 onOpenAddDialog={handleOpenAddDialog}
@@ -753,9 +758,9 @@ export function PurchaseOrderForm({
                 )}
               </div>
 
-              <NotesPanel isReadOnly={false} />
+              <NotesPanel isReadOnly={isViewMode} />
               
-              <AttachmentsModal isReadOnly={false} />
+              <AttachmentsModal isReadOnly={isViewMode} />
 
               {/* PO Summary Totals */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -807,15 +812,30 @@ export function PurchaseOrderForm({
 
         {/* Sticky Action Footer */}
         <div className="flex-shrink-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)] z-10">
-          <Button onClick={handleSave} variant="ghost" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium h-10 px-6">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!selectedSupplier} variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
-            <FileText className="w-4 h-4 mr-2 opacity-70" /> {isEditMode ? "Update Draft" : "Save Draft"}
-          </Button>
-          <Button onClick={handleSave} disabled={!selectedSupplier} className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-            {isEditMode ? "Save PO Changes" : "Send to Supplier"}
-          </Button>
+          {isViewMode ? (
+            <>
+              <Button onClick={() => router.push(backHref)} variant="outline" className="font-medium h-10 px-6">
+                Back to POs
+              </Button>
+              <Link href={`${backHref}/${initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}/edit`}>
+                <Button className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
+                  Edit PO
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Button onClick={handleSave} variant="ghost" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium h-10 px-6">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={!selectedSupplier} variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6 disabled:opacity-50 disabled:cursor-not-allowed">
+                <FileText className="w-4 h-4 mr-2 opacity-70" /> {isEditMode ? "Update Draft" : "Save Draft"}
+              </Button>
+              <Button onClick={handleSave} disabled={!selectedSupplier} className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                {isEditMode ? "Save PO Changes" : "Send to Supplier"}
+              </Button>
+            </>
+          )}
         </div>
         
         <AddItemDialog 
@@ -878,8 +898,8 @@ export function PurchaseOrderForm({
             <div className="p-6">
               <div className="grid grid-cols-2 gap-5">
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Fabric Type <span className="text-red-500">*</span></Label>
-                  <Select disabled={!!editingItem?.soItemId} value={manualFormData.type} onValueChange={(val) => setManualFormData({...manualFormData, type: val})}>
+                  <Label className="text-xs font-bold text-slate-600">Fabric Type</Label>
+                  <Select value={manualFormData.type} onValueChange={(val) => setManualFormData({...manualFormData, type: val})}>
                     <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -894,39 +914,36 @@ export function PurchaseOrderForm({
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Fabric Description</Label>
                   <Input 
-                    disabled={!!editingItem?.soItemId}
                     value={manualFormData.description}
                     onChange={(e) => setManualFormData({...manualFormData, description: e.target.value})}
                     placeholder="Linen Slub" 
-                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">GSM / Content <span className="text-red-500">*</span></Label>
-                  <Input 
-                    disabled={!!editingItem?.soItemId}
-                    value={manualFormData.gsm}
-                    onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
-                    placeholder="150 GSM" 
-                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Rate (₹) <span className="text-red-500">*</span></Label>
-                  <Input 
-                    type="number"
-                    value={manualFormData.rate}
-                    onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
-                    placeholder="130.00" 
                     className="h-10 text-sm bg-white" 
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Width <span className="text-red-500">*</span></Label>
-                  <Select disabled={!!editingItem?.soItemId} value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
+                  <Label className="text-xs font-bold text-slate-600">GSM / Content</Label>
+                  <Input 
+                    value={manualFormData.gsm}
+                    onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
+                    placeholder="150 GSM" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Color / Shade</Label>
+                  <Input 
+                    value={manualFormData.color}
+                    onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
+                    placeholder="Beige" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Width</Label>
+                  <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
                     <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select width" />
                     </SelectTrigger>
@@ -939,7 +956,7 @@ export function PurchaseOrderForm({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">GST % <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-slate-600">GST %</Label>
                   <Select value={manualFormData.gst} onValueChange={(val) => setManualFormData({...manualFormData, gst: val})}>
                     <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select GST" />
@@ -954,13 +971,24 @@ export function PurchaseOrderForm({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Color / Shade <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-slate-600">Qty (Mtrs)</Label>
                   <Input 
-                    disabled={!!editingItem?.soItemId}
-                    value={manualFormData.color}
-                    onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
-                    placeholder="Beige" 
-                    className="h-10 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-500" 
+                    type="number"
+                    value={manualFormData.qty}
+                    onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
+                    placeholder="200.00" 
+                    className="h-10 text-sm bg-white" 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
+                  <Input 
+                    type="number"
+                    value={manualFormData.rate}
+                    onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
+                    placeholder="130.00" 
+                    className="h-10 text-sm bg-white" 
                   />
                 </div>
 
@@ -970,17 +998,6 @@ export function PurchaseOrderForm({
                     disabled 
                     value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     className="h-10 text-sm bg-slate-50 font-semibold" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Qty (Mtrs) <span className="text-red-500">*</span></Label>
-                  <Input 
-                    type="number"
-                    value={manualFormData.qty}
-                    onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
-                    placeholder="200.00" 
-                    className="h-10 text-sm bg-white" 
                   />
                 </div>
                 
