@@ -39,6 +39,7 @@ interface RollEntry {
   gst: number;
   amount: number;
   poItemIds?: string[];
+  rollDetails?: { id: string, rollNo: string, mtrQty: number }[];
 }
 
 const INITIAL_SUPPLIERS = ["SALASAR FASHION", "ARVIND MILLS", "VARDHMAN TEXTILES"];
@@ -74,6 +75,10 @@ export function FabricGrnForm() {
   // Popup States
   const [isLoadPoItemsOpen, setIsLoadPoItemsOpen] = useState(false);
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+  const [isRollDetailsOpen, setIsRollDetailsOpen] = useState(false);
+  const [activeRollEntryId, setActiveRollEntryId] = useState<string | null>(null);
+  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, mtrQty: string }[]>([]);
+
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [manualFormData, setManualFormData] = useState({
     description: "", rollNo: "", width: "", gsm: "", color: "", fabricType: "", mtrQty: "", hsn: "", rate: "", gst: "5"
@@ -81,6 +86,43 @@ export function FabricGrnForm() {
 
   const [selectedPoItems, setSelectedPoItems] = useState<Record<string, boolean>>({});
   const [combineLines, setCombineLines] = useState(false);
+
+  const handleOpenRollDetails = (entry: RollEntry) => {
+    setActiveRollEntryId(entry.id);
+    if (entry.rollDetails && entry.rollDetails.length > 0) {
+      setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, mtrQty: r.mtrQty.toString() })));
+    } else {
+      // Default to 1 roll
+      setActiveRollDetails([{ id: Math.random().toString(), rollNo: "R-01", mtrQty: entry.mtrQty ? entry.mtrQty.toString() : "" }]);
+    }
+    setIsRollDetailsOpen(true);
+  };
+
+  const handleSaveRollDetails = () => {
+    if (!activeRollEntryId) return;
+    
+    const validRolls = activeRollDetails.map((r, idx) => ({
+      ...r,
+      rollNo: r.rollNo || `R-${(idx + 1).toString().padStart(2, '0')}`,
+      mtrQty: Number(r.mtrQty) || 0
+    }));
+    
+    const totalMeters = validRolls.reduce((acc, curr) => acc + curr.mtrQty, 0);
+    
+    setEntries(entries.map(e => {
+      if (e.id === activeRollEntryId) {
+        const amount = totalMeters * e.rate;
+        return {
+          ...e,
+          rollDetails: validRolls,
+          mtrQty: totalMeters,
+          amount
+        };
+      }
+      return e;
+    }));
+    setIsRollDetailsOpen(false);
+  };
 
   const handleOpenManualEntry = () => {
     setEditingEntryId(null);
@@ -395,10 +437,11 @@ export function FabricGrnForm() {
                     <TableRow>
                       <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 w-12">Sr</TableHead>
                       <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Description <span className="text-red-500">*</span> <span className="inline-block w-3.5 h-3.5 rounded-full border border-blue-400 text-blue-500 text-[9px] text-center leading-[12px] font-bold ml-1 cursor-help">i</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-32 text-center">Mtr Qty <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-32 text-center">Rate (₹/Mtr) <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-32 text-center">GST % <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-32 text-right">Amount (₹)</TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-24 text-center">Rolls <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-center">Mtr Qty <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-center">Rate (₹/Mtr) <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-24 text-center">GST % <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-right">Amount (₹)</TableHead>
                       <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-16 text-center">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -434,6 +477,15 @@ export function FabricGrnForm() {
                           ) : (
                             <p className="text-[10px] text-slate-400 font-medium">(Width, GSM, Color, Fabric Type will appear here after save)</p>
                           )}
+                        </TableCell>
+                        <TableCell className="py-3 px-2 text-center">
+                          <Button 
+                            onClick={(e) => { e.stopPropagation(); handleOpenRollDetails(entry); }}
+                            className="bg-blue-50 hover:bg-blue-100 text-[#0453B8] border border-blue-200 h-8 px-4 text-xs font-bold rounded"
+                            variant="outline"
+                          >
+                            {entry.rollDetails ? entry.rollDetails.length : (entry.mtrQty > 0 ? 1 : 0)} Rolls
+                          </Button>
                         </TableCell>
                         <TableCell className="py-3 px-2 text-center">
                           <div className="text-sm font-bold text-slate-700">{entry.mtrQty} <span className="text-[10px] text-slate-400 ml-0.5">Mtr</span></div>
@@ -841,6 +893,100 @@ export function FabricGrnForm() {
               <CheckCircle2 className="w-4 h-4 mr-2" />
               Save Details
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Roll Details Dialog */}
+      <Dialog open={isRollDetailsOpen} onOpenChange={setIsRollDetailsOpen}>
+        <DialogContent className="sm:max-w-xl max-w-[95vw] w-full bg-white p-0 overflow-hidden">
+          <DialogHeader className="px-5 py-4 border-b border-slate-100 flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-bold text-slate-800">
+              Roll Wise Meter Entry {activeRollEntryId ? `- ${entries.find(e => e.id === activeRollEntryId)?.description}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-5 py-4 overflow-y-auto h-[320px] custom-scrollbar">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
+                  <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
+                  <TableHead className="w-32 py-2.5 text-xs font-bold text-slate-700 text-right">Meter (Mtr) <span className="text-red-500">*</span></TableHead>
+                  <TableHead className="w-12 py-2.5"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeRollDetails.map((roll, idx) => (
+                  <TableRow key={roll.id}>
+                    <TableCell className="text-center font-semibold text-slate-600 text-xs py-2">{idx + 1}</TableCell>
+                    <TableCell className="py-2">
+                      <Input 
+                        value={roll.rollNo}
+                        onChange={(e) => {
+                          const newDetails = [...activeRollDetails];
+                          newDetails[idx].rollNo = e.target.value;
+                          setActiveRollDetails(newDetails);
+                        }}
+                        className="h-8 text-xs border-slate-200"
+                        placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
+                      />
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <Input 
+                        type="number"
+                        value={roll.mtrQty}
+                        onChange={(e) => {
+                          const newDetails = [...activeRollDetails];
+                          newDetails[idx].mtrQty = e.target.value;
+                          setActiveRollDetails(newDetails);
+                        }}
+                        className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="0.00"
+                      />
+                    </TableCell>
+                    <TableCell className="py-2 text-center">
+                      <button 
+                        onClick={() => {
+                          const newDetails = activeRollDetails.filter((_, i) => i !== idx);
+                          setActiveRollDetails(newDetails);
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            
+            <div className="mt-3 flex justify-start">
+              <Button 
+                onClick={() => {
+                  setActiveRollDetails([
+                    ...activeRollDetails, 
+                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, mtrQty: "" }
+                  ]);
+                }}
+                variant="outline" 
+                className="h-8 text-xs font-semibold text-[#0453B8] border-blue-200 bg-blue-50/50 hover:bg-blue-50"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Roll
+              </Button>
+            </div>
+          </div>
+          
+          <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-[#0453B8]">Total Meter</span>
+              <span className="text-sm font-bold text-[#0453B8]">
+                {activeRollDetails.reduce((acc, curr) => acc + (Number(curr.mtrQty) || 0), 0).toFixed(2)} Mtr
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
+              <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
