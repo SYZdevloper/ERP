@@ -46,6 +46,7 @@ export function DepartmentList({ department, description }: DepartmentListProps)
     const currentIdx = phaseOrder[card.currentPhase];
     const viewIdx = phaseOrder[viewDept];
 
+    if (currentIdx < viewIdx) return "Incoming";
     if (currentIdx === viewIdx + 1 && card.pendingReplacementCount > 0) return "Replacements Requested";
     if (currentIdx > viewIdx) return "Completed";
     return card.handoverStatus === "Pending_Acceptance" ? "Pending Acceptance" : "In Progress";
