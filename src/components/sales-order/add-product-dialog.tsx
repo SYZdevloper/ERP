@@ -752,15 +752,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
                         <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white animate-in fade-in zoom-in-95 duration-200">
                           <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
-                          <div className="flex h-9 bg-white relative overflow-hidden">
+                          <div className="flex flex-col bg-white relative overflow-hidden">
                             {/* Ratio Input */}
-                            <div className={`flex-1 flex items-center transition-all duration-300 ease-in-out border-slate-150 ${isRatioMode ? "opacity-100 max-w-[50%] border-r pointer-events-auto" : "opacity-0 max-w-0 pointer-events-none border-r-0"}`}>
+                            <div className={`w-full flex items-center transition-all duration-300 ease-in-out border-slate-200 ${isRatioMode ? "opacity-100 h-9 border-b pointer-events-auto" : "opacity-0 h-0 pointer-events-none border-b-0"}`}>
                               <Input
                                 id={`ratio-input-${size}`}
                                 type="number"
                                 min="0"
                                 placeholder="Ratio"
-                                className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-semibold text-slate-900 bg-white"
+                                className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-semibold text-slate-900 bg-slate-50 placeholder:text-slate-400 text-[11px]"
                                 value={ratios[size] || ""}
                                 onChange={(e) => setRatios({ ...ratios, [size]: parseInt(e.target.value) || 0 })}
                                 onFocus={(e) => e.target.select()}
@@ -778,13 +778,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               />
                             </div>
                             {/* Qty Input */}
-                            <div className="flex-1 flex items-center transition-all duration-300 ease-in-out">
+                            <div className="w-full flex items-center transition-all duration-300 ease-in-out h-10">
                               <Input
                                 id={`size-input-${size}`}
                                 type="number"
                                 min="0"
                                 placeholder="Qty"
-                                className={`h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-bold bg-white transition-colors duration-300 ${isRatioMode ? "text-[#0453B8]" : "text-slate-900"}`}
+                                className={`h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-black bg-white transition-colors duration-300 text-sm ${isRatioMode ? "text-[#0453B8]" : "text-slate-900"}`}
                                 value={quantities[size] || ""}
                                 onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
                                 onFocus={(e) => e.target.select()}
