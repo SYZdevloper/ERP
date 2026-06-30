@@ -22,6 +22,7 @@ interface POItemsTableProps {
   onGsmChange?: (id: string, newGsm: string) => void;
   onAvgChange?: (id: string, newAvg: number) => void;
   onWidthChange?: (id: string, newWidth: string) => void;
+  onImageChange?: (id: string, imageUrl: string) => void;
   totalQtyDisplay: string;
   isReadOnly?: boolean;
   itemLabel: string; // e.g. "Material" or "Trim Item"
