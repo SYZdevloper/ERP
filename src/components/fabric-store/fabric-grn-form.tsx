@@ -407,40 +407,12 @@ export function FabricGrnForm() {
               </div>
             </div>
 
-            {/* 2. PO Summary Highlights */}
-            {poLoaded && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <h2 className="text-sm font-bold text-[#0453B8] mb-5">2. PO Summary (This PO)</h2>
-                <div className="grid grid-cols-5 gap-4 text-center divide-x divide-slate-200">
-                  <div className="flex flex-col gap-1.5 px-2">
-                    <span className="text-[11px] font-bold text-slate-700">Ordered Qty</span>
-                    <span className="text-lg font-black text-slate-900">{po ? '1,000.00' : '0.00'} <span className="text-[10px] font-bold text-slate-400">Mtr</span></span>
-                  </div>
-                  <div className="flex flex-col gap-1.5 px-2">
-                    <span className="text-[11px] font-bold text-slate-700">Previously Received</span>
-                    <span className="text-lg font-black text-slate-900">{po ? '400.00' : '0.00'} <span className="text-[10px] font-bold text-slate-400">Mtr</span></span>
-                  </div>
-                  <div className="flex flex-col gap-1.5 px-2">
-                    <span className="text-[11px] font-bold text-[#0453B8]">Current Received</span>
-                    <span className="text-lg font-black text-[#0453B8]">{totalMeters.toFixed(2)} <span className="text-[10px] font-bold text-slate-400">Mtr</span></span>
-                  </div>
-                  <div className="flex flex-col gap-1.5 px-2">
-                    <span className="text-[11px] font-bold text-emerald-600">Total Received</span>
-                    <span className="text-lg font-black text-emerald-600">{po ? (400 + totalMeters).toFixed(2) : totalMeters.toFixed(2)} <span className="text-[10px] font-bold text-slate-400">Mtr</span></span>
-                  </div>
-                  <div className="flex flex-col gap-1.5 px-2">
-                    <span className="text-[11px] font-bold text-red-500">Balance Qty</span>
-                    <span className="text-lg font-black text-red-500">{po ? (1000 - (400 + totalMeters)).toFixed(2) : '0.00'} <span className="text-[10px] font-bold text-slate-400">Mtr</span></span>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {/* 4. Roll Wise Entry Table */}
+            {/* 2. Roll Wise Entry Table */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden mb-5">
               <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-sm font-bold text-[#0453B8]">3. Fabric Receiving Entry</h2>
+                  <h2 className="text-sm font-bold text-[#0453B8]">2. Fabric Receiving Entry</h2>
                 </div>
                 <div className="flex items-center gap-3">
                   <Button onClick={() => setIsLoadPoItemsOpen(true)} disabled={!poLoaded} variant="outline" className="h-8 px-3 text-[#0453B8] border-blue-200 hover:bg-blue-50 font-semibold text-xs bg-white shadow-sm">
@@ -706,6 +678,7 @@ export function FabricGrnForm() {
                         }}
                       />
                     </TableHead>
+                    <TableHead className="py-3 font-bold text-slate-700 text-xs text-center w-16">Image</TableHead>
                     <TableHead className="py-3 font-bold text-slate-700 text-xs">Item Description</TableHead>
                     <TableHead className="py-3 font-bold text-slate-700 text-xs text-center">Width (Inch)</TableHead>
                     <TableHead className="py-3 font-bold text-slate-700 text-xs text-center">GSM</TableHead>
@@ -728,6 +701,21 @@ export function FabricGrnForm() {
                           checked={isAdded || selectedPoItems[item.id] || false}
                           onChange={(e) => setSelectedPoItems({...selectedPoItems, [item.id]: e.target.checked})}
                         />
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        {item.image ? (
+                          <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
+                            {item.image.startsWith('http') || item.image.startsWith('/') ? (
+                              <img src={item.image} alt={item.material} className="w-full h-full object-cover" />
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-slate-400" />
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
+                            <ImageIcon className="w-4 h-4 text-slate-300" />
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="font-semibold text-slate-700 text-xs uppercase flex items-center gap-2">

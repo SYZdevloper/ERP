@@ -24,11 +24,11 @@ interface AddProductDialogProps {
 
 const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
 const EXTENDED_SIZES = ["XXL", "3XL", "4XL", "5XL", "6XL"] as const;
-const AUDIENCE_FILTERS = ["Men's Shirt", "Men's T-Shirt", "Women's Shirt", "Women's T-Shirt", "Kids' Wear"] as const;
+const AUDIENCE_FILTERS = ["Mens", "Womens", "Kids"] as const;
 type AudienceFilter = typeof AUDIENCE_FILTERS[number];
 
 // Hardcoded Master Values
-const MASTER_CATEGORIES = ["Men's Shirt", "Men's T-Shirt", "Women's Shirt", "Women's T-Shirt", "Kids' Wear"];
+const MASTER_CATEGORIES = ["Mens", "Womens", "Kids"];
 const MASTER_SUBCATEGORIES = ["T-Shirt", "Shirt", "Hoodie", "Dress", "Trouser", "Skirt", "Top", "Shorts", "Jacket"];
 const MASTER_TYPES = ["Half Sleeves", "Full Sleeves", "Sleeveless", "Full Length", "Knee Length"];
 const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Round Neck", "V-Neck", "Polo"];
@@ -39,7 +39,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [showSearch, setShowSearch] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeAudience, setActiveAudience] = useState<AudienceFilter>("Men's Shirt");
+  const [activeAudience, setActiveAudience] = useState<AudienceFilter>("Mens");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
 
@@ -118,7 +118,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   }, [handleCalculate]);
 
   const [newProduct, setNewProduct] = useState({
-    code: "", rate: "", category: "", subcategory: "", name: "", type: "", type2: "", buttons: ""
+    code: "", rate: "", category: "", subcategory: "", name: "", type: "", type2: "", buttons: "", description: ""
   });
 
   const rateInputRef = useRef<HTMLInputElement>(null);
@@ -162,7 +162,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setTotalOrderQty("");
       setIsRatioMode(true);
       setNewProductImage(null);
-      setNewProduct({ code: "", rate: "", category: "", subcategory: "", name: "", type: "", type2: "", buttons: "" });
+      setNewProduct({ code: "", rate: "", category: "", subcategory: "", name: "", type: "", type2: "", buttons: "", description: "" });
     }
   }, [open, editProduct, catalogItems]);
 
@@ -271,6 +271,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       type: newProduct.type || "-",
       color: "N/A",
       rate: 0,
+      description: newProduct.description,
     };
 
     setCatalogItems([createdProduct, ...catalogItems]);
@@ -404,16 +405,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 </div>
               </div>
 
-              <div
-                className={`flex justify-end transition-all duration-300 ease-in-out overflow-hidden ${
-                  selectedProduct && !showSearch ? "max-h-[40px] opacity-100 mb-4" : "max-h-0 opacity-0 m-0"
-                }`}
-              >
-                <Button variant="ghost" size="sm" className="h-8 rounded-full bg-blue-50 text-[#0453B8] hover:bg-blue-100 font-semibold px-4 text-xs" onClick={() => setShowSearch(true)}>
-                  <Search className="w-3.5 h-3.5 mr-1.5" /> Show Search & Tabs
-                </Button>
-              </div>
-
               {/* Product Selection Area */}
               {!selectedProduct ? (
                 <div className="mt-4">
@@ -507,26 +498,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                             <span className="text-sm font-semibold text-slate-700">
                               {selectedProduct.name} {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}
                             </span>
-                            <div className="flex flex-wrap items-center gap-2 mt-2 min-h-[30px]">
-                              {showTags ? (
-                                <>
-                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.category.replace("'s", "").replace(" Wear", "")}</span>
-                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory}</span>
-                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.type}</span>
-                                  <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
-                                  {selectedProduct.buttons && (
-                                    <span className="bg-blue-50 text-[#0453B8] font-bold px-3 py-1.5 rounded-md text-xs">{selectedProduct.buttons} Buttons</span>
-                                  )}
-                                  <button onClick={(e) => { e.stopPropagation(); setShowTags(false); }} className="text-slate-400 hover:text-slate-600 ml-1 transition-colors" title="Hide Tags">
-                                    <EyeOff className="w-4 h-4" />
-                                  </button>
-                                </>
-                              ) : (
-                                <button onClick={(e) => { e.stopPropagation(); setShowTags(true); }} className="text-slate-500 hover:text-[#0453B8] flex items-center gap-1.5 text-xs font-semibold bg-slate-50 hover:bg-blue-50 px-2.5 py-1.5 rounded-md transition-colors" title="Show Tags">
-                                  <Eye className="w-3.5 h-3.5" /> Show Attributes
-                                </button>
-                              )}
-                            </div>
                           </div>
                         </>
                       );
@@ -956,6 +927,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg"><SelectValue placeholder="Select Sleeve Type" /></SelectTrigger>
                     <SelectContent>{MASTER_TYPES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
                   </Select>
+                </div>
+                <div className="col-span-2 flex flex-col gap-2 mt-2">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</Label>
+                  <textarea placeholder="Additional description..." className="h-[80px] w-full text-sm font-medium bg-white border border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:outline-none shadow-sm rounded-lg p-3 resize-none" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-8">

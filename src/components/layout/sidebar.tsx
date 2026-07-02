@@ -156,7 +156,7 @@ export function Sidebar() {
               )}
               <Link href="/production" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isProductionActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
                 <Factory className="w-4 h-4 shrink-0" />
-                {isExpanded && <span className="truncate">Production PPC</span>}
+                {isExpanded && <span className="truncate">TeckPack</span>}
               </Link>
             </div>
             
