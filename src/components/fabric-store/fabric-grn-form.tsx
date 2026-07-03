@@ -40,7 +40,7 @@ interface RollEntry {
   gst: number;
   amount: number;
   poItemIds?: string[];
-  rollDetails?: { id: string, rollNo: string, mtrQty: number }[];
+  rollDetails?: { id: string, rollNo: string, mtrQty: number, color?: string }[];
 }
 
 const INITIAL_SUPPLIERS = ["SALASAR FASHION", "ARVIND MILLS", "VARDHMAN TEXTILES"];
@@ -78,7 +78,7 @@ export function FabricGrnForm() {
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
   const [isRollDetailsOpen, setIsRollDetailsOpen] = useState(false);
   const [activeRollEntryId, setActiveRollEntryId] = useState<string | null>(null);
-  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, mtrQty: string }[]>([]);
+  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, mtrQty: string, color?: string }[]>([]);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [manualFormData, setManualFormData] = useState({
@@ -99,7 +99,8 @@ export function FabricGrnForm() {
     const newRolls = Array.from({ length: count }).map((_, idx) => ({
       id: Math.random().toString(),
       rollNo: `R-${(idx + 1).toString().padStart(2, '0')}`,
-      mtrQty: mtrPerRoll
+      mtrQty: mtrPerRoll,
+      color: ""
     }));
     setActiveRollDetails(newRolls);
   };
@@ -111,7 +112,7 @@ export function FabricGrnForm() {
       setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, mtrQty: r.mtrQty.toString() })));
     } else {
       // Default to 1 roll
-      setActiveRollDetails([{ id: Math.random().toString(), rollNo: "R-01", mtrQty: entry.mtrQty ? entry.mtrQty.toString() : "" }]);
+      setActiveRollDetails([{ id: Math.random().toString(), rollNo: "R-01", mtrQty: entry.mtrQty ? entry.mtrQty.toString() : "", color: "" }]);
     }
     setIsRollDetailsOpen(true);
   };
@@ -122,7 +123,8 @@ export function FabricGrnForm() {
     const validRolls = activeRollDetails.map((r, idx) => ({
       ...r,
       rollNo: r.rollNo || `R-${(idx + 1).toString().padStart(2, '0')}`,
-      mtrQty: Number(r.mtrQty) || 0
+      mtrQty: Number(r.mtrQty) || 0,
+      color: r.color || ""
     }));
     
     const totalMeters = validRolls.reduce((acc, curr) => acc + curr.mtrQty, 0);
@@ -965,6 +967,7 @@ export function FabricGrnForm() {
                 <TableRow>
                   <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
                   <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
+                  <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
                   <TableHead className="w-32 py-2.5 text-xs font-bold text-slate-700 text-right">Meter (Mtr) <span className="text-red-500">*</span></TableHead>
                   <TableHead className="w-12 py-2.5"></TableHead>
                 </TableRow>
@@ -983,6 +986,18 @@ export function FabricGrnForm() {
                         }}
                         className="h-8 text-xs border-slate-200"
                         placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
+                      />
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <Input 
+                        value={roll.color || ""}
+                        onChange={(e) => {
+                          const newDetails = [...activeRollDetails];
+                          newDetails[idx].color = e.target.value;
+                          setActiveRollDetails(newDetails);
+                        }}
+                        className="h-8 text-xs border-slate-200"
+                        placeholder="e.g. Red"
                       />
                     </TableCell>
                     <TableCell className="py-2">
@@ -1044,7 +1059,7 @@ export function FabricGrnForm() {
                 onClick={() => {
                   setActiveRollDetails([
                     ...activeRollDetails, 
-                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, mtrQty: "" }
+                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, mtrQty: "", color: "" }
                   ]);
                 }}
                 variant="outline" 

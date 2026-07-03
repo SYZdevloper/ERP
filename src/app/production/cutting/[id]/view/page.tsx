@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Scissors, Hash, Tag, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Save, Scissors, Hash, Tag, FileText, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { useProduction } from "@/components/production/production-context";
 
 // Mock Rolls for demonstration
 const MOCK_ROLLS = [
-  { id: "Roll-1", material: "NYLON-TASLAN-04", qty: 50 },
-  { id: "Roll-2", material: "NYLON-TASLAN-04", qty: 50 },
-  { id: "Roll-3", material: "NYLON-TASLAN-04", qty: 50 },
+  { id: "Roll-1", material: "NYLON-TASLAN-04", qty: 50, layerLength: "5", noOfLayers: "9" },
+  { id: "Roll-2", material: "NYLON-TASLAN-04", qty: 50, layerLength: "5", noOfLayers: "8" },
+  { id: "Roll-3", material: "NYLON-TASLAN-04", qty: 50, layerLength: "4", noOfLayers: "10" },
 ];
 
 export default function CuttingJobCardView() {
@@ -34,6 +34,16 @@ export default function CuttingJobCardView() {
 
   const activeRoll = MOCK_ROLLS.find(r => r.id === selectedRoll);
   
+  useEffect(() => {
+    if (activeRoll) {
+      setLayerLength(activeRoll.layerLength || "");
+      setNoOfLayers(activeRoll.noOfLayers || "");
+    } else {
+      setLayerLength("");
+      setNoOfLayers("");
+    }
+  }, [activeRoll]);
+
   const length = parseFloat(layerLength) || 0;
   const layers = parseInt(noOfLayers) || 0;
   const fabricUsed = length * layers;
@@ -90,6 +100,16 @@ export default function CuttingJobCardView() {
               Techpack Details
             </h3>
             
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shrink-0 shadow-sm flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-slate-300 mx-auto" />
+              </div>
+              <div className="flex-1">
+                 <h4 className="font-bold text-slate-800 text-sm leading-tight">{jobCard?.style || "Basic Cotton Hoodie"}</h4>
+                 <p className="text-xs text-slate-500 font-medium mt-1">Essentials</p>
+              </div>
+            </div>
+
             <div className="space-y-5">
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Tag className="w-3.5 h-3.5"/> Brand Name</span>
