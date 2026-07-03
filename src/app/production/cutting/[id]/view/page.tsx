@@ -100,16 +100,6 @@ export default function CuttingJobCardView() {
               Techpack Details
             </h3>
             
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shrink-0 shadow-sm flex items-center justify-center">
-                <ImageIcon className="w-6 h-6 text-slate-300 mx-auto" />
-              </div>
-              <div className="flex-1">
-                 <h4 className="font-bold text-slate-800 text-sm leading-tight">{jobCard?.style || "Basic Cotton Hoodie"}</h4>
-                 <p className="text-xs text-slate-500 font-medium mt-1">Essentials</p>
-              </div>
-            </div>
-
             <div className="space-y-5">
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Tag className="w-3.5 h-3.5"/> Brand Name</span>
@@ -129,6 +119,19 @@ export default function CuttingJobCardView() {
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5"/> Pattern Number</span>
                 <span className="text-sm font-bold text-slate-800">PTRN-2026-X8</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Image */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-[#0453B8]" />
+              <h3 className="font-bold text-slate-800 text-sm">Product Image</h3>
+            </div>
+            <div className="bg-slate-50 flex items-center justify-center py-6">
+              <div className="w-48 h-48 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&q=80" alt="Product" className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
