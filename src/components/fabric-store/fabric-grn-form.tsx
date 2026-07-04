@@ -40,6 +40,8 @@ interface RollEntry {
   gst: number;
   amount: number;
   poItemIds?: string[];
+  orderedQty?: number;
+  isClosed?: boolean;
   rollDetails?: { id: string, rollNo: string, mtrQty: number, color?: string }[];
 }
 
@@ -67,10 +69,14 @@ export function FabricGrnForm() {
   const handleLoadPo = (selectedPo: string) => {
     if (selectedPo) {
       setPoLoaded(true);
+      setViewMode("po-table");
     }
   };
   
   const [showAddress, setShowAddress] = useState(true);
+  const [viewMode, setViewMode] = useState<"address" | "po-table">("address");
+  const [poFilter, setPoFilter] = useState("");
+  const [shortReceiptPrompt, setShortReceiptPrompt] = useState<{isOpen: boolean, entryId: string | null, totalMeters: number, orderedQty: number}>({ isOpen: false, entryId: null, totalMeters: 0, orderedQty: 0 });
   const [entries, setEntries] = useState<RollEntry[]>([]);
 
   // Popup States
@@ -141,7 +147,19 @@ export function FabricGrnForm() {
       }
       return e;
     }));
+    
     setIsRollDetailsOpen(false);
+
+    // Check for short receipt if it's linked to a PO item
+    const currentEntry = entries.find(e => e.id === activeRollEntryId);
+    if (currentEntry && currentEntry.orderedQty && totalMeters < currentEntry.orderedQty) {
+      setShortReceiptPrompt({
+        isOpen: true,
+        entryId: currentEntry.id,
+        totalMeters,
+        orderedQty: currentEntry.orderedQty
+      });
+    }
   };
 
   const handleOpenManualEntry = () => {
@@ -383,44 +401,159 @@ export function FabricGrnForm() {
                 </div>
               </div>
 
-              {/* Address Block */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#F8FAFC]">
-                <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setShowAddress(!showAddress)}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#0453B8]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <div className="mt-4 overflow-hidden relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {viewMode === "address" ? "Supplier Address" : `Available Designs for Zara Fashion Pvt Limited`}
+                  </h3>
+                  {!poLoaded === false && viewMode === "po-table" && (
+                    <div className="flex-1 max-w-sm ml-4">
+                      <Input 
+                        placeholder="Filter by PO..." 
+                        value={poFilter}
+                        onChange={(e) => setPoFilter(e.target.value)}
+                        className="h-8 text-xs bg-white"
+                      />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-700 uppercase">Address</h3>
-                      <p className="text-sm font-semibold text-slate-900 mt-0.5">{supplier || "Select Supplier"}</p>
-                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    {poLoaded && (
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setViewMode(viewMode === "address" ? "po-table" : "address")}
+                        className="h-8 text-xs font-medium border-slate-200"
+                      >
+                        {viewMode === "address" ? "Show Designs" : "Show Address"}
+                      </Button>
+                    )}
+                    {viewMode === "address" && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowAddress(!showAddress)}
+                        className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                      >
+                        {showAddress ? "Hide Address" : "Unhide Address"}
+                      </Button>
+                    )}
                   </div>
-                  <button type="button" className="text-sm font-bold text-[#0453B8] hover:text-blue-700 flex items-center gap-1">
-                    {showAddress ? "Hide Address" : "Show Address"}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${showAddress ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6"/></svg>
-                  </button>
                 </div>
-                
-                {showAddress && supplier && (
-                  <div className="px-4 pb-4 pl-[3.25rem] text-sm text-slate-600">
-                    <p>123, Ring Road, Surat - 395002, Gujarat, India</p>
+
+                <div className="relative">
+                  {/* Address View */}
+                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                    <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                      <div className="overflow-hidden">
+                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#F8FAFC]">
+                          <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setShowAddress(!showAddress)}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#0453B8]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                              </div>
+                              <div>
+                                <h3 className="text-xs font-bold text-slate-700 uppercase">Address</h3>
+                                <p className="text-sm font-semibold text-slate-900 mt-0.5">{supplier || "Select Supplier"}</p>
+                              </div>
+                            </div>
+                          </div>
+                          {supplier && (
+                            <div className="px-4 pb-4 pl-[3.25rem] text-sm text-slate-600">
+                              <p>123, Ring Road, Surat - 395002, Gujarat, India</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  {/* Designs Table View */}
+                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'po-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
+                    <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                          <tr>
+                            <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
+                            <th className="px-4 py-3 font-bold text-slate-700">Image</th>
+                            <th className="px-4 py-3 font-bold text-slate-700">Style / Design</th>
+                            <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
+                            </tr>
+                          ) : (
+                            poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).map((item: any, idx) => {
+                              const isAdded = entries.some(e => e.poItemIds?.includes(item.id));
+                              return (
+                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-4 py-3">
+                                    <div className="font-bold text-[#0453B8]">SO-2026-001</div>
+                                    <div className="text-xs text-slate-500 font-medium">Line {String(idx + 1).padStart(2, '0')}</div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50">
+                                      <img src={item.image || "/men regualr fit shirt.jpeg"} alt={item.material} className="w-full h-full object-contain mix-blend-multiply" />
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="font-bold text-slate-800">{item.material}</div>
+                                    <div className="text-xs text-slate-600 font-medium">{item.color} • {item.gsm}GSM</div>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <Button 
+                                      variant={isAdded ? "ghost" : "outline"}
+                                      size="sm" 
+                                      disabled={isAdded}
+                                      onClick={() => {
+                                        const newEntry: RollEntry = {
+                                          id: Math.random().toString(),
+                                          srNo: entries.length + 1,
+                                          description: item.material,
+                                          rollNo: "", 
+                                          width: item.width,
+                                          gsm: item.gsm,
+                                          color: item.color,
+                                          fabricType: item.type,
+                                          mtrQty: 0, 
+                                          hsn: item.hsn,
+                                          rate: item.rate,
+                                          gst: item.gst,
+                                          amount: 0,
+                                          image: item.image,
+                                          poItemIds: [item.id],
+                                          orderedQty: item.orderedQty
+                                        };
+                                        setEntries(prev => [...prev, newEntry]);
+                                      }}
+                                      className={`h-7 text-xs font-semibold ${isAdded ? 'text-emerald-600 bg-emerald-50' : 'border-[#0453B8] text-[#0453B8] hover:bg-blue-50'}`}
+                                    >
+                                      {isAdded ? "Added" : "Select"}
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-
             {/* 2. Roll Wise Entry Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden mb-5">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden mb-5 mt-5">
               <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
                   <h2 className="text-sm font-bold text-[#0453B8]">2. Fabric Receiving Entry</h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button onClick={() => setIsLoadPoItemsOpen(true)} disabled={!poLoaded} variant="outline" className="h-8 px-3 text-[#0453B8] border-blue-200 hover:bg-blue-50 font-semibold text-xs bg-white shadow-sm">
-                    <FileText className="w-3.5 h-3.5 mr-1.5" />
-                    Load PO Items
-                  </Button>
                   <Button onClick={handleOpenManualEntry} disabled={!poLoaded} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Manual Fabric
@@ -435,24 +568,24 @@ export function FabricGrnForm() {
                       <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 w-12">Sr</TableHead>
                       <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 w-16">Image</TableHead>
                       <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2">Description <span className="text-red-500">*</span> <span className="inline-block w-3.5 h-3.5 rounded-full border border-blue-400 text-blue-500 text-[9px] text-center leading-[12px] font-bold ml-1 cursor-help">i</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-24 text-center">Rolls <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-center">Mtr Qty <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-center">Rate (₹/Mtr) <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-24 text-center">GST % <span className="text-red-500">*</span></TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-28 text-right">Amount (₹)</TableHead>
-                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 w-16 text-center">Action</TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-center w-[12%]">Rolls <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-center w-[12%]">Mtr Qty <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-center w-[12%]">Rate (₹/Mtr) <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-center w-[12%]">GST % <span className="text-red-500">*</span></TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-right w-[12%]">Amount (₹)</TableHead>
+                      <TableHead className="text-slate-700 text-[11px] font-bold py-2.5 px-2 text-center w-[10%]">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="text-sm">
                     {!poLoaded ? (
                       <TableRow>
-                        <TableCell colSpan={13} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
+                        <TableCell colSpan={9} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
                           Please load a Fabric PO first to enter rolls.
                         </TableCell>
                       </TableRow>
                     ) : entries.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={13} className="text-center py-8 text-slate-400 font-medium">
+                        <TableCell colSpan={9} className="text-center py-8 text-slate-400 font-medium">
                           No rolls added yet. Use the quick add row below to enter rolls.
                         </TableCell>
                       </TableRow>
@@ -477,7 +610,10 @@ export function FabricGrnForm() {
                           )}
                         </TableCell>
                         <TableCell className="py-3 px-2">
-                          <div className="font-bold text-slate-800 text-sm uppercase mb-1">{entry.description || "-"}</div>
+                          <div className="font-bold text-slate-800 text-sm uppercase mb-1 flex items-center gap-2">
+                            {entry.description || "-"}
+                            {entry.isClosed && <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold">CLOSED</span>}
+                          </div>
                           {(entry.width || entry.gsm || entry.color || entry.fabricType) ? (
                             <p className="text-[10px] text-slate-500 font-medium">
                               {[
@@ -1085,6 +1221,49 @@ export function FabricGrnForm() {
               <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
               <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shortReceiptPrompt.isOpen} onOpenChange={(open) => !open && setShortReceiptPrompt(prev => ({ ...prev, isOpen: false }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-800">Short Receipt Confirmation</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 mb-2">
+              You are receiving <span className="font-bold text-slate-900">{shortReceiptPrompt.totalMeters.toFixed(2)} Mtr</span> against an ordered quantity of <span className="font-bold text-slate-900">{shortReceiptPrompt.orderedQty.toFixed(2)} Mtr</span>.
+            </p>
+            <p className="text-sm font-semibold text-[#0453B8] mb-4">
+              Is your Required Fabric Fulfilled? Do you want to Close the PO?
+            </p>
+            <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <span className="font-bold">If Yes:</span> No further tracking for this item. PO will be closed.
+              <br />
+              <span className="font-bold">If No:</span> {(shortReceiptPrompt.orderedQty - shortReceiptPrompt.totalMeters).toFixed(2)} Mtr will still be Pending Against PO.
+            </p>
+          </div>
+          <div className="flex items-center justify-end gap-3 mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShortReceiptPrompt({ isOpen: false, entryId: null, totalMeters: 0, orderedQty: 0 });
+              }}
+              className="px-6 font-semibold"
+            >
+              No, Keep Pending
+            </Button>
+            <Button 
+              onClick={() => {
+                if (shortReceiptPrompt.entryId) {
+                  setEntries(entries.map(e => e.id === shortReceiptPrompt.entryId ? { ...e, isClosed: true } : e));
+                }
+                setShortReceiptPrompt({ isOpen: false, entryId: null, totalMeters: 0, orderedQty: 0 });
+              }}
+              className="px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold"
+            >
+              Yes, Close PO
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

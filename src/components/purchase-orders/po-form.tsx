@@ -85,7 +85,8 @@ export function PurchaseOrderForm({
     qty: "0",
     rate: "0",
     gst: "0",
-    image: ""
+    image: "",
+    avg: "1.80"
   });
 
   useEffect(() => {
@@ -235,10 +236,11 @@ export function PurchaseOrderForm({
       gsm: item.gsm || item.gsmContent || "",
       width: item.width || "",
       color: item.colorShade || "",
-      qty: item.qty ? item.qty.toString() : "",
-      rate: item.rate ? item.rate.toString() : "",
-      gst: item.gst ? item.gst.toString() : "5",
-      image: item.fabricImage || ""
+      qty: String(item.qty || 0),
+      rate: String(item.rate || 0),
+      gst: String(item.gst || 0),
+      image: item.fabricImage || "",
+      avg: String(item.consumptionAvg || "1.80")
     });
     setIsManualEntryOpen(true);
   };
@@ -257,7 +259,8 @@ export function PurchaseOrderForm({
       qty: reqQty?.toString() || "0",
       rate: "0",
       gst: "5",
-      image: ""
+      image: "",
+      avg: "1.80"
     });
     setIsManualEntryOpen(true);
   };
@@ -663,8 +666,6 @@ export function PurchaseOrderForm({
                               <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
                               <th className="px-4 py-3 font-bold text-slate-700">Image</th>
                               <th className="px-4 py-3 font-bold text-slate-700">Style / Design</th>
-                              <th className="px-4 py-3 font-bold text-slate-700">Color</th>
-                              <th className="px-4 py-3 font-bold text-slate-700 text-center">Required Qty</th>
                               <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
                             </tr>
                           </thead>
@@ -676,7 +677,7 @@ export function PurchaseOrderForm({
                               if (availableDesigns.length === 0) {
                                 return (
                                   <tr>
-                                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
+                                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
                                   </tr>
                                 );
                               }
@@ -705,8 +706,6 @@ export function PurchaseOrderForm({
                                       <div className="font-bold text-slate-800">{item.productId}</div>
                                       <div className="text-xs text-slate-600 font-medium">{item.name}</div>
                                     </td>
-                                    <td className="px-4 py-3 text-slate-600 font-medium">{item.color}</td>
-                                    <td className="px-4 py-3 text-center font-bold text-slate-800">{reqQty?.toFixed(type === "Fabric" ? 2 : 0)}</td>
                                     <td className="px-4 py-3 text-center">
                                       <Button 
                                         variant={isAdded ? "ghost" : "outline"}
@@ -943,11 +942,21 @@ export function PurchaseOrderForm({
                       </div>
                       <div>
                         <div className="text-[10px] font-bold text-slate-500 uppercase">Avg</div>
-                        <div className="font-bold text-slate-800 text-base">{(selectedSoItemContext.requiredQtyMtr / (Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)).toFixed(2)}</div>
+                        <Input 
+                          type="number"
+                          value={manualFormData.avg}
+                          onChange={(e) => {
+                            const newAvg = e.target.value;
+                            const soQty = (Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0);
+                            const newQty = (Number(newAvg) * soQty).toFixed(2);
+                            setManualFormData({...manualFormData, avg: newAvg, qty: newQty});
+                          }}
+                          className="h-8 mt-1 text-sm font-bold bg-white w-20 text-center border-slate-300 focus:ring-[#0453B8]"
+                        />
                       </div>
-                      <div>
+                      <div className="flex flex-col justify-end">
                         <div className="text-[10px] font-bold text-red-500 uppercase">Total Mtrs</div>
-                        <div className="font-bold text-red-600 text-base">{selectedSoItemContext.requiredQtyMtr}</div>
+                        <div className="font-bold text-red-600 text-base mb-1">{manualFormData.qty}</div>
                       </div>
                     </div>
                   </div>
@@ -999,16 +1008,7 @@ export function PurchaseOrderForm({
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Qty (Mtrs)</Label>
-                  <Input 
-                    type="number"
-                    value={manualFormData.qty}
-                    onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
-                    placeholder="200.00" 
-                    className="h-10 text-sm bg-white" 
-                  />
-                </div>
+
 
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
@@ -1093,6 +1093,8 @@ export function PurchaseOrderForm({
                         amount: (Number(manualFormData.rate) || item.rate) * (Number(manualFormData.qty) || item.qty),
                         productName: manualFormData.type || item.productName,
                         fabricImage: manualFormData.image || item.fabricImage,
+                        consumptionAvg: Number(manualFormData.avg) || item.consumptionAvg,
+                        requiredQty: Number(manualFormData.qty) || item.requiredQty,
                       };
                     }
                     return item;
@@ -1117,6 +1119,9 @@ export function PurchaseOrderForm({
                     soNo: selectedSoItemContext ? selectedSoItemContext.soNo : "",
                     soItemId: selectedSoItemContext ? selectedSoItemContext.id : undefined,
                     fabricImage: manualFormData.image || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg",
+                    orderPcs: selectedSoItemContext ? (Object.values(selectedSoItemContext.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number) : undefined,
+                    consumptionAvg: Number(manualFormData.avg) || undefined,
+                    requiredQty: Number(manualFormData.qty) || undefined,
                   };
                   setPoItems(prev => [newItem, ...prev]);
                 }
@@ -1124,7 +1129,7 @@ export function PurchaseOrderForm({
                 setIsManualEntryOpen(false);
                 setEditingItem(null);
                 setManualFormData({
-                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: ""
+                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", avg: "1.80"
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
                 <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}
