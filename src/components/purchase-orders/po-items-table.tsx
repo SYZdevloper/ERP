@@ -84,7 +84,6 @@ export function POItemsTable({
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight w-[6%] text-[#0453B8]">Avg<br/><span className="font-normal text-[9px] text-slate-500">({type === 'Fabric' ? 'Mtrs' : 'Pcs'})</span></TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight w-[8%] text-red-600">Total<br/><span className="font-normal text-[9px] text-slate-500">({type === 'Fabric' ? 'Mtrs' : 'Pcs'})</span></TableHead>
 
-              <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 leading-tight w-[10%]">PO Qty<br/><span className="font-normal text-[9px] text-red-500">*</span></TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 w-[10%]">Rate (₹)</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-center py-2.5 px-2 w-[8%]">GST %</TableHead>
               <TableHead className="text-slate-700 text-[11px] font-bold text-right py-2.5 px-2 w-[12%]">Amount (₹)</TableHead>
@@ -94,7 +93,7 @@ export function POItemsTable({
           <TableBody className="text-sm">
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isReadOnly ? 11 : 12} className="py-8 text-center text-slate-500">
+                <TableCell colSpan={isReadOnly ? 10 : 11} className="py-8 text-center text-slate-500">
                   No {itemLabel.toLowerCase()}s added yet. {!isReadOnly && `Click "Add Sales Order" or "Manual Fabric" to start.`}
                 </TableCell>
               </TableRow>
@@ -124,7 +123,7 @@ export function POItemsTable({
                         <React.Fragment key={`group-${soNo}`}>
                           {/* Group Header */}
                           <TableRow className="bg-[#f8fafd]">
-                            <TableCell colSpan={12} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
+                            <TableCell colSpan={11} className="py-2.5 px-4 text-xs font-bold text-[#0453B8]">
                               {soNo} - {soName}
                             </TableCell>
                           </TableRow>
@@ -148,7 +147,7 @@ export function POItemsTable({
                                 <TableCell className="py-2.5 px-2">
                                   <div className="inline-flex flex-col min-w-[150px]">
                                     <span className="font-bold text-[#0453B8] text-[12px] leading-tight mb-0.5">{item.material || "Fabrics"}</span>
-                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "180gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '44"'}</span>
+                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "180gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '44"'} {item.colorShade && item.colorShade !== "-" ? ` • ${item.colorShade}` : ""}</span>
                                   </div>
                                 </TableCell>
 
@@ -173,16 +172,6 @@ export function POItemsTable({
                                   {item.requiredQty ? item.requiredQty.toFixed(2) : "-"}
                                 </TableCell>
 
-                                <TableCell className="text-center py-2.5 px-2">
-                                  <button 
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); onEditClick(item); }}
-                                    className="px-3 py-1 bg-blue-50 text-[#0453B8] font-bold border border-blue-200 rounded-md hover:bg-blue-100 transition-colors mx-auto block text-xs"
-                                  >
-                                    {item.qty || 0}
-                                  </button>
-                                </TableCell>
-
                                 <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
                                   {item.rate || 0}
                                 </TableCell>
@@ -197,9 +186,14 @@ export function POItemsTable({
 
                                 {!isReadOnly && (
                                   <TableCell className="text-center py-2.5 px-2">
-                                    <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors mx-auto block">
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <button onClick={(e) => { e.stopPropagation(); onEditClick(item); }} type="button" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-blue-200 transition-colors">
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </TableCell>
                                 )}
                               </TableRow>
@@ -212,7 +206,7 @@ export function POItemsTable({
                     {manualGroup.length > 0 && (
                       <React.Fragment key="group-MANUAL">
                         <TableRow className="bg-[#f0fdf4]">
-                          <TableCell colSpan={12} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                          <TableCell colSpan={11} className="py-2.5 px-4 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
                             Manual Entry
                           </TableCell>
                         </TableRow>
@@ -230,23 +224,13 @@ export function POItemsTable({
                             <TableCell className="py-2.5 px-2">
                                   <div className="inline-flex flex-col min-w-[150px]">
                                     <span className="font-bold text-[#0453B8] text-[12px] leading-tight mb-0.5">{item.material || "Fabrics"}</span>
-                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "150gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '54"'}</span>
+                                    <span className="text-[11px] font-bold text-slate-700 leading-tight">{(item.gsm || item.gsmContent || "150gsm").replace(" GSM", "gsm")} &nbsp; {item.width || '54"'} {item.colorShade && item.colorShade !== "-" ? ` • ${item.colorShade}` : ""}</span>
                                   </div>
                                 </TableCell>
 
                                 <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
                                 <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
                                 <TableCell className="text-center py-2.5 px-2 text-slate-400 font-bold">-</TableCell>
-
-                            <TableCell className="text-center py-2.5 px-2">
-                                <button 
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); onEditClick(item); }}
-                                  className="px-3 py-1 bg-blue-50 text-[#0453B8] font-bold border border-blue-200 rounded-md hover:bg-blue-100 transition-colors mx-auto block text-xs"
-                                >
-                                  {item.qty || 0}
-                                </button>
-                              </TableCell>
 
                             <TableCell className="text-center py-2.5 px-2 text-xs font-bold text-slate-800">
                                 {item.rate || 0}
@@ -262,9 +246,14 @@ export function POItemsTable({
 
                             {!isReadOnly && (
                               <TableCell className="text-center py-2.5 px-2">
-                                <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors mx-auto block">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button onClick={(e) => { e.stopPropagation(); onEditClick(item); }} type="button" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-blue-200 transition-colors">
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); onDeleteClick(item.id); }} type="button" className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-red-200 transition-colors">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </TableCell>
                             )}
                           </TableRow>

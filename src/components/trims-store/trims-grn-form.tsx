@@ -415,6 +415,10 @@ export function TrimsGrnForm() {
                   <Label className="text-[11px] font-bold text-slate-700">LR Number</Label>
                   <Input placeholder="Enter LR Number" className="h-9 text-sm bg-white border-slate-200" />
                 </div>
+                <div className="flex flex-col gap-2">
+                  <Label className="text-[11px] font-bold text-slate-700">Amount</Label>
+                  <Input type="number" placeholder="Enter Amount" className="h-9 text-sm bg-white border-slate-200" />
+                </div>
               </div>
             </div>
 

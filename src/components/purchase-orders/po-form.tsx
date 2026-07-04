@@ -71,6 +71,7 @@ export function PurchaseOrderForm({
 
   const [showAddress, setShowAddress] = useState(true);
   const [viewMode, setViewMode] = useState<"address" | "so-table">("address");
+  const [soFilter, setSoFilter] = useState("");
   const [activeSoForLines, setActiveSoForLines] = useState<any | null>(null);
   const [selectedLines, setSelectedLines] = useState<Record<string, boolean>>({});
   
@@ -231,13 +232,32 @@ export function PurchaseOrderForm({
     setManualFormData({
       type: item.material || "",
       description: item.description || "",
-      gsm: item.gsm || "",
+      gsm: item.gsm || item.gsmContent || "",
       width: item.width || "",
       color: item.colorShade || "",
       qty: item.qty ? item.qty.toString() : "",
       rate: item.rate ? item.rate.toString() : "",
       gst: item.gst ? item.gst.toString() : "5",
       image: item.fabricImage || ""
+    });
+    setIsManualEntryOpen(true);
+  };
+
+  const handleOpenAddFabricForSoItem = (item: any) => {
+    setSelectedSoItemContext(item);
+    setEditingItem(null);
+    const isFabric = type === "Fabric";
+    const reqQty = isFabric ? item.requiredQtyMtr : Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0);
+    setManualFormData({
+      type: isFabric ? item.fabricBom?.type || "Cotton Fabric" : selectedTrimItem,
+      description: "",
+      gsm: isFabric ? item.fabricBom?.gsm || "180" : "",
+      width: isFabric ? item.fabricBom?.width || "44" : "",
+      color: isFabric ? item.fabricBom?.color || item.color : item.color,
+      qty: reqQty?.toString() || "0",
+      rate: "0",
+      gst: "5",
+      image: ""
     });
     setIsManualEntryOpen(true);
   };
@@ -561,8 +581,18 @@ export function PurchaseOrderForm({
                 <div className="mt-4 overflow-hidden relative">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold text-slate-800">
-                      {viewMode === "address" ? "Supplier Address" : `Available Sales Orders for ${selectedBuyerId}`}
+                      {viewMode === "address" ? "Supplier Address" : `Available Designs for ${selectedBuyerId}`}
                     </h3>
+                    {!isViewMode && viewMode === "so-table" && (
+                      <div className="flex-1 max-w-sm ml-4">
+                        <Input 
+                          placeholder="Filter by SO..." 
+                          value={soFilter}
+                          onChange={(e) => setSoFilter(e.target.value)}
+                          className="h-8 text-xs bg-white"
+                        />
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       {selectedBuyerId && !isViewMode && (
                         <Button 
@@ -572,7 +602,7 @@ export function PurchaseOrderForm({
                           onClick={() => setViewMode(viewMode === "address" ? "so-table" : "address")}
                           className="h-8 text-xs font-medium border-slate-200"
                         >
-                          {viewMode === "address" ? "Show Sales Orders" : "Show Address"}
+                          {viewMode === "address" ? "Show Designs" : "Show Address"}
                         </Button>
                       )}
                       {viewMode === "address" && (
@@ -624,59 +654,74 @@ export function PurchaseOrderForm({
                       </div>
                     </div>
 
-                    {/* Sales Order Table View */}
+                    {/* Designs Table View */}
                     <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
-                      <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[240px]">
+                      <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
                         <table className="w-full text-sm text-left">
-                          <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10">
+                          <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                             <tr>
                               <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
-                              <th className="px-4 py-3 font-bold text-slate-700">SO Date</th>
-                              <th className="px-4 py-3 font-bold text-slate-700">Total Styles</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Image</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Style / Design</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Color</th>
+                              <th className="px-4 py-3 font-bold text-slate-700 text-center">Required Qty</th>
                               <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map((so) => (
-                              <tr key={so.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-4 py-3 font-bold text-[#0453B8]">{so.soNo}</td>
-                                <td className="px-4 py-3 text-slate-600">{so.orderDate}</td>
-                                <td className="px-4 py-3 text-slate-600">
-                                  {(() => {
-                                    const totalSoItems = ALL_SO_ITEMS.filter(i => i.soId === so.id && i.trackingStatus !== "CLOSED").length || 5;
-                                    const soItemsInPo = poItems.filter(i => i.soNo === so.soNo).length;
-                                    return soItemsInPo > 0 
-                                      ? <span className="font-bold text-[#0453B8]">{soItemsInPo} / {totalSoItems} Styles Selected</span>
-                                      : <span>{totalSoItems} Styles</span>;
-                                  })()}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      const initialSelected: Record<string, boolean> = {};
-                                      ALL_SO_ITEMS.filter(i => i.soId === so.id).forEach(item => {
-                                        const existing = poItems.find(p => p.soItemId === item.id);
-                                        if (existing) {
-                                          initialSelected[item.id] = true;
-                                        }
-                                      });
-                                      setSelectedLines(initialSelected);
-                                      setActiveSoForLines(so);
-                                    }}
-                                    className="h-7 text-xs border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
-                                  >
-                                    Select
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                            {MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).length === 0 && (
-                              <tr>
-                                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available sales orders found for this buyer.</td>
-                              </tr>
-                            )}
+                            {(() => {
+                              const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
+                              const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
+                              
+                              if (availableDesigns.length === 0) {
+                                return (
+                                  <tr>
+                                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
+                                  </tr>
+                                );
+                              }
+
+                              return availableDesigns.map((item: any) => {
+                                const isAdded = poItems.some(poItem => poItem.soItemId === item.id);
+                                const reqQty = type === "Fabric" ? item.requiredQtyMtr : Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0);
+
+                                return (
+                                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-4 py-3">
+                                      <div className="font-bold text-[#0453B8]">{item.soNo}</div>
+                                      <div className="text-xs text-slate-500 font-medium">Line {item.soItem.split('-')[1]}</div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50">
+                                        <img src={
+                                          item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
+                                          item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
+                                          item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
+                                          "/men regualr fit shirt.jpeg"
+                                        } alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="font-bold text-slate-800">{item.productId}</div>
+                                      <div className="text-xs text-slate-600 font-medium">{item.name}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-slate-600 font-medium">{item.color}</td>
+                                    <td className="px-4 py-3 text-center font-bold text-slate-800">{reqQty?.toFixed(type === "Fabric" ? 2 : 0)}</td>
+                                    <td className="px-4 py-3 text-center">
+                                      <Button 
+                                        variant={isAdded ? "ghost" : "outline"}
+                                        size="sm" 
+                                        disabled={isAdded}
+                                        onClick={() => handleOpenAddFabricForSoItem(item)}
+                                        className={`h-7 text-xs font-semibold ${isAdded ? 'text-emerald-600 bg-emerald-50' : 'border-[#0453B8] text-[#0453B8] hover:bg-blue-50'}`}
+                                      >
+                                        {isAdded ? "Added" : "Select"}
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            })()}
                           </tbody>
                         </table>
                       </div>
@@ -862,8 +907,8 @@ export function PurchaseOrderForm({
         )}
         {/* Floating Panel for Add Manual Fabric */}
         {isManualEntryOpen && (
-          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300">
-            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300 max-h-[calc(100vh-7rem)]">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-slate-900">
                 {editingItem ? "Edit Fabric" : "Add Manual Fabric"}
                 {editingItem?.soItemId && (
@@ -877,7 +922,38 @@ export function PurchaseOrderForm({
               </Button>
             </div>
             
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              {/* Product Info Header for SO Items */}
+              {selectedSoItemContext && !editingItem && (
+                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4 flex gap-4">
+                  <div className="w-20 h-24 bg-white border border-slate-200 rounded shrink-0 overflow-hidden flex items-center justify-center p-1">
+                    <img src={
+                      selectedSoItemContext.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
+                      selectedSoItemContext.name.includes("Shirt") ? "/men casual half shirt.jpg" :
+                      selectedSoItemContext.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
+                      "/men regualr fit shirt.jpeg"
+                    } alt={selectedSoItemContext.name} className="w-full h-full object-contain mix-blend-multiply" />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <h4 className="font-bold text-[#0453B8] text-sm mb-1">{selectedSoItemContext.productId} - {selectedSoItemContext.name}</h4>
+                    <div className="grid grid-cols-3 gap-4 mt-3 bg-white p-3 border border-slate-200 rounded-md">
+                      <div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">SO Qty</div>
+                        <div className="font-bold text-slate-800 text-base">{(Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)} Pcs</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">Avg</div>
+                        <div className="font-bold text-slate-800 text-base">{(selectedSoItemContext.requiredQtyMtr / (Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold text-red-500 uppercase">Total Mtrs</div>
+                        <div className="font-bold text-red-600 text-base">{selectedSoItemContext.requiredQtyMtr}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-5">
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Content</Label>
@@ -999,7 +1075,7 @@ export function PurchaseOrderForm({
               </div>
             </div>
             
-            <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3">
+            <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3 shrink-0">
               <Button type="button" variant="outline" onClick={() => { setIsManualEntryOpen(false); setEditingItem(null); }} className="font-bold">Cancel</Button>
               <Button type="button" onClick={() => {
                 if (editingItem) {
@@ -1022,6 +1098,7 @@ export function PurchaseOrderForm({
                     return item;
                   }));
                 } else {
+                  const isFabric = type === "Fabric";
                   const newItem = {
                     id: Math.random().toString(36).substr(2, 9),
                     material: manualFormData.type,
@@ -1030,17 +1107,18 @@ export function PurchaseOrderForm({
                     colorShade: manualFormData.color || "Beige",
                     qty: Number(manualFormData.qty) || 200,
                     buffer: 0,
-                    uom: "mtr",
+                    uom: isFabric ? "mtr" : "pcs",
                     rate: Number(manualFormData.rate) || 130,
                     gst: Number(manualFormData.gst) || 5,
                     amount: (Number(manualFormData.rate) || 130) * (Number(manualFormData.qty) || 200),
                     deliveryDate: "",
                     images: [],
                     productName: manualFormData.type,
-                    soNo: "",
+                    soNo: selectedSoItemContext ? selectedSoItemContext.soNo : "",
+                    soItemId: selectedSoItemContext ? selectedSoItemContext.id : undefined,
                     fabricImage: manualFormData.image || "/Cotton_-_Fabric_Types_-_Brightside_1_480x480.jpg",
                   };
-                  setPoItems(prev => [...prev, newItem]);
+                  setPoItems(prev => [newItem, ...prev]);
                 }
                 
                 setIsManualEntryOpen(false);

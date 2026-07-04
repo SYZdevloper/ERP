@@ -462,204 +462,207 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 /* ── Selected Product Detail + Configuration ── */
                 <div className="border border-slate-200 rounded-xl bg-white p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200">
 
-                  {/* Selected Product Card */}
-                  <div className="border border-slate-200 rounded-xl p-4 flex items-start gap-5 shadow-sm bg-white">
-                    {(() => {
-                      let imageSrc = "/men casual half shirt.jpg";
-                      const nameLower = selectedProduct.name.toLowerCase();
-                      if (nameLower.includes("formal") || selectedProduct.code.startsWith("MS")) {
-                        imageSrc = selectedProduct.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                      }
-                      if (nameLower.includes("t-shirt") || selectedProduct.code.startsWith("MT")) {
-                        imageSrc = "/men casual tshirt.jpeg";
-                      }
-                      return (
-                        <>
-                          <div className="relative w-[100px] aspect-square bg-[#F5F6F8] rounded-xl overflow-hidden flex items-center justify-center p-2 shrink-0 group cursor-pointer border border-transparent hover:border-[#0453B8] transition-colors">
-                            <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply group-hover:opacity-30 transition-opacity" />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
-                              <Plus className="w-6 h-6 text-[#0453B8] mb-1" />
-                              <span className="text-[10px] font-bold text-[#0453B8] text-center px-1 leading-tight">Change<br/>Image</span>
-                            </div>
-                            <input
-                              type="file"
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const url = URL.createObjectURL(e.target.files[0]);
-                                  setCustomImage(url);
-                                }
-                              }}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-2 pt-1">
-                            <span className="text-base font-extrabold text-slate-900">{selectedProduct.code}</span>
-                            <span className="text-sm font-semibold text-slate-700">
-                              {selectedProduct.name} {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}
-                            </span>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Attributes */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 mt-2 mb-2">
-                    {/* 1) Buyer Design No */}
-                    <div className="flex items-center gap-3">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Buyer Design No</Label>
-                      <Input
-                        value={sqNumber}
-                        onChange={(e) => setSqNumber(e.target.value)}
-                        placeholder="e.g. 10 digit code"
-                        className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
-                      />
-                    </div>
-
-                    {/* 2) Color (Swapped with Rate) */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Color <span className="text-red-500">*</span></Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Select value={selectedColor} onValueChange={setSelectedColor}>
-                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                            <SelectValue placeholder="Select Color" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              { label: "White", hex: "white" },
-                              { label: "Black", hex: "black" },
-                              { label: "Navy", hex: "#000080" },
-                              { label: "Red", hex: "#ef4444" },
-                              { label: "Grey", hex: "#808080" },
-                            ].map(c => (
-                              <SelectItem key={c.label} value={c.label}>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
-                                  <span>{c.label}</span>
+                  <div className="flex flex-col md:flex-row gap-6 items-start mt-2 mb-4">
+                    
+                    {/* Left: Product Image */}
+                    <div className="w-full md:w-[280px] flex flex-col gap-3 shrink-0">
+                      <div className="border border-slate-200 rounded-xl p-5 flex flex-col items-center gap-4 shadow-sm bg-white text-center">
+                        {(() => {
+                          let imageSrc = "/men casual half shirt.jpg";
+                          const nameLower = selectedProduct.name.toLowerCase();
+                          if (nameLower.includes("formal") || selectedProduct.code.startsWith("MS")) {
+                            imageSrc = selectedProduct.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
+                          }
+                          if (nameLower.includes("t-shirt") || selectedProduct.code.startsWith("MT")) {
+                            imageSrc = "/men casual tshirt.jpeg";
+                          }
+                          return (
+                            <>
+                              <div className="relative w-[180px] aspect-square bg-[#F5F6F8] rounded-xl overflow-hidden flex items-center justify-center p-2 shrink-0 group cursor-pointer border border-transparent hover:border-[#0453B8] transition-colors mx-auto">
+                                <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply group-hover:opacity-30 transition-opacity" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
+                                  <Plus className="w-8 h-8 text-[#0453B8] mb-2" />
+                                  <span className="text-xs font-bold text-[#0453B8] text-center px-2 leading-tight">Change<br/>Image</span>
                                 </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsColorDialogOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* 3) Pattern */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Pattern</Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-10 flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
-                              {selectedPattern ? selectedPattern : "Pattern"}
-                              <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[300px] p-0" align="start">
-                            <div className="flex flex-col">
-                              <div className="flex items-center border-b px-3">
-                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
-                                <Input
-                                  placeholder="Search brand or code..."
-                                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
-                                  value={patternSearch}
-                                  onChange={(e) => setPatternSearch(e.target.value)}
+                                <input
+                                  type="file"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      const url = URL.createObjectURL(e.target.files[0]);
+                                      setCustomImage(url);
+                                    }
+                                  }}
                                 />
                               </div>
-                              <div className="max-h-[300px] overflow-y-auto py-2">
-                                {INITIAL_MASTER_PATTERNS
-                                  .filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase()))
-                                  .map(pattern => (
-                                    <button
-                                      key={pattern.code}
-                                      className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
-                                      onClick={() => { setSelectedPattern(pattern.code); setIsPatternOpen(false); }}
-                                    >
-                                      <div className="flex items-center justify-between w-full">
-                                        <span className="font-bold text-[13px] text-slate-900">{pattern.code}</span>
-                                        <span className="font-semibold text-[11px] text-slate-500">{pattern.fit}</span>
-                                      </div>
-                                      <span className="text-[11px] font-semibold text-[#0453B8]">{pattern.brand}</span>
-                                    </button>
-                                  ))}
-                                {INITIAL_MASTER_PATTERNS.filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase())).length === 0 && (
-                                  <div className="py-6 text-center text-sm text-slate-500 font-medium">No pattern found.</div>
-                                )}
+                              <div className="flex flex-col gap-1 w-full pt-2">
+                                <span className="text-xl font-extrabold text-slate-900">{selectedProduct.code}</span>
+                                <span className="text-sm font-bold text-slate-700 leading-tight">
+                                  {selectedProduct.name}
+                                </span>
+                                <span className="text-xs font-medium text-slate-500 mt-1">
+                                  {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}
+                                </span>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsPatternMasterOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 
-                    {/* 4) Rate (Swapped with Color) */}
-                    <div className="flex items-center gap-3">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Rate <span className="text-red-500">*</span></Label>
-                      <Input
-                        ref={rateInputRef}
-                        type="number"
-                        min="0"
-                        value={customRate}
-                        onChange={(e) => setCustomRate(e.target.value)}
-                        placeholder="0"
-                        className="h-9 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
-                      />
-                    </div>
-
-                    {/* 4) Fabric */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-bold text-slate-700 min-w-[45px]">Fabric <span className="text-red-500">*</span></Label>
-                      <div className="flex-1 flex items-center gap-1">
-                        <Select value={selectedFabric} onValueChange={setSelectedFabric}>
-                          <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                            <SelectValue placeholder="Select Fabric" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
-                            <SelectItem value="Linen">Linen</SelectItem>
-                            <SelectItem value="Denim">Denim</SelectItem>
-                            <SelectItem value="Polyester">Polyester</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border border-transparent hover:border-blue-200" onClick={() => setIsFabricDialogOpen(true)}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
+                    {/* Right: Form Fields */}
+                    <div className="flex-1 w-full flex flex-col gap-4 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                      
+                      {/* 1) Buyer Design No */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Buyer Design</Label>
+                        <Input
+                          value={sqNumber}
+                          onChange={(e) => setSqNumber(e.target.value)}
+                          placeholder="e.g. 10 digit code"
+                          className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                        />
                       </div>
-                    </div>
 
-
-                  </div>
-
-                  {/* Brand */}
-                  <div className="flex items-center justify-start mt-3 mb-4 bg-blue-50/50 p-3 rounded-xl border border-blue-100 relative">
-                    <div className="flex items-center gap-4 flex-1">
-                      <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider min-w-[80px]">Select Brand</Label>
-                      <div className="flex items-center gap-2.5 flex-wrap whitespace-nowrap flex-1 pr-10">
-                        {["Zara", "H&M", "Levi's", "No Brand"].map((brand) => (
-                          <button
-                            key={brand}
-                            type="button"
-                            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${brandName === brand
-                                ? "bg-white text-[#0453B8] shadow-sm border border-blue-200"
-                                : "bg-transparent text-slate-600 hover:bg-white/60 hover:text-slate-800"
-                              }`}
-                            onClick={() => setBrandName(brand)}
-                          >
-                            {brand}
-                          </button>
-                        ))}
+                      {/* 2) Rate */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Rate <span className="text-red-500">*</span></Label>
+                        <Input
+                          ref={rateInputRef}
+                          type="number"
+                          min="0"
+                          value={customRate}
+                          onChange={(e) => setCustomRate(e.target.value)}
+                          placeholder="0"
+                          className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                        />
                       </div>
+
+                      {/* 3) Brand */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Brand</Label>
+                        <div className="flex items-center gap-2 flex-wrap flex-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                          {["Zara", "H&M", "Levi's", "No Brand"].map((brand) => (
+                            <button
+                              key={brand}
+                              type="button"
+                              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${brandName === brand
+                                  ? "bg-white text-[#0453B8] shadow-sm border border-blue-200"
+                                  : "bg-transparent text-slate-600 hover:bg-slate-200 hover:text-slate-800"
+                                }`}
+                              onClick={() => setBrandName(brand)}
+                            >
+                              {brand}
+                            </button>
+                          ))}
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-[#0453B8] hover:bg-blue-100" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* 4) Pattern No */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Pattern No</Label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-10 flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
+                                {selectedPattern ? selectedPattern : "Select Pattern"}
+                                <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                              <div className="flex flex-col">
+                                <div className="flex items-center border-b px-3">
+                                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
+                                  <Input
+                                    placeholder="Search brand or code..."
+                                    className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
+                                    value={patternSearch}
+                                    onChange={(e) => setPatternSearch(e.target.value)}
+                                  />
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto py-2">
+                                  {INITIAL_MASTER_PATTERNS
+                                    .filter(p => p.brand.toLowerCase().includes(patternSearch.toLowerCase()) || p.code.toLowerCase().includes(patternSearch.toLowerCase()))
+                                    .map(pattern => (
+                                      <button
+                                        key={pattern.code}
+                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
+                                        onClick={() => { setSelectedPattern(pattern.code); setIsPatternOpen(false); }}
+                                      >
+                                        <div className="flex items-center justify-between w-full">
+                                          <span className="font-bold text-[13px] text-slate-900">{pattern.code}</span>
+                                          <span className="font-semibold text-[11px] text-slate-500">{pattern.fit}</span>
+                                        </div>
+                                        <span className="text-[11px] font-semibold text-[#0453B8]">{pattern.brand}</span>
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsPatternMasterOpen(true)}>
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* 5) Color */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Color <span className="text-red-500">*</span></Label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <Select value={selectedColor} onValueChange={setSelectedColor}>
+                            <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                              <SelectValue placeholder="Select Color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                { label: "White", hex: "white" },
+                                { label: "Black", hex: "black" },
+                                { label: "Navy", hex: "#000080" },
+                                { label: "Red", hex: "#ef4444" },
+                                { label: "Grey", hex: "#808080" },
+                              ].map(c => (
+                                <SelectItem key={c.label} value={c.label}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full border border-slate-300 shadow-sm" style={{ backgroundColor: c.hex }} />
+                                    <span>{c.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsColorDialogOpen(true)}>
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* 6) Fabric */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Fabric <span className="text-red-500">*</span></Label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <Select value={selectedFabric} onValueChange={setSelectedFabric}>
+                            <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                              <SelectValue placeholder="Select Fabric" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>
+                              <SelectItem value="Linen">Linen</SelectItem>
+                              <SelectItem value="Denim">Denim</SelectItem>
+                              <SelectItem value="Polyester">Polyester</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsFabricDialogOpen(true)}>
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
                     </div>
-                    <Button variant="ghost" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 text-[#0453B8] hover:bg-blue-100 hover:text-blue-800 rounded-md" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
 
                   {/* Size / Ratio Inputs */}
@@ -892,6 +895,12 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     </p>
                   </div>
                 </div>
+
+                <div className="col-span-2 flex flex-col gap-2 mt-2">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</Label>
+                  <textarea placeholder="Additional description..." className="h-[80px] w-full text-sm font-medium bg-white border border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:outline-none shadow-sm rounded-lg p-3 resize-none" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
+                </div>
+
                 <div className="flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Code <span className="text-red-500">*</span></Label>
                   <Input placeholder="e.g. MS-001" className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg" value={newProduct.code} onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} />
@@ -927,10 +936,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg"><SelectValue placeholder="Select Sleeve Type" /></SelectTrigger>
                     <SelectContent>{MASTER_TYPES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
                   </Select>
-                </div>
-                <div className="col-span-2 flex flex-col gap-2 mt-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</Label>
-                  <textarea placeholder="Additional description..." className="h-[80px] w-full text-sm font-medium bg-white border border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:outline-none shadow-sm rounded-lg p-3 resize-none" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-8">

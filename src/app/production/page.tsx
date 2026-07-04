@@ -14,6 +14,7 @@ import { useProduction } from "@/components/production/production-context";
 const MOCK_ORDERS = {
   "SO-2026-008": {
     id: "SO-2026-008",
+    buyerName: "NorthTrail Outdoors",
     products: [
       {
         id: "P-101",
@@ -27,12 +28,12 @@ const MOCK_ORDERS = {
         buyerDesignNumber: "NT-WP-2026",
         targetQty: 850,
         fabricRolls: [
-          { id: "R-101", color: "Yellow", meter: 296, width: 44, originalQty: 50, availableQty: 50, unit: "Mtr" },
-          { id: "R-102", color: "Brown", meter: 297, width: 44, originalQty: 50, availableQty: 50, unit: "Mtr" },
-          { id: "R-103", color: "Blue", meter: 293, width: 44, originalQty: 50, availableQty: 50, unit: "Mtr" },
-          { id: "R-104", color: "Black", meter: 300, width: 44, originalQty: 50, availableQty: 50, unit: "Mtr" },
-          { id: "R-201", color: "Olive", meter: 100, width: 44, originalQty: 100, availableQty: 100, unit: "Mtr" },
-          { id: "R-202", color: "Olive", meter: 100, width: 44, originalQty: 100, availableQty: 100, unit: "Mtr" },
+          { id: "R-101", material: "NYLON-TASLAN-04", originalQty: 50, availableQty: 50, unit: "Mtr" },
+          { id: "R-102", material: "NYLON-TASLAN-04", originalQty: 50, availableQty: 50, unit: "Mtr" },
+          { id: "R-103", material: "NYLON-TASLAN-04", originalQty: 50, availableQty: 50, unit: "Mtr" },
+          { id: "R-104", material: "NYLON-TASLAN-04", originalQty: 50, availableQty: 50, unit: "Mtr" },
+          { id: "R-201", material: "POLY-LINING-99", originalQty: 100, availableQty: 100, unit: "Mtr" },
+          { id: "R-202", material: "POLY-LINING-99", originalQty: 100, availableQty: 100, unit: "Mtr" },
         ],
       },
       {
@@ -47,14 +48,15 @@ const MOCK_ORDERS = {
         buyerDesignNumber: "NT-WP-2026-B",
         targetQty: 400,
         fabricRolls: [
-          { id: "R-105", color: "Black", meter: 200, width: 44, originalQty: 100, availableQty: 100, unit: "Mtr" },
-          { id: "R-203", color: "Olive", meter: 150, width: 44, originalQty: 50, availableQty: 50, unit: "Mtr" },
+          { id: "R-105", material: "NYLON-TASLAN-BLK", originalQty: 100, availableQty: 100, unit: "Mtr" },
+          { id: "R-203", material: "POLY-LINING-99", originalQty: 50, availableQty: 50, unit: "Mtr" },
         ],
       }
     ]
   },
   "SO-2026-009": {
     id: "SO-2026-009",
+    buyerName: "Essentials Inc.",
     products: [
       {
         id: "P-201",
@@ -68,9 +70,9 @@ const MOCK_ORDERS = {
         buyerDesignNumber: "ESS-CH-001",
         targetQty: 1200,
         fabricRolls: [
-          { id: "R-301", color: "Grey", meter: 180, width: 50, originalQty: 100, availableQty: 100, unit: "Mtr" },
-          { id: "R-302", color: "Grey", meter: 180, width: 50, originalQty: 100, availableQty: 100, unit: "Mtr" },
-          { id: "R-401", color: "Grey", meter: 90, width: 50, originalQty: 50, availableQty: 20, unit: "Mtr" },
+          { id: "R-301", material: "FRENCH-TERRY-280", originalQty: 100, availableQty: 100, unit: "Mtr" },
+          { id: "R-302", material: "FRENCH-TERRY-280", originalQty: 100, availableQty: 100, unit: "Mtr" },
+          { id: "R-401", material: "RIB-KNIT-MATCHING", originalQty: 50, availableQty: 20, unit: "Mtr" },
         ]
       }
     ]
@@ -85,17 +87,6 @@ export default function TechpackPage() {
   const [selectedProductId, setSelectedProductId] = useState("P-101");
   const [isIssued, setIsIssued] = useState(false);
   const [allocations, setAllocations] = useState<Record<string, number>>({});
-  const [rollEntries, setRollEntries] = useState<Record<string, { layerLength: string, noOfLayer: string, damage: string, short: string }>>({});
-
-  const handleRollEntryChange = (rollId: string, field: string, value: string) => {
-    setRollEntries(prev => ({
-      ...prev,
-      [rollId]: {
-        ...(prev[rollId] || { layerLength: '', noOfLayer: '', damage: '', short: '' }),
-        [field]: value
-      }
-    }));
-  };
 
   const orderData = MOCK_ORDERS[selectedSO as keyof typeof MOCK_ORDERS];
   const productData = orderData?.products.find(p => p.id === selectedProductId) || orderData?.products[0];
@@ -177,7 +168,8 @@ export default function TechpackPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-end gap-4">
         
         <div className="flex-1 max-w-[240px]">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Sales Order</label>
+          <div className="text-sm font-bold text-[#0453B8] mb-1">{orderData?.buyerName || "Buyer Name"}</div>
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Sales Order</label>
           <Select value={selectedSO} onValueChange={handleSOChange}>
             <SelectTrigger className="h-12 border-slate-200 focus:ring-[#0453B8] font-bold text-slate-800 text-base shadow-sm">
               <SelectValue placeholder="Select an order" />
@@ -312,66 +304,37 @@ export default function TechpackPage() {
               <TableHeader>
                 <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
                   <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Roll No</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Color</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Meter</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Width</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">Layer Length</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">No. of Layer</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Total</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Balance</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20">Damage</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20">Short</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Material</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Available Qty</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px]">Allocate Qty</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Remaining</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {productData.fabricRolls.map(roll => {
-                  const entry = rollEntries[roll.id] || { layerLength: '', noOfLayer: '', damage: '', short: '' };
-                  const ll = parseFloat(entry.layerLength) || 0;
-                  const nl = parseFloat(entry.noOfLayer) || 0;
-                  const total = ll * nl;
-                  const damage = parseFloat(entry.damage) || 0;
-                  const short = parseFloat(entry.short) || 0;
-                  const balance = roll.meter - total - damage - short;
+                  const allocated = allocations[roll.id] ?? roll.availableQty; // Default UI shows what's in state
+                  const remaining = roll.availableQty - allocated;
                   
                   return (
                     <TableRow key={roll.id} className="border-b-slate-50 hover:bg-slate-50/50">
                       <TableCell className="font-bold text-slate-800">{roll.id}</TableCell>
-                      <TableCell className="font-semibold text-slate-600">{roll.color}</TableCell>
-                      <TableCell className="text-right font-bold text-slate-700">{roll.meter}</TableCell>
-                      <TableCell className="text-right font-semibold text-slate-600">{roll.width}</TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={entry.layerLength}
-                          onChange={(e) => handleRollEntryChange(roll.id, 'layerLength', e.target.value)}
-                          className="h-8 text-right text-xs focus:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-1"
-                        />
+                      <TableCell className="font-semibold text-slate-600">{roll.material}</TableCell>
+                      <TableCell className="text-right font-bold text-slate-700">
+                        {roll.availableQty} <span className="text-xs font-semibold text-slate-400">{roll.unit}</span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Input
                           type="number"
-                          value={entry.noOfLayer}
-                          onChange={(e) => handleRollEntryChange(roll.id, 'noOfLayer', e.target.value)}
-                          className="h-8 text-right text-xs focus:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-1"
+                          min={0}
+                          max={roll.availableQty}
+                          value={allocations[roll.id] !== undefined ? allocations[roll.id] : ''}
+                          onChange={(e) => handleAllocationChange(roll.id, e.target.value, roll.availableQty)}
+                          className="h-8 text-right font-bold focus:ring-[#0453B8]"
+                          placeholder="0"
                         />
                       </TableCell>
-                      <TableCell className="text-right font-bold text-slate-800">{total > 0 ? total.toFixed(2) : ''}</TableCell>
-                      <TableCell className="text-right font-bold text-slate-800">{balance !== roll.meter ? balance.toFixed(2) : ''}</TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={entry.damage}
-                          onChange={(e) => handleRollEntryChange(roll.id, 'damage', e.target.value)}
-                          className="h-8 text-right text-xs focus:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-1"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={entry.short}
-                          onChange={(e) => handleRollEntryChange(roll.id, 'short', e.target.value)}
-                          className="h-8 text-right text-xs focus:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-1"
-                        />
+                      <TableCell className={`text-right font-bold ${remaining > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                        {remaining.toFixed(2)} <span className="text-xs font-semibold text-slate-400">{roll.unit}</span>
                       </TableCell>
                     </TableRow>
                   );
