@@ -55,6 +55,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [patternSearch, setPatternSearch] = useState("");
   const [isPatternOpen, setIsPatternOpen] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [customProductName, setCustomProductName] = useState("");
 
   const [isRatioMode, setIsRatioMode] = useState(true);
   const [totalOrderQty, setTotalOrderQty] = useState<string>("");
@@ -191,9 +192,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     return catalogItems.find(p => p.id === selectedProductId) || null;
   }, [selectedProductId, catalogItems]);
 
-  // Sync custom rate when product changes
+  // Sync custom rate and name when product changes
   useEffect(() => {
     if (selectedProduct && !editProduct) {
+      setCustomProductName(selectedProduct.name);
       setCustomRate(selectedProduct.rate.toString());
       setTimeout(() => {
         rateInputRef.current?.focus();
@@ -205,10 +207,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   // Auto-fill new product name
   useEffect(() => {
     if (viewMode === 'create') {
-      const autoName = [newProduct.category, newProduct.subcategory, newProduct.type2, newProduct.type].filter(Boolean).join(" ");
+      const autoName = [newProduct.category, newProduct.subcategory, newProduct.type2, newProduct.type, newProduct.description].filter(Boolean).join(" ");
       setNewProduct(prev => prev.name !== autoName ? { ...prev, name: autoName } : prev);
     }
-  }, [newProduct.category, newProduct.subcategory, newProduct.type, newProduct.type2, viewMode]);
+  }, [newProduct.category, newProduct.subcategory, newProduct.type, newProduct.type2, newProduct.description, viewMode]);
 
   const currentTotalAmount = useMemo(() => {
     if (!selectedProduct) return 0;
@@ -238,7 +240,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     const newLineItem = {
       id: editProduct ? editProduct.id : `new-${Date.now()}`,
       productId: selectedProduct.code,
-      name: selectedProduct.name,
+      name: customProductName || selectedProduct.name,
       category: selectedProduct.category,
       subcategory: selectedProduct.subcategory,
       type: selectedProduct.type,
@@ -478,32 +480,44 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           }
                           return (
                             <>
-                              <div className="relative w-[180px] aspect-square bg-[#F5F6F8] rounded-xl overflow-hidden flex items-center justify-center p-2 shrink-0 group cursor-pointer border border-transparent hover:border-[#0453B8] transition-colors mx-auto">
-                                <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply group-hover:opacity-30 transition-opacity" />
+                              <div
+                                onClick={() => document.getElementById('config-product-image-input')?.click()}
+                                className="relative w-[180px] aspect-square bg-[#F5F6F8] rounded-xl overflow-hidden p-4 cursor-pointer hover:ring-2 hover:ring-[#0453B8] transition-all group shrink-0 mx-auto"
+                              >
+                                <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
+                                
                                 <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
-                                  <Plus className="w-8 h-8 text-[#0453B8] mb-2" />
-                                  <span className="text-xs font-bold text-[#0453B8] text-center px-2 leading-tight">Change<br/>Image</span>
+                                  <ImagePlus className="w-8 h-8 text-[#0453B8]" />
+                                  <span className="text-[10px] font-bold text-[#0453B8] mt-1 uppercase tracking-wider bg-white/80 px-2 py-1 rounded-md">Change Image</span>
                                 </div>
-                                <input
-                                  type="file"
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    if (e.target.files && e.target.files[0]) {
-                                      const url = URL.createObjectURL(e.target.files[0]);
-                                      setCustomImage(url);
-                                    }
-                                  }}
-                                />
+
+                                {customImage && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setCustomImage(null); }}
+                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  >
+                                    <XIcon className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
-                              <div className="flex flex-col gap-1 w-full pt-2">
-                                <span className="text-xl font-extrabold text-slate-900">{selectedProduct.code}</span>
-                                <span className="text-sm font-bold text-slate-700 leading-tight">
-                                  {selectedProduct.name}
-                                </span>
-                                <span className="text-xs font-medium text-slate-500 mt-1">
-                                  {selectedProduct.type} {selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}
-                                </span>
+                              <input
+                                id="config-product-image-input"
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const url = URL.createObjectURL(e.target.files[0]);
+                                    setCustomImage(url);
+                                  }
+                                }}
+                              />
+                              <div>
+                                <h3 className="text-lg font-extrabold text-slate-900 mb-1">{selectedProduct.code}</h3>
+                                <p className="text-sm font-semibold text-slate-700">{selectedProduct.name}</p>
+                                <p className="text-xs text-slate-500 mt-1">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</p>
+                                <p className="text-xs text-slate-500">{selectedProduct.type}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}</p>
                               </div>
                             </>
                           );
@@ -511,9 +525,20 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       </div>
                     </div>
 
+
                     {/* Right: Form Fields */}
                     <div className="flex-1 w-full flex flex-col gap-4 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
                       
+                      {/* Product Name (Full Width, No Label) */}
+                      <div className="mb-2">
+                        <Input
+                          value={customProductName}
+                          onChange={(e) => setCustomProductName(e.target.value)}
+                          placeholder="e.g. Mens Full Sleeves Regular Collar"
+                          className="h-12 w-full bg-slate-50 border-slate-200 shadow-inner rounded-lg text-lg font-bold px-4 text-slate-900 focus-visible:ring-[#0453B8] placeholder:text-slate-400 placeholder:font-normal"
+                        />
+                      </div>
+
                       {/* 1) Buyer Design No */}
                       <div className="flex items-center gap-3">
                         <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Buyer Design</Label>
@@ -677,7 +702,16 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       {/* Advanced Calculator Moved Here */}
                       <div className="flex items-center gap-2 relative h-8 flex-1 justify-start ml-2">
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 transition-all duration-300 ease-in-out opacity-100 pointer-events-auto translate-x-0">
-                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap">Adjust Size</Label>
+                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap">Total Qty</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={totalOrderQty}
+                            onChange={(e) => setTotalOrderQty(e.target.value)}
+                            placeholder="0"
+                            className="h-8 w-20 bg-white border-slate-200 shadow-sm rounded-md text-[11px] font-semibold px-2 focus-visible:ring-[#0453B8]"
+                          />
+                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap ml-1">Adjust Size</Label>
                           <Select value={adjustmentSize} onValueChange={setAdjustmentSize}>
                             <SelectTrigger className="w-[75px] h-8 text-[11px] bg-white border-slate-200 font-semibold focus:ring-[#0453B8]">
                               <SelectValue placeholder="Size" />
@@ -688,15 +722,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               ))}
                             </SelectContent>
                           </Select>
-                          <Label className="text-[11px] font-bold text-slate-700 whitespace-nowrap ml-1">Total Qty</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={totalOrderQty}
-                            onChange={(e) => setTotalOrderQty(e.target.value)}
-                            placeholder="0"
-                            className="h-8 w-20 bg-white border-slate-200 shadow-sm rounded-md text-[11px] font-semibold px-2 focus-visible:ring-[#0453B8]"
-                          />
 
                         </div>
                       </div>
@@ -896,9 +921,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   </div>
                 </div>
 
-                <div className="col-span-2 flex flex-col gap-2 mt-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Description</Label>
-                  <textarea placeholder="Additional description..." className="h-[80px] w-full text-sm font-medium bg-white border border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:outline-none shadow-sm rounded-lg p-3 resize-none" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} />
+                <div className="flex flex-col gap-2 mt-2">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Name <span className="text-red-500">*</span></Label>
+                  <Input placeholder="Auto-filled name" className="h-[48px] w-full text-sm font-medium bg-slate-50 border-slate-200 shadow-sm rounded-lg" value={newProduct.name} readOnly />
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -906,8 +931,14 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   <Input placeholder="e.g. MS-001" className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg" value={newProduct.code} onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Name <span className="text-red-500">*</span></Label>
-                  <Input placeholder="Auto-filled name" className="h-[48px] w-full text-sm font-medium bg-slate-50 border-slate-200 shadow-sm rounded-lg" value={newProduct.name} readOnly />
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pocket Style (5)</Label>
+                  <Select value={newProduct.description} onValueChange={(v) => setNewProduct({ ...newProduct, description: v })}>
+                    <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg"><SelectValue placeholder="Select Pocket Style" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="With Pocket">With Pocket</SelectItem>
+                      <SelectItem value="Without Pocket">Without Pocket</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">For (1) <span className="text-red-500">*</span></Label>

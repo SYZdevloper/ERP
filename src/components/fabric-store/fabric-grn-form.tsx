@@ -135,6 +135,12 @@ export function FabricGrnForm() {
     
     const totalMeters = validRolls.reduce((acc, curr) => acc + curr.mtrQty, 0);
     
+    const currentEntry = entries.find(e => e.id === activeRollEntryId);
+    if (currentEntry && currentEntry.orderedQty && totalMeters > currentEntry.orderedQty) {
+      alert(`Total meter (${totalMeters}) cannot exceed the ordered quantity (${currentEntry.orderedQty}) from the PO.`);
+      return;
+    }
+    
     setEntries(entries.map(e => {
       if (e.id === activeRollEntryId) {
         const amount = totalMeters * e.rate;
@@ -151,7 +157,6 @@ export function FabricGrnForm() {
     setIsRollDetailsOpen(false);
 
     // Check for short receipt if it's linked to a PO item
-    const currentEntry = entries.find(e => e.id === activeRollEntryId);
     if (currentEntry && currentEntry.orderedQty && totalMeters < currentEntry.orderedQty) {
       setShortReceiptPrompt({
         isOpen: true,
@@ -528,7 +533,10 @@ export function FabricGrnForm() {
                                           poItemIds: [item.id],
                                           orderedQty: item.orderedQty
                                         };
-                                        setEntries(prev => [...prev, newEntry]);
+                                        const updatedEntries = [...entries, newEntry];
+                                        setEntries(updatedEntries);
+                                        // Open roll details immediately after selecting
+                                        setTimeout(() => handleOpenRollDetails(newEntry), 0);
                                       }}
                                       className={`h-7 text-xs font-semibold ${isAdded ? 'text-emerald-600 bg-emerald-50' : 'border-[#0453B8] text-[#0453B8] hover:bg-blue-50'}`}
                                     >
@@ -1095,81 +1103,20 @@ export function FabricGrnForm() {
 
       {/* Roll Details Dialog */}
       <Dialog open={isRollDetailsOpen} onOpenChange={setIsRollDetailsOpen}>
-        <DialogContent className="sm:max-w-xl max-w-[95vw] w-full bg-white p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-4xl max-w-[95vw] w-full bg-white p-0 overflow-hidden">
           <DialogHeader className="px-5 py-4 border-b border-slate-100 flex flex-row items-center justify-between">
             <DialogTitle className="text-base font-bold text-slate-800">
               Roll Wise Meter Entry {activeRollEntryId ? `- ${entries.find(e => e.id === activeRollEntryId)?.description}` : ''}
             </DialogTitle>
           </DialogHeader>
-          <div className="px-5 py-4 overflow-y-auto h-[320px] custom-scrollbar">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow>
-                  <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
-                  <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
-                  <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
-                  <TableHead className="w-32 py-2.5 text-xs font-bold text-slate-700 text-right">Meter (Mtr) <span className="text-red-500">*</span></TableHead>
-                  <TableHead className="w-12 py-2.5"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeRollDetails.map((roll, idx) => (
-                  <TableRow key={roll.id}>
-                    <TableCell className="text-center font-semibold text-slate-600 text-xs py-2">{idx + 1}</TableCell>
-                    <TableCell className="py-2">
-                      <Input 
-                        value={roll.rollNo}
-                        onChange={(e) => {
-                          const newDetails = [...activeRollDetails];
-                          newDetails[idx].rollNo = e.target.value;
-                          setActiveRollDetails(newDetails);
-                        }}
-                        className="h-8 text-xs border-slate-200"
-                        placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Input 
-                        value={roll.color || ""}
-                        onChange={(e) => {
-                          const newDetails = [...activeRollDetails];
-                          newDetails[idx].color = e.target.value;
-                          setActiveRollDetails(newDetails);
-                        }}
-                        className="h-8 text-xs border-slate-200"
-                        placeholder="e.g. Red"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Input 
-                        type="number"
-                        value={roll.mtrQty}
-                        onChange={(e) => {
-                          const newDetails = [...activeRollDetails];
-                          newDetails[idx].mtrQty = e.target.value;
-                          setActiveRollDetails(newDetails);
-                        }}
-                        className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="0.00"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2 text-center">
-                      <button 
-                        onClick={() => {
-                          const newDetails = activeRollDetails.filter((_, i) => i !== idx);
-                          setActiveRollDetails(newDetails);
-                        }}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            <div className="mt-5 mb-2 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+          <div className="px-5 py-4 overflow-y-auto h-[500px] custom-scrollbar flex flex-col">
+            <div className="flex items-center gap-3 mb-4 px-2">
+              <span className="text-sm font-bold text-slate-700">Total Mtr:</span>
+              <div className="border-2 border-red-500 rounded px-3 py-1 text-red-600 font-bold text-sm bg-red-50">
+                {splitTotalMeters || "0"} Meter
+              </div>
+            </div>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg shrink-0">
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] font-bold text-slate-500 uppercase">Target Total (Mtr)</Label>
@@ -1207,6 +1154,75 @@ export function FabricGrnForm() {
               >
                 <Plus className="w-3.5 h-3.5 mr-1" /> Add Roll
               </Button>
+            </div>
+
+            <div className="flex-1 overflow-auto rounded-md border border-slate-200">
+              <Table>
+                <TableHeader className="bg-slate-50 sticky top-0 z-10">
+                  <TableRow>
+                    <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
+                    <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
+                    <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
+                    <TableHead className="w-32 py-2.5 text-xs font-bold text-slate-700 text-right">Meter (Mtr) <span className="text-red-500">*</span></TableHead>
+                    <TableHead className="w-12 py-2.5"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeRollDetails.map((roll, idx) => (
+                    <TableRow key={roll.id}>
+                      <TableCell className="text-center font-semibold text-slate-600 text-xs py-2">{idx + 1}</TableCell>
+                      <TableCell className="py-2">
+                        <Input 
+                          value={roll.rollNo}
+                          onChange={(e) => {
+                            const newDetails = [...activeRollDetails];
+                            newDetails[idx].rollNo = e.target.value;
+                            setActiveRollDetails(newDetails);
+                          }}
+                          className="h-8 text-xs border-slate-200"
+                          placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
+                        />
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Input 
+                          value={roll.color || ""}
+                          onChange={(e) => {
+                            const newDetails = [...activeRollDetails];
+                            newDetails[idx].color = e.target.value;
+                            setActiveRollDetails(newDetails);
+                          }}
+                          className="h-8 text-xs border-slate-200"
+                          placeholder="e.g. Red"
+                        />
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Input 
+                          type="number"
+                          value={roll.mtrQty}
+                          onChange={(e) => {
+                            const newDetails = [...activeRollDetails];
+                            newDetails[idx].mtrQty = e.target.value;
+                            setActiveRollDetails(newDetails);
+                          }}
+                          className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          placeholder="0.00"
+                        />
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <button 
+                          onClick={() => {
+                            const newDetails = activeRollDetails.filter((_, i) => i !== idx);
+                            setActiveRollDetails(newDetails);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
           

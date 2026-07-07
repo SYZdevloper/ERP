@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ListPageHeader } from "@/components/ui/list-page-header";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, ArrowRight, Package, Info, FileText, Tag, Hash, Ruler, Sparkles, Image as ImageIcon, History, Save, Clock, Filter, Download } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, Package, Info, FileText, Tag, Hash, Ruler, Sparkles, Image as ImageIcon, History, Save, Clock, Filter, Download, Scissors } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -92,6 +92,7 @@ export default function CuttingPage() {
   const [rollEntries, setRollEntries] = useState<Record<string, { layerLength: string, noOfLayer: string, damage: string, short: string }>>({});
   const [revisions, setRevisions] = useState<{ id: string, timestamp: Date, entries: typeof rollEntries }[]>([]);
 
+
   const handleSaveProgress = () => {
     const newRevision = {
       id: `REV-${Math.floor(Math.random() * 9000) + 1000}`,
@@ -124,6 +125,53 @@ export default function CuttingPage() {
       setAllocations(initialAllocations);
     }
   }, [productData]);
+
+  const computedSizeEntries = React.useMemo(() => {
+    if (!productData) return [];
+    
+    // Auto-calculator based on Size Ratio "1 : 2 : 2 : 1" for S, M, L, XL
+    const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+    const ratioMap: Record<string, number> = { S: 1, M: 2, L: 2, XL: 1 };
+    const ratioSum = Object.values(ratioMap).reduce((a, b) => a + b, 0);
+
+    const colorStats: Record<string, { totalLayers: number, usedFabric: number }> = {};
+    
+    productData.fabricRolls.forEach(roll => {
+      const entry = rollEntries[roll.id] || {};
+      const noOfLayer = parseFloat(entry.noOfLayer) || 0;
+      const layerLength = parseFloat(entry.layerLength) || 0;
+      const used = noOfLayer * layerLength;
+      
+      if (!colorStats[roll.color]) {
+        colorStats[roll.color] = { totalLayers: 0, usedFabric: 0 };
+      }
+      colorStats[roll.color].totalLayers += noOfLayer;
+      colorStats[roll.color].usedFabric += used;
+    });
+
+    return Object.keys(colorStats).map((color, idx) => {
+      const stats = colorStats[color];
+      const totalPcs = stats.totalLayers * ratioSum;
+      const average = totalPcs > 0 ? (stats.usedFabric / totalPcs).toFixed(2) : '0.00';
+      
+      const sizeBreakdown: Record<string, string> = {};
+      sizes.forEach(s => {
+        if (ratioMap[s]) {
+          sizeBreakdown[s] = (stats.totalLayers * ratioMap[s]).toString();
+        } else {
+          sizeBreakdown[s] = '';
+        }
+      });
+      
+      return {
+        id: idx + 1,
+        color: color,
+        sizes: sizeBreakdown,
+        average: average,
+        totalPcs: totalPcs
+      };
+    });
+  }, [productData, rollEntries]);
 
   if (!productData) return null;
 
@@ -371,40 +419,53 @@ export default function CuttingPage() {
             </div>
 
             <div className="space-y-5">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5"/> Techpack Date</span>
-                <span className="text-sm font-bold text-slate-800">{productData.techpackDate}</span>
-              </div>
-              
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Tag className="w-3.5 h-3.5"/> Brand</span>
-                <span className="text-sm font-bold text-slate-800">{productData.brand}</span>
-              </div>
-              
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Hash className="w-3.5 h-3.5"/> Style</span>
-                <span className="text-sm font-bold text-slate-800">{productData.style}</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5"/> Techpack Date</span>
+                  <span className="text-sm font-bold text-slate-800">{productData.techpackDate}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3.5 h-3.5"/> Pattern No</span>
+                  <span className="text-sm font-bold text-slate-800">PTRN-2026-X8</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Tag className="w-3.5 h-3.5"/> Brand</span>
+                  <span className="text-sm font-bold text-slate-800">{productData.brand}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Scissors className="w-3.5 h-3.5"/> Size Ratio</span>
+                  <span className="text-sm font-bold text-slate-800">1 : 2 : 2 : 1</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Hash className="w-3.5 h-3.5"/> Style</span>
+                  <span className="text-sm font-bold text-slate-800">{productData.style}</span>
+                </div>
+                <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5"/> Size</span>
                   <span className="text-sm font-bold text-slate-800">{productData.size}</span>
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5"/> Fit</span>
                   <span className="text-sm font-bold text-slate-800">{productData.fit}</span>
                 </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Hash className="w-3.5 h-3.5"/> Buyer Design No.</span>
+                  <span className="text-sm font-bold text-slate-800">{productData.buyerDesignNumber}</span>
+                </div>
               </div>
-              
+
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Package className="w-3.5 h-3.5"/> Fabric Detail</span>
                 <span className="text-sm font-bold text-slate-800">{productData.fabricDetail}</span>
-              </div>
-              
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Hash className="w-3.5 h-3.5"/> Buyer Design No.</span>
-                <span className="text-sm font-bold text-slate-800">{productData.buyerDesignNumber}</span>
               </div>
             </div>
           </div>
@@ -423,6 +484,7 @@ export default function CuttingPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
+                  <TableHead className="w-10 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Sr</TableHead>
                   <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Roll No</TableHead>
                   <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Color</TableHead>
                   <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Meter</TableHead>
@@ -436,7 +498,7 @@ export default function CuttingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {productData.fabricRolls.map(roll => {
+                {productData.fabricRolls.map((roll, idx) => {
                   const entry = rollEntries[roll.id] || { layerLength: '', noOfLayer: '', damage: '', short: '' };
                   const ll = parseFloat(entry.layerLength) || 0;
                   const nl = parseFloat(entry.noOfLayer) || 0;
@@ -447,6 +509,7 @@ export default function CuttingPage() {
                   
                   return (
                     <TableRow key={roll.id} className="border-b-slate-50 hover:bg-slate-50/50">
+                      <TableCell className="text-center font-bold text-red-600">{idx + 1}</TableCell>
                       <TableCell className="font-bold text-slate-800">{roll.id}</TableCell>
                       <TableCell className="font-semibold text-slate-600">{roll.color}</TableCell>
                       <TableCell className="text-right font-bold text-slate-700">{roll.meter}</TableCell>
@@ -490,13 +553,104 @@ export default function CuttingPage() {
                 })}
                 {productData.fabricRolls.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-slate-500 font-medium">
+                    <TableCell colSpan={11} className="h-32 text-center text-slate-500 font-medium">
                       No fabric rolls available for this product.
                     </TableCell>
                   </TableRow>
                 )}
+                <TableRow className="bg-slate-50 hover:bg-slate-50 border-t-2 border-slate-200">
+                  <TableCell colSpan={3} className="font-bold text-slate-800 text-right pr-4">Totals</TableCell>
+                  <TableCell className="text-right font-bold text-slate-800">
+                    {productData.fabricRolls.reduce((sum, r) => sum + r.meter, 0).toFixed(2)}
+                  </TableCell>
+                  <TableCell colSpan={3}></TableCell>
+                  <TableCell className="text-right font-bold text-slate-800">
+                    {productData.fabricRolls.reduce((sum, r) => {
+                      const entry = rollEntries[r.id] || {};
+                      const ll = parseFloat(entry.layerLength as string) || 0;
+                      const nl = parseFloat(entry.noOfLayer as string) || 0;
+                      return sum + (ll * nl);
+                    }, 0).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-slate-800">
+                    {productData.fabricRolls.reduce((sum, r) => {
+                      const entry = rollEntries[r.id] || {};
+                      const ll = parseFloat(entry.layerLength as string) || 0;
+                      const nl = parseFloat(entry.noOfLayer as string) || 0;
+                      const damage = parseFloat(entry.damage as string) || 0;
+                      const short = parseFloat(entry.short as string) || 0;
+                      return sum + (r.meter - (ll * nl) - damage - short);
+                    }, 0).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-slate-800">
+                    {productData.fabricRolls.reduce((sum, r) => {
+                      const damage = parseFloat(rollEntries[r.id]?.damage as string) || 0;
+                      return sum + damage;
+                    }, 0).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-slate-800">
+                    {productData.fabricRolls.reduce((sum, r) => {
+                      const short = parseFloat(rollEntries[r.id]?.short as string) || 0;
+                      return sum + short;
+                    }, 0).toFixed(2)}
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
+          </div>
+
+          {/* Size Breakdown */}
+          <div className="border-t border-slate-200 bg-white shrink-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] relative">
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+              <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">Size Breakdown</h3>
+              <span className="font-bold text-[#0453B8] text-sm">(Sizewise & Colourwise)</span>
+            </div>
+            <div className="p-4 overflow-x-auto">
+              <table className="w-full border-collapse border border-slate-300 text-sm text-center">
+                <thead>
+                  <tr className="bg-white">
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800 w-24">Size</th>
+                    {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'].map(s => (
+                      <th key={s} className="border border-slate-300 py-2 px-2 font-bold text-slate-800 w-16">{s}</th>
+                    ))}
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800 w-24 leading-tight">
+                      Average<br/>Mtr. / Pcs.
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {computedSizeEntries.map((entry) => (
+                    <tr key={entry.id} className="bg-white hover:bg-slate-50 transition-colors">
+                      <td className="border border-slate-300 py-2 px-2 font-bold text-slate-800 text-center">
+                        {entry.color}
+                      </td>
+                      {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'].map(s => (
+                        <td key={s} className="border border-slate-300 py-2 px-2 text-slate-700 font-semibold text-center">
+                          {entry.sizes[s] || '-'}
+                        </td>
+                      ))}
+                      <td className="border border-slate-300 py-2 px-2 text-slate-800 font-bold text-center">
+                        {entry.average}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 font-bold h-10 border-t-2 border-slate-300">
+                    <td className="border border-slate-300 py-2 px-4 text-left text-slate-800">Total</td>
+                    {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'].map(s => {
+                      const total = computedSizeEntries.reduce((sum, e) => sum + (parseFloat(e.sizes[s]) || 0), 0);
+                      return (
+                        <td key={s} className="border border-slate-300 py-2 px-2 text-center text-[#0453B8]">
+                          {total > 0 ? total : '-'}
+                        </td>
+                      );
+                    })}
+                    <td className="border border-slate-300 py-2 px-2 text-center text-[#0453B8]">
+                      {computedSizeEntries.reduce((sum, e) => sum + e.totalPcs, 0)} Pcs
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

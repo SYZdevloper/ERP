@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check, ArrowRight, X } from "lucide-react";
+import { ChevronDown, ArrowLeft, FileText, MapPin, CheckCircle2, Check, ArrowRight, X, ImagePlus } from "lucide-react";
 import Link from "next/link";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
@@ -86,6 +86,7 @@ export function PurchaseOrderForm({
     rate: "0",
     gst: "0",
     image: "",
+    soImage: "",
     avg: "1.80"
   });
 
@@ -240,6 +241,7 @@ export function PurchaseOrderForm({
       rate: String(item.rate || 0),
       gst: String(item.gst || 0),
       image: item.fabricImage || "",
+      soImage: "",
       avg: String(item.consumptionAvg || "1.80")
     });
     setIsManualEntryOpen(true);
@@ -260,6 +262,7 @@ export function PurchaseOrderForm({
       rate: "0",
       gst: "5",
       image: "",
+      soImage: "",
       avg: "1.80"
     });
     setIsManualEntryOpen(true);
@@ -736,7 +739,24 @@ export function PurchaseOrderForm({
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteItem}
                 onOpenAddDialog={handleOpenAddDialog}
-                onOpenManualEntry={() => setIsManualEntryOpen(true)}
+                onOpenManualEntry={() => {
+                  setSelectedSoItemContext(null);
+                  setEditingItem(null);
+                  setManualFormData({
+                    type: type === "Fabric" ? "Cotton Fabric" : selectedTrimItem,
+                    description: "",
+                    gsm: "",
+                    width: "",
+                    color: "",
+                    qty: "0",
+                    rate: "0",
+                    gst: "5",
+                    image: "",
+                    soImage: "",
+                    avg: "1.80"
+                  });
+                  setIsManualEntryOpen(true);
+                }}
                 onQtyChange={handleQtyChange}
                 onRateChange={handleRateChange}
                 onDateChange={handleDateChange}
@@ -906,8 +926,9 @@ export function PurchaseOrderForm({
         )}
         {/* Floating Panel for Add Manual Fabric */}
         {isManualEntryOpen && (
-          <div className="fixed top-24 right-4 w-[650px] z-50 bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-300 max-h-[calc(100vh-7rem)]">
-            <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between shrink-0">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-[700px] bg-white shadow-2xl rounded-xl border border-slate-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh]">
+              <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-slate-900">
                 {editingItem ? "Edit Fabric" : "Add Manual Fabric"}
                 {editingItem?.soItemId && (
@@ -923,25 +944,74 @@ export function PurchaseOrderForm({
             
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
               {/* Product Info Header for SO Items */}
-              {selectedSoItemContext && !editingItem && (
-                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4 flex gap-4">
-                  <div className="w-20 h-24 bg-white border border-slate-200 rounded shrink-0 overflow-hidden flex items-center justify-center p-1">
-                    <img src={
-                      selectedSoItemContext.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
-                      selectedSoItemContext.name.includes("Shirt") ? "/men casual half shirt.jpg" :
-                      selectedSoItemContext.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
-                      "/men regualr fit shirt.jpeg"
-                    } alt={selectedSoItemContext.name} className="w-full h-full object-contain mix-blend-multiply" />
+              {selectedSoItemContext && (
+                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-5 flex gap-8 items-center">
+                  {/* Big Image on Left */}
+                  <div className="flex flex-col gap-3 shrink-0 w-[160px] bg-white border border-slate-200 rounded-xl p-3 shadow-sm items-center">
+                    {(() => {
+                      let imageSrc = "/men casual half shirt.jpg";
+                      if (selectedSoItemContext.name.includes("T-Shirt")) imageSrc = "/men casual tshirt.jpeg";
+                      else if (selectedSoItemContext.name.includes("Jacket")) imageSrc = "/mens casual full sleeve shirt.jpg";
+                      else if (!selectedSoItemContext.name.includes("Shirt")) imageSrc = "/men regualr fit shirt.jpeg";
+                      
+                      return (
+                        <>
+                          <div 
+                            className="w-full aspect-square bg-[#F5F6F8] rounded-lg overflow-hidden flex items-center justify-center p-2 relative group cursor-pointer hover:ring-2 hover:ring-[#0453B8] transition-all"
+                            onClick={() => document.getElementById('so-item-image-upload')?.click()}
+                          >
+                            <img src={manualFormData.soImage || imageSrc} alt={selectedSoItemContext.name} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
+                              <ImagePlus className="w-6 h-6 text-[#0453B8]" />
+                              <span className="text-[9px] font-bold text-[#0453B8] mt-1 uppercase tracking-wider bg-white/80 px-1.5 py-0.5 rounded-md">Upload</span>
+                            </div>
+                            {manualFormData.soImage && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setManualFormData({...manualFormData, soImage: ""}); }}
+                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                          <input 
+                            id="so-item-image-upload" 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setManualFormData({...manualFormData, soImage: URL.createObjectURL(e.target.files[0])});
+                              }
+                            }} 
+                          />
+                        </>
+                      );
+                    })()}
+                    <span className="text-xs font-bold text-slate-800 text-center leading-tight">{selectedSoItemContext.name}</span>
                   </div>
+                  
+                  {/* Details on Right */}
                   <div className="flex-1 flex flex-col justify-center">
-                    <h4 className="font-bold text-[#0453B8] text-sm mb-1">{selectedSoItemContext.productId} - {selectedSoItemContext.name}</h4>
-                    <div className="grid grid-cols-3 gap-4 mt-3 bg-white p-3 border border-slate-200 rounded-md">
-                      <div>
+                    <h4 className="font-extrabold text-[#0453B8] text-xl mb-3">{selectedSoItemContext.productId} - {selectedSoItemContext.name}</h4>
+                    
+                    <div className="flex items-center justify-between bg-white px-6 py-5 border border-slate-200 rounded-xl shadow-sm">
+                      <div className="flex flex-col gap-1">
                         <div className="text-[10px] font-bold text-slate-500 uppercase">SO Qty</div>
-                        <div className="font-bold text-slate-800 text-base">{(Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)} Pcs</div>
+                        <div className="font-extrabold text-slate-800 text-xl flex items-baseline gap-1">
+                          {(Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)} 
+                          <span className="text-sm font-semibold text-slate-500">Pcs</span>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase">Avg</div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">Buyer Design No.</div>
+                        <div className="font-bold text-slate-800 text-base">{selectedSoItemContext.sqNumber || "N/A"}</div>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">Avg Cons.</div>
                         <Input 
                           type="number"
                           value={manualFormData.avg}
@@ -951,12 +1021,13 @@ export function PurchaseOrderForm({
                             const newQty = (Number(newAvg) * soQty).toFixed(2);
                             setManualFormData({...manualFormData, avg: newAvg, qty: newQty});
                           }}
-                          className="h-8 mt-1 text-sm font-bold bg-white w-20 text-center border-slate-300 focus:ring-[#0453B8]"
+                          className="h-9 text-sm font-bold bg-white w-24 text-center border-2 border-slate-300 rounded-lg focus:ring-[#0453B8]"
                         />
                       </div>
-                      <div className="flex flex-col justify-end">
-                        <div className="text-[10px] font-bold text-red-500 uppercase">Total Mtrs</div>
-                        <div className="font-bold text-red-600 text-base mb-1">{manualFormData.qty}</div>
+
+                      <div className="flex flex-col gap-1 items-end">
+                        <div className="text-[10px] font-bold text-red-600 uppercase">Total Mtrs</div>
+                        <div className="font-black text-red-600 text-2xl leading-none">{manualFormData.qty}</div>
                       </div>
                     </div>
                   </div>
@@ -1045,33 +1116,35 @@ export function PurchaseOrderForm({
                   />
                 </div>
                 
-                <div className="flex flex-col gap-2 col-span-2">
-                  <Label className="text-xs font-bold text-slate-600">Fabric Image (Optional)</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
-                      {manualFormData.image ? (
-                        <img src={manualFormData.image} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[10px] text-slate-400 font-medium">No Image</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <Input 
-                        disabled={!!editingItem?.soItemId}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const url = URL.createObjectURL(file);
-                            setManualFormData({...manualFormData, image: url});
-                          }
-                        }}
-                        className="h-10 text-sm bg-white cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#F1F5F9] file:text-slate-700 hover:file:bg-slate-200" 
-                      />
+                {!selectedSoItemContext && (
+                  <div className="flex flex-col gap-2 col-span-2">
+                    <Label className="text-xs font-bold text-slate-600">Fabric Image (Optional)</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
+                        {manualFormData.image ? (
+                          <img src={manualFormData.image} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-medium">No Image</span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Input 
+                          disabled={!!editingItem?.soItemId}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const url = URL.createObjectURL(file);
+                              setManualFormData({...manualFormData, image: url});
+                            }
+                          }}
+                          className="h-10 text-sm bg-white cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#F1F5F9] file:text-slate-700 hover:file:bg-slate-200" 
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
             
@@ -1129,12 +1202,13 @@ export function PurchaseOrderForm({
                 setIsManualEntryOpen(false);
                 setEditingItem(null);
                 setManualFormData({
-                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", avg: "1.80"
+                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80"
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
                 <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}
               </Button>
             </div>
+          </div>
           </div>
         )}
       </div>
