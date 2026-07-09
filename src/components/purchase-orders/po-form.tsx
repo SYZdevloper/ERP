@@ -268,7 +268,8 @@ export function PurchaseOrderForm({
       image: "",
       soImage: "",
       avg: "1.80",
-      supplierSortNo: ""
+      supplierSortNo: "",
+      deliveryDate: ""
     });
     setIsManualEntryOpen(true);
   };
@@ -759,7 +760,8 @@ export function PurchaseOrderForm({
                     image: "",
                     soImage: "",
                     avg: "1.80",
-                    supplierSortNo: ""
+                    supplierSortNo: "",
+                    deliveryDate: ""
                   });
                   setIsManualEntryOpen(true);
                 }}
