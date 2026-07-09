@@ -42,6 +42,7 @@ interface RollEntry {
   poItemIds?: string[];
   orderedQty?: number;
   isClosed?: boolean;
+  billedQtyAsPerBill?: number;
   rollDetails?: { id: string, rollNo: string, billedQty: number, actualQty: number, color?: string }[];
 }
 
@@ -84,6 +85,7 @@ export function FabricGrnForm() {
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
   const [isRollDetailsOpen, setIsRollDetailsOpen] = useState(false);
   const [activeRollEntryId, setActiveRollEntryId] = useState<string | null>(null);
+  const [activeBilledQtyAsPerBill, setActiveBilledQtyAsPerBill] = useState<string>("");
   const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, billedQty: string, actualQty: string, color?: string }[]>([]);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -114,6 +116,7 @@ export function FabricGrnForm() {
 
   const handleOpenRollDetails = (entry: RollEntry) => {
     setActiveRollEntryId(entry.id);
+    setActiveBilledQtyAsPerBill(entry.billedQtyAsPerBill ? entry.billedQtyAsPerBill.toString() : "");
     if (entry.rollDetails && entry.rollDetails.length > 0) {
       setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, billedQty: r.billedQty.toString(), actualQty: r.actualQty.toString() })));
     } else {
@@ -135,6 +138,13 @@ export function FabricGrnForm() {
     }));
     
     const totalActual = validRolls.reduce((acc, curr) => acc + curr.actualQty, 0);
+    const totalBilled = validRolls.reduce((acc, curr) => acc + curr.billedQty, 0);
+    const expectedBilled = Number(activeBilledQtyAsPerBill) || 0;
+
+    if (expectedBilled > 0 && Math.abs(totalBilled - expectedBilled) > 0.01) {
+      alert(`Total Billed Qty of rolls (${totalBilled.toFixed(2)}) must tally with the Billed Qty as per Bill (${expectedBilled.toFixed(2)}).`);
+      return;
+    }
     
     const currentEntry = entries.find(e => e.id === activeRollEntryId);
     if (currentEntry && currentEntry.orderedQty && totalActual > currentEntry.orderedQty) {
@@ -149,6 +159,7 @@ export function FabricGrnForm() {
           ...e,
           rollDetails: validRolls,
           mtrQty: totalActual,
+          billedQtyAsPerBill: expectedBilled,
           amount: amount
         };
       }
@@ -1137,6 +1148,20 @@ export function FabricGrnForm() {
                       <Label className="text-[10px] font-bold text-red-500 uppercase">Balance</Label>
                       <div className="text-lg font-black text-red-600">{balance}</div>
                     </div>
+                    <div className="h-10 w-px bg-blue-200 mx-2"></div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-slate-700 uppercase">Billed Qty as per Bill <span className="text-red-500">*</span></Label>
+                      <div className="flex items-center">
+                        <Input 
+                          type="number"
+                          value={activeBilledQtyAsPerBill}
+                          onChange={(e) => setActiveBilledQtyAsPerBill(e.target.value)}
+                          placeholder="e.g. 300"
+                          className="h-8 w-28 text-sm font-bold border-blue-200 focus-visible:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="ml-2 text-xs font-medium text-slate-500">Mtr</span>
+                      </div>
+                    </div>
                   </div>
               <Button 
                 onClick={() => {
@@ -1244,6 +1269,11 @@ export function FabricGrnForm() {
             
             const shortageRolls = activeRollDetails.filter(r => (Number(r.billedQty) || 0) > (Number(r.actualQty) || 0));
             const totalShortage = shortageRolls.reduce((acc, r) => acc + ((Number(r.billedQty) || 0) - (Number(r.actualQty) || 0)), 0);
+            
+            const expectedBilled = Number(activeBilledQtyAsPerBill) || 0;
+            const isExceeding = expectedBilled > 0 && totalBilled > expectedBilled + 0.01;
+            const isShort = expectedBilled > 0 && totalBilled < expectedBilled - 0.01;
+            const doesNotTally = expectedBilled > 0 && Math.abs(totalBilled - expectedBilled) > 0.01;
 
             return (
               <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex flex-col gap-3">
@@ -1251,7 +1281,7 @@ export function FabricGrnForm() {
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-slate-600">Total Billed:</span>
-                      <span className="text-sm font-bold text-slate-800">{totalBilled.toFixed(2)} Mtr</span>
+                      <span className={`text-sm font-bold ${doesNotTally ? 'text-red-600' : 'text-slate-800'}`}>{totalBilled.toFixed(2)} Mtr</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-[#0453B8]">Total Actual:</span>
@@ -1260,9 +1290,19 @@ export function FabricGrnForm() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
-                    <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
+                    <Button onClick={handleSaveRollDetails} disabled={doesNotTally || expectedBilled === 0} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed">Save Roll Details</Button>
                   </div>
                 </div>
+                {isExceeding && (
+                  <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200 rounded-md">
+                    Error: Total Billed Qty ({totalBilled.toFixed(2)}) exceeds Billed Qty as per Bill ({expectedBilled.toFixed(2)}). You cannot enter more than the Billed Qty.
+                  </div>
+                )}
+                {isShort && (
+                  <div className="text-amber-600 font-bold text-sm bg-amber-50 p-2 border border-amber-200 rounded-md">
+                    Warning: Total Billed Qty ({totalBilled.toFixed(2)}) is less than Billed Qty as per Bill ({expectedBilled.toFixed(2)}). Please tally to save.
+                  </div>
+                )}
                 {totalShortage > 0 && (
                   <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200 rounded-md">
                     Shortage {totalShortage.toFixed(2)} Meter in Roll No {shortageRolls.map(r => r.rollNo).join(", ")}
