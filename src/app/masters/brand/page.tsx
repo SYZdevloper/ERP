@@ -1,9 +1,33 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
-import { BrandCard } from "@/components/masters/brand-card";
+import { MasterCard } from "@/components/masters/master-card";
+import { MasterDialog, DialogField } from "@/components/masters/master-dialog";
+import { useState } from "react";
+import { INITIAL_MASTER_BRANDS, MasterBrand } from "@/data/mock-masters";
 
 export default function BrandPage() {
+  const [data, setData] = useState<MasterBrand[]>(INITIAL_MASTER_BRANDS);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MasterBrand | null>(null);
+
+  const handleSave = (item: MasterBrand) => {
+    if (editingItem) {
+      setData(data.map(b => b.id === editingItem.id ? item : b));
+    } else {
+      setData([{ ...item, id: `BRD-${Date.now()}` }, ...data]);
+    }
+    setIsDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const fields: DialogField[] = [
+    { name: "name", label: "Name", type: "text", required: true, placeholder: "e.g. Zara" },
+    { name: "fullName", label: "Full Name of Company", type: "text", placeholder: "e.g. Zara fashion group" },
+  ];
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
@@ -21,7 +45,28 @@ export default function BrandPage() {
             </div>
 
             <div className="flex-1 min-h-0">
-              <BrandCard />
+              <MasterCard
+                title="Brand"
+                description="Manage the list of brands."
+                data={data}
+                columns={[
+                  { key: "name", header: "Name" },
+                  { key: "fullName", header: "Full Name of Company" }
+                ]}
+                onAdd={() => { setEditingItem(null); setIsDialogOpen(true); }}
+                onEdit={(item) => { setEditingItem(item); setIsDialogOpen(true); }}
+                onDelete={(item) => setData(data.filter(b => b.id !== item.id))}
+                renderDialog={
+                  <MasterDialog
+                    title="Brand"
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    initialData={editingItem}
+                    fields={fields}
+                    onSave={handleSave}
+                  />
+                }
+              />
             </div>
           </div>
         </main>
@@ -29,3 +74,4 @@ export default function BrandPage() {
     </div>
   );
 }
+

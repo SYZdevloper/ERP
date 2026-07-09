@@ -9,7 +9,7 @@ import Link from "next/link";
 import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { format, differenceInDays } from "date-fns";
 import { useState } from "react";
-import { BuyerDialog } from "@/components/masters/buyer-dialog";
+import { MasterDialog } from "@/components/masters/master-dialog";
 export function BuyerOrderDetailsCard({ 
   isReadOnly = false, 
   isEditMode = false,
@@ -186,9 +186,25 @@ export function BuyerOrderDetailsCard({
         </div>
       </div>
       
-      <BuyerDialog 
+      <MasterDialog 
+        title="Buyer"
         open={isBuyerDialogOpen} 
         onOpenChange={setIsBuyerDialogOpen} 
+        initialData={null}
+        fields={[
+          { name: "companyName", label: "Company Name", type: "text", required: true, placeholder: "Enter full company name" },
+          { name: "gstNumber", label: "GST Number", type: "text", required: true, placeholder: "e.g. 22AAAAA0000A1Z5" },
+          { name: "logo", label: "Buyer Logo", type: "image", gridCols: 2 },
+          { name: "accountDeptNo", label: "Account Dept Number", type: "text" },
+          { name: "warehouseDeptNo", label: "Warehouse Dept Number", type: "text" },
+          { name: "transport", label: "Transport", type: "text", placeholder: "Preferred transport service" },
+          { name: "creditTerms", label: "Credit Terms", type: "text", placeholder: "e.g. 30 Days, 60 Days" },
+          { name: "defaultAgent", label: "Agent by Default", type: "text" },
+          { name: "defaultBrand", label: "Default Brand", type: "text", placeholder: "e.g. Zara" },
+          { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN" },
+          { name: "shippingAddress", label: "Shipping Address", type: "textarea", placeholder: "Street, City, State PIN" },
+          { name: "notes", label: "Notes", type: "textarea", placeholder: "Additional notes" },
+        ]}
         onSave={(data) => {
           console.log("New Buyer Data:", data);
           // Typically you would save the new buyer to your backend or state here.

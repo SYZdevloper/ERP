@@ -1,9 +1,33 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
-import { ColorCard } from "@/components/masters/color-card";
+import { MasterCard } from "@/components/masters/master-card";
+import { MasterDialog, DialogField } from "@/components/masters/master-dialog";
+import { useState } from "react";
+import { INITIAL_MASTER_COLORS, MasterColor } from "@/data/mock-masters";
 
 export default function ColorPage() {
+  const [data, setData] = useState<MasterColor[]>(INITIAL_MASTER_COLORS);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MasterColor | null>(null);
+
+  const handleSave = (item: MasterColor) => {
+    if (editingItem) {
+      setData(data.map(c => c.id === editingItem.id ? item : c));
+    } else {
+      setData([{ ...item, id: `COL-${Date.now()}` }, ...data]);
+    }
+    setIsDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const fields: DialogField[] = [
+    { name: "name", label: "Name", type: "text", required: true, placeholder: "e.g. Red" },
+    { name: "hexCode", label: "Hex Code", type: "color", required: true },
+  ];
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
@@ -21,7 +45,38 @@ export default function ColorPage() {
             </div>
 
             <div className="flex-1 min-h-0">
-              <ColorCard />
+              <MasterCard
+                title="Color"
+                description="Manage color options."
+                data={data}
+                columns={[
+                  { key: "name", header: "Name" },
+                  { key: "hexCode", header: "Hex Code" },
+                  { 
+                    key: "preview", 
+                    header: "Preview",
+                    render: (_, row) => (
+                      <div 
+                        className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" 
+                        style={{ backgroundColor: row.hexCode }}
+                      />
+                    )
+                  }
+                ]}
+                onAdd={() => { setEditingItem(null); setIsDialogOpen(true); }}
+                onEdit={(item) => { setEditingItem(item); setIsDialogOpen(true); }}
+                onDelete={(item) => setData(data.filter(c => c.id !== item.id))}
+                renderDialog={
+                  <MasterDialog
+                    title="Color"
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    initialData={editingItem}
+                    fields={fields}
+                    onSave={handleSave}
+                  />
+                }
+              />
             </div>
           </div>
         </main>
@@ -29,3 +84,4 @@ export default function ColorPage() {
     </div>
   );
 }
+

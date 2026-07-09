@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SizeBreakdownSchema = z.object({
+const SizeBreakdownSchema = z.object({
   XS: z.number().min(0).optional(),
   S: z.number().min(0).optional(),
   M: z.number().min(0).optional(),
@@ -13,9 +13,9 @@ export const SizeBreakdownSchema = z.object({
   "6XL": z.number().min(0).optional(),
 });
 
-export type SizeBreakdown = z.infer<typeof SizeBreakdownSchema>;
+type SizeBreakdown = z.infer<typeof SizeBreakdownSchema>;
 
-export const ProductLineItemSchema = z.object({
+const ProductLineItemSchema = z.object({
   id: z.string(),
   productId: z.string(),
   name: z.string(),
@@ -46,7 +46,7 @@ export const ProductLineItemSchema = z.object({
 });
 export type ProductLineItem = z.infer<typeof ProductLineItemSchema>;
 
-export const CatalogProductSchema = z.object({
+const CatalogProductSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
@@ -63,7 +63,7 @@ export const CatalogProductSchema = z.object({
 
 export type CatalogProduct = z.infer<typeof CatalogProductSchema>;
 
-export const AddressSchema = z.object({
+const AddressSchema = z.object({
   id: z.string().optional(),
   companyName: z.string(),
   addressLine1: z.string(),
@@ -76,9 +76,9 @@ export const AddressSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
-export type Address = z.infer<typeof AddressSchema>;
+type Address = z.infer<typeof AddressSchema>;
 
-export const BuyerSchema = z.object({
+const BuyerSchema = z.object({
   id: z.string(),
   name: z.string(),
   creditLimit: z.number(),
@@ -90,7 +90,7 @@ export const BuyerSchema = z.object({
 
 export type Buyer = z.infer<typeof BuyerSchema>;
 
-export const AttachmentSchema = z.object({
+const AttachmentSchema = z.object({
   id: z.string(),
   name: z.string(),
   size: z.number(),

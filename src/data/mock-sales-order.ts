@@ -176,7 +176,7 @@ export const MOCK_BUYERS: Buyer[] = [
   }
 ];
 
-export const MOCK_PRODUCTS: ProductLineItem[] = [
+const MOCK_PRODUCTS: ProductLineItem[] = [
   {
     id: "line-1",
     productId: "MT001",
@@ -336,15 +336,7 @@ export const MOCK_TRIM_CATALOG: Record<string, TrimVariant[]> = {
   ],
 };
 
-// Helper: get default (first) variant for a trim type
-export function getDefaultTrimVariant(trimType: string): TrimVariant | undefined {
-  return MOCK_TRIM_CATALOG[trimType]?.[0];
-}
 
-// Helper: find a specific variant by code
-export function getTrimVariantByCode(trimType: string, code: string): TrimVariant | undefined {
-  return MOCK_TRIM_CATALOG[trimType]?.find(v => v.code === code);
-}
 
 export const INITIAL_SALES_ORDER = {
   salesOrderNo: "SO-2026-001",

@@ -1,9 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
-import { FabricCard } from "@/components/masters/fabric-card";
+import { MasterCard } from "@/components/masters/master-card";
+import { MasterDialog, DialogField } from "@/components/masters/master-dialog";
+import { useState } from "react";
+import { INITIAL_MASTER_FABRICS, MasterFabric } from "@/data/mock-masters";
 
 export default function FabricPage() {
+  const [data, setData] = useState<MasterFabric[]>(INITIAL_MASTER_FABRICS);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MasterFabric | null>(null);
+
+  const handleSave = (item: MasterFabric) => {
+    if (editingItem) {
+      setData(data.map(f => f.id === editingItem.id ? item : f));
+    } else {
+      setData([{ ...item, id: `FAB-${Date.now()}` }, ...data]);
+    }
+    setIsDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const fields: DialogField[] = [
+    { name: "name", label: "Name", type: "text", required: true, placeholder: "e.g. Cotton" },
+  ];
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
@@ -21,7 +44,27 @@ export default function FabricPage() {
             </div>
 
             <div className="flex-1 min-h-0">
-              <FabricCard />
+              <MasterCard
+                title="Fabric"
+                description="Manage fabric types and compositions."
+                data={data}
+                columns={[
+                  { key: "name", header: "Name" },
+                ]}
+                onAdd={() => { setEditingItem(null); setIsDialogOpen(true); }}
+                onEdit={(item) => { setEditingItem(item); setIsDialogOpen(true); }}
+                onDelete={(item) => setData(data.filter(f => f.id !== item.id))}
+                renderDialog={
+                  <MasterDialog
+                    title="Fabric"
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    initialData={editingItem}
+                    fields={fields}
+                    onSave={handleSave}
+                  />
+                }
+              />
             </div>
           </div>
         </main>
@@ -29,3 +72,4 @@ export default function FabricPage() {
     </div>
   );
 }
+

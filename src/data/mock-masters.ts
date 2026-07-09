@@ -146,3 +146,16 @@ export const INITIAL_MASTER_SUPPLIERS: Supplier[] = [
   { code: "SUP-110", name: "Reliance Packaging", contactPerson: "Kiran", phone: "+91 9810000070", category: "Trims", onTimePct: 90, rejectionPct: 1.0, openPos: 4, billingAddress: "Mumbai, Maharashtra" },
   { code: "SUP-111", name: "Salsar Fashion", contactPerson: "Salsar", phone: "+91 9810000071", category: "Fabric", onTimePct: 95, rejectionPct: 0.5, openPos: 1, billingAddress: "Surat, Gujarat" }
 ];
+
+export const SUPPLIER_ADDRESSES: Record<string, { line1: string, line2: string, gstin: string }> = {
+  "ABC Buttons Ltd.": { line1: "15, Mangaldas Road, Lohar Chawl", line2: "Mumbai, Maharashtra - 400002, India", gstin: "27AABCL1234F1Z5" },
+  "Arvind Mills": { line1: "Naroda Road, Near Railway Station", line2: "Ahmedabad, Gujarat - 380025, India", gstin: "24AABCA1234F1Z5" },
+  "Vardhman Textiles": { line1: "Chandigarh Road", line2: "Ludhiana, Punjab - 141010, India", gstin: "03AAACV1234F1Z5" },
+  "Raymond Fabrics": { line1: "Panchgram, Post Office - Khaperkheda", line2: "Chhindwara, MP - 480106, India", gstin: "23AABCR1234F1Z5" },
+  "Welspun": { line1: "Welspun City, Village Versamedi", line2: "Anjar, Gujarat - 370110, India", gstin: "24AABCW1234F1Z5" },
+  "YKK Zippers": { line1: "Sector-3, HSIIDC Industrial Estate", line2: "Bawal, Haryana - 123501, India", gstin: "06AABCY1234F1Z5" },
+  "Laxmi Buttons": { line1: "15, Mangaldas Road, Lohar Chawl", line2: "Mumbai, Maharashtra - 400002, India", gstin: "27AABCL1234F1Z5" },
+  "Super Labels": { line1: "Plot No. 45, Udyog Vihar Phase 1", line2: "Gurugram, Haryana - 122016, India", gstin: "06AABCS1234F1Z5" },
+  "Vardhman Threads": { line1: "Chandigarh Road", line2: "Ludhiana, Punjab - 141010, India", gstin: "03AAACV1234F1Z5" },
+  "Reliance Packaging": { line1: "Reliance Corporate Park, Ghansoli", line2: "Navi Mumbai, Maharashtra - 400701, India", gstin: "27AABCR1234F1Z5" },
+};

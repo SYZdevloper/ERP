@@ -10,8 +10,8 @@ import Link from "next/link";
 
 import { OrderHeader } from "@/components/sales-order/order-header";
 import { BuyerOrderDetailsCard } from "@/components/sales-order/buyer-order-details-card";
-import { BillingAddressCard } from "@/components/sales-order/billing-address-card";
-import { ShippingAddressCard } from "@/components/sales-order/shipping-address-card";
+import { AddressCard } from "@/components/sales-order/address-card";
+import { MapPin, Truck } from "lucide-react";
 import { ProductsTable } from "@/components/sales-order/products-table";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { OrderSummaryPanel } from "@/components/sales-order/order-summary-panel";
@@ -126,8 +126,8 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
                 
                 {showAddress && (
                   <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch animate-in fade-in duration-300">
-                    <BillingAddressCard isReadOnly={topSectionReadOnly} />
-                    <ShippingAddressCard isReadOnly={topSectionReadOnly} />
+                    <AddressCard type="billing" title="Billing Address" icon={MapPin} isReadOnly={topSectionReadOnly} />
+                    <AddressCard type="shipping" title="Shipping Address" icon={Truck} isReadOnly={topSectionReadOnly} />
                   </div>
                 )}
               </div>

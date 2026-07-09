@@ -9,11 +9,7 @@ import { INITIAL_MASTER_PATTERNS } from "@/data/mock-masters";
 import { CatalogProduct } from "@/types/sales-order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ColorDialog } from "@/components/masters/color-dialog";
-import { FabricDialog } from "@/components/masters/fabric-dialog";
-import { FitDialog } from "@/components/masters/fit-dialog";
-import { PatternDialog } from "@/components/masters/pattern-dialog";
-import { BrandDialog } from "@/components/masters/brand-dialog";
+import { MasterDialog, DialogField } from "@/components/masters/master-dialog";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -898,11 +894,11 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       </DialogContent>
 
       {/* Render Master Dialogs outside of the main DialogContent so they overlay correctly */}
-      <ColorDialog open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen} initialData={null} onSave={handleSaveColor} />
-      <FabricDialog open={isFabricDialogOpen} onOpenChange={setIsFabricDialogOpen} initialData={null} onSave={handleSaveFabric} />
-      <FitDialog open={isFitDialogOpen} onOpenChange={setIsFitDialogOpen} initialData={null} onSave={handleSaveFit} />
-      <PatternDialog open={isPatternMasterOpen} onOpenChange={setIsPatternMasterOpen} initialData={null} onSave={handleSavePattern} />
-      <BrandDialog open={isBrandDialogOpen} onOpenChange={setIsBrandDialogOpen} initialData={null} onSave={handleSaveBrand} />
+      <MasterDialog title="Color" open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen} initialData={null} onSave={handleSaveColor} fields={[{ name: "name", label: "Name", type: "text", required: true }, { name: "hexCode", label: "Hex Code", type: "color", required: true }]} />
+      <MasterDialog title="Fabric" open={isFabricDialogOpen} onOpenChange={setIsFabricDialogOpen} initialData={null} onSave={handleSaveFabric} fields={[{ name: "name", label: "Name", type: "text", required: true }]} />
+      <MasterDialog title="Fit" open={isFitDialogOpen} onOpenChange={setIsFitDialogOpen} initialData={null} onSave={handleSaveFit} fields={[{ name: "name", label: "Name", type: "text", required: true }]} />
+      <MasterDialog title="Pattern" open={isPatternMasterOpen} onOpenChange={setIsPatternMasterOpen} initialData={null} onSave={handleSavePattern} fields={[{ name: "code", label: "Pattern Code", type: "text", required: true }, { name: "brand", label: "Brand", type: "text", required: true }, { name: "fit", label: "Fit", type: "text", required: true }, { name: "image", label: "Pattern Image", type: "image" }]} />
+      <MasterDialog title="Brand" open={isBrandDialogOpen} onOpenChange={setIsBrandDialogOpen} initialData={null} onSave={handleSaveBrand} fields={[{ name: "name", label: "Name", type: "text", required: true }, { name: "fullName", label: "Full Name of Company", type: "text" }]} />
     </Dialog>
   );
 }
