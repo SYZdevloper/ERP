@@ -105,7 +105,8 @@ export function FabricGrnForm() {
     const newRolls = Array.from({ length: count }).map((_, idx) => ({
       id: Math.random().toString(),
       rollNo: `R-${(idx + 1).toString().padStart(2, '0')}`,
-      mtrQty: mtrPerRoll,
+      billedQty: mtrPerRoll,
+      actualQty: mtrPerRoll,
       color: ""
     }));
     setActiveRollDetails(newRolls);
