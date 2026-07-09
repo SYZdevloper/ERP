@@ -245,7 +245,8 @@ export function PurchaseOrderForm({
       image: item.fabricImage || "",
       soImage: "",
       avg: String(item.consumptionAvg || "1.80"),
-      supplierSortNo: item.supplierSortNo || ""
+      supplierSortNo: item.supplierSortNo || "",
+      deliveryDate: ""
     });
     setIsManualEntryOpen(true);
   };
