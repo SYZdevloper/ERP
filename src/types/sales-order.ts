@@ -110,6 +110,7 @@ export const SalesOrderSchema = z.object({
   buyerPoNo: z.string().min(1, "PO No is required"),
   poDate: z.date(),
   deliveryDate: z.date(),
+  fob: z.string().optional(),
 
   products: z.array(ProductLineItemSchema),
   attachments: z.array(AttachmentSchema),

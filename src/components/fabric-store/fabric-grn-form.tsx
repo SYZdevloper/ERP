@@ -42,7 +42,7 @@ interface RollEntry {
   poItemIds?: string[];
   orderedQty?: number;
   isClosed?: boolean;
-  rollDetails?: { id: string, rollNo: string, mtrQty: number, color?: string }[];
+  rollDetails?: { id: string, rollNo: string, billedQty: number, actualQty: number, color?: string }[];
 }
 
 const INITIAL_SUPPLIERS = ["SALASAR FASHION", "ARVIND MILLS", "VARDHMAN TEXTILES"];
@@ -84,7 +84,7 @@ export function FabricGrnForm() {
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
   const [isRollDetailsOpen, setIsRollDetailsOpen] = useState(false);
   const [activeRollEntryId, setActiveRollEntryId] = useState<string | null>(null);
-  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, mtrQty: string, color?: string }[]>([]);
+  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, billedQty: string, actualQty: string, color?: string }[]>([]);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [manualFormData, setManualFormData] = useState({
@@ -113,12 +113,11 @@ export function FabricGrnForm() {
 
   const handleOpenRollDetails = (entry: RollEntry) => {
     setActiveRollEntryId(entry.id);
-    setSplitTotalMeters(entry.mtrQty ? entry.mtrQty.toString() : "1000");
     if (entry.rollDetails && entry.rollDetails.length > 0) {
-      setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, mtrQty: r.mtrQty.toString() })));
+      setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, billedQty: r.billedQty.toString(), actualQty: r.actualQty.toString() })));
     } else {
       // Default to 1 roll
-      setActiveRollDetails([{ id: Math.random().toString(), rollNo: "R-01", mtrQty: entry.mtrQty ? entry.mtrQty.toString() : "", color: "" }]);
+      setActiveRollDetails([{ id: Math.random().toString(), rollNo: "R-01", billedQty: entry.mtrQty ? entry.mtrQty.toString() : "", actualQty: entry.mtrQty ? entry.mtrQty.toString() : "", color: "" }]);
     }
     setIsRollDetailsOpen(true);
   };
@@ -129,26 +128,27 @@ export function FabricGrnForm() {
     const validRolls = activeRollDetails.map((r, idx) => ({
       ...r,
       rollNo: r.rollNo || `R-${(idx + 1).toString().padStart(2, '0')}`,
-      mtrQty: Number(r.mtrQty) || 0,
+      billedQty: Number(r.billedQty) || 0,
+      actualQty: Number(r.actualQty) || 0,
       color: r.color || ""
     }));
     
-    const totalMeters = validRolls.reduce((acc, curr) => acc + curr.mtrQty, 0);
+    const totalActual = validRolls.reduce((acc, curr) => acc + curr.actualQty, 0);
     
     const currentEntry = entries.find(e => e.id === activeRollEntryId);
-    if (currentEntry && currentEntry.orderedQty && totalMeters > currentEntry.orderedQty) {
-      alert(`Total meter (${totalMeters}) cannot exceed the ordered quantity (${currentEntry.orderedQty}) from the PO.`);
+    if (currentEntry && currentEntry.orderedQty && totalActual > currentEntry.orderedQty) {
+      alert(`Total actual meter (${totalActual}) cannot exceed the ordered quantity (${currentEntry.orderedQty}) from the PO.`);
       return;
     }
     
     setEntries(entries.map(e => {
       if (e.id === activeRollEntryId) {
-        const amount = totalMeters * e.rate;
+        const amount = totalActual * e.rate;
         return {
           ...e,
           rollDetails: validRolls,
-          mtrQty: totalMeters,
-          amount
+          mtrQty: totalActual,
+          amount: amount
         };
       }
       return e;
@@ -157,7 +157,7 @@ export function FabricGrnForm() {
     setIsRollDetailsOpen(false);
 
     // Check for short receipt if it's linked to a PO item
-    if (currentEntry && currentEntry.orderedQty && totalMeters < currentEntry.orderedQty) {
+    if (currentEntry && currentEntry.orderedQty && totalActual < currentEntry.orderedQty) {
       setShortReceiptPrompt({
         isOpen: true,
         entryId: currentEntry.id,
@@ -399,9 +399,14 @@ export function FabricGrnForm() {
                   <Label className="text-xs font-bold text-slate-600">Invoice No.</Label>
                   <Input placeholder="Enter Invoice No." className="h-10 text-sm bg-white border-slate-200" />
                 </div>
-                
+
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Invoice Date</Label>
+                  <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">GRN Date</Label>
                   <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
                 </div>
               </div>
@@ -1110,43 +1115,33 @@ export function FabricGrnForm() {
             </DialogTitle>
           </DialogHeader>
           <div className="px-5 py-4 overflow-y-auto h-[500px] custom-scrollbar flex flex-col">
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <span className="text-sm font-bold text-slate-700">Total Mtr:</span>
-              <div className="border-2 border-red-500 rounded px-3 py-1 text-red-600 font-bold text-sm bg-red-50">
-                {splitTotalMeters || "0"} Meter
-              </div>
-            </div>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold text-slate-500 uppercase">Target Total (Mtr)</Label>
-                  <Input 
-                    type="number"
-                    value={splitTotalMeters}
-                    onChange={(e) => setSplitTotalMeters(e.target.value)}
-                    className="h-8 w-24 text-xs font-bold bg-white"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold text-slate-500 uppercase">Split Into Rolls</Label>
-                  <Input 
-                    type="number"
-                    value={splitRollCount}
-                    onChange={(e) => setSplitRollCount(e.target.value)}
-                    className="h-8 w-24 text-xs font-bold bg-white"
-                  />
-                </div>
-                <div className="flex flex-col gap-1 justify-end h-full mt-auto pb-0.5">
-                  <Button onClick={handleAutoSplit} className="h-8 text-xs font-bold bg-[#0453B8] hover:bg-blue-700 text-white px-3 shadow-sm">
-                    Auto-Split
-                  </Button>
-                </div>
-              </div>
+            {(() => {
+              const currentEntry = entries.find(e => e.id === activeRollEntryId);
+              const orderQty = currentEntry?.orderedQty || 0;
+              const receivedQty = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
+              const balance = Math.max(0, orderQty - receivedQty);
+
+              return (
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg shrink-0">
+                  <div className="flex items-center gap-8 px-2">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Order Qty</Label>
+                      <div className="text-lg font-black text-slate-800">{orderQty}</div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Qty</Label>
+                      <div className="text-lg font-black text-[#0453B8]">{receivedQty}</div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-red-500 uppercase">Balance</Label>
+                      <div className="text-lg font-black text-red-600">{balance}</div>
+                    </div>
+                  </div>
               <Button 
                 onClick={() => {
                   setActiveRollDetails([
                     ...activeRollDetails, 
-                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, mtrQty: "", color: "" }
+                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, billedQty: "", actualQty: "", color: "" }
                   ]);
                 }}
                 variant="outline" 
@@ -1155,6 +1150,8 @@ export function FabricGrnForm() {
                 <Plus className="w-3.5 h-3.5 mr-1" /> Add Roll
               </Button>
             </div>
+            );
+          })()}
 
             <div className="flex-1 overflow-auto rounded-md border border-slate-200">
               <Table>
@@ -1163,7 +1160,8 @@ export function FabricGrnForm() {
                     <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
                     <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
                     <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
-                    <TableHead className="w-32 py-2.5 text-xs font-bold text-slate-700 text-right">Meter (Mtr) <span className="text-red-500">*</span></TableHead>
+                    <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Billed (Mtr) <span className="text-red-500">*</span></TableHead>
+                    <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Actual (Mtr) <span className="text-red-500">*</span></TableHead>
                     <TableHead className="w-12 py-2.5"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1198,10 +1196,23 @@ export function FabricGrnForm() {
                       <TableCell className="py-2">
                         <Input 
                           type="number"
-                          value={roll.mtrQty}
+                          value={roll.billedQty}
                           onChange={(e) => {
                             const newDetails = [...activeRollDetails];
-                            newDetails[idx].mtrQty = e.target.value;
+                            newDetails[idx].billedQty = e.target.value;
+                            setActiveRollDetails(newDetails);
+                          }}
+                          className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          placeholder="0.00"
+                        />
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Input 
+                          type="number"
+                          value={roll.actualQty}
+                          onChange={(e) => {
+                            const newDetails = [...activeRollDetails];
+                            newDetails[idx].actualQty = e.target.value;
                             setActiveRollDetails(newDetails);
                           }}
                           className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1226,18 +1237,39 @@ export function FabricGrnForm() {
             </div>
           </div>
           
-          <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-[#0453B8]">Total Meter</span>
-              <span className="text-sm font-bold text-[#0453B8]">
-                {activeRollDetails.reduce((acc, curr) => acc + (Number(curr.mtrQty) || 0), 0).toFixed(2)} Mtr
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
-              <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
-            </div>
-          </div>
+          {(() => {
+            const totalBilled = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.billedQty) || 0), 0);
+            const totalActual = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
+            
+            const shortageRolls = activeRollDetails.filter(r => (Number(r.billedQty) || 0) > (Number(r.actualQty) || 0));
+            const totalShortage = shortageRolls.reduce((acc, r) => acc + ((Number(r.billedQty) || 0) - (Number(r.actualQty) || 0)), 0);
+
+            return (
+              <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-600">Total Billed:</span>
+                      <span className="text-sm font-bold text-slate-800">{totalBilled.toFixed(2)} Mtr</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-[#0453B8]">Total Actual:</span>
+                      <span className="text-sm font-bold text-[#0453B8]">{totalActual.toFixed(2)} Mtr</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
+                    <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
+                  </div>
+                </div>
+                {totalShortage > 0 && (
+                  <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200 rounded-md">
+                    Shortage {totalShortage.toFixed(2)} Meter in Roll No {shortageRolls.map(r => r.rollNo).join(", ")}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

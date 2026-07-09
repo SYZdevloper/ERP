@@ -25,4 +25,5 @@ export interface POItem {
   productFit?: string;
   soNo?: string;
   fabricImage?: string;
+  supplierSortNo?: string;
 }

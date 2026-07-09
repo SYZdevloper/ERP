@@ -159,6 +159,31 @@ export function BuyerOrderDetailsCard({
             </div>
           )}
         </div>
+
+        {/* Second Row */}
+        <div className="flex flex-col gap-2 md:col-start-5 md:col-span-3 w-full">
+          <Label htmlFor="fob" className="text-xs text-slate-500 font-medium">FOB</Label>
+          {effectivelyReadOnly ? (
+            <div className="text-sm font-semibold text-slate-900 mt-1">{watch("fob") || "-"}</div>
+          ) : (
+            <Controller
+              control={control}
+              name="fob"
+              render={({ field }) => (
+                <Select value={field.value || undefined} onValueChange={field.onChange}>
+                  <SelectTrigger id="fob" className="w-full h-[42px]">
+                    <SelectValue placeholder="Select terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FOB">FOB</SelectItem>
+                    <SelectItem value="PAID">PAID</SelectItem>
+                    <SelectItem value="TOPAY">TOPAY</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          )}
+        </div>
       </div>
       
       <BuyerDialog 

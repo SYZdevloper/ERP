@@ -302,15 +302,33 @@ export default function CuttingPage() {
         </div>
       ) : (
         <>
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-end gap-4">
-            <div className="flex-1">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-start gap-4">
+            <div className="flex-1 flex items-start gap-5">
               <Button 
                 variant="outline" 
                 onClick={() => setCurrentView('list')}
-                className="font-bold text-slate-700"
+                className="font-bold text-slate-700 h-10 mt-6"
               >
                 ← Back to List
               </Button>
+              
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[11px] font-bold text-[#0453B8] uppercase tracking-wider">Issue to</Label>
+                  <Input 
+                    placeholder="Select Job Worker or Department" 
+                    className="h-10 text-sm font-semibold w-[280px] bg-white border-slate-300 focus:border-[#0453B8]" 
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Rate</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    className="h-8 text-sm font-semibold w-24 bg-white border-slate-300" 
+                  />
+                </div>
+              </div>
             </div>
             
             {/* Quick Summary Box */}
@@ -401,7 +419,7 @@ export default function CuttingPage() {
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5 h-full overflow-y-auto">
             <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
               <FileText className="w-5 h-5 text-[#0453B8]" />
-              Techpack Details
+              1. Techpack Details
             </h3>
             
             <div className="flex items-center gap-4 mb-6">
@@ -476,7 +494,7 @@ export default function CuttingPage() {
           <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
             <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <Package className="w-5 h-5 text-[#0453B8]" />
-              Fabric Roll Allocation
+              2. Fabric Roll Allocation
             </h3>
           </div>
           
@@ -602,7 +620,7 @@ export default function CuttingPage() {
           {/* Size Breakdown */}
           <div className="border-t border-slate-200 bg-white shrink-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] relative">
             <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-              <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">Size Breakdown</h3>
+              <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">3. Size Breakdown</h3>
               <span className="font-bold text-[#0453B8] text-sm">(Sizewise & Colourwise)</span>
             </div>
             <div className="p-4 overflow-x-auto">

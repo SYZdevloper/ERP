@@ -22,6 +22,7 @@ export type TrimItemRow = {
   manualTotalQty?: string | number;
   rate?: string | number;
   gst?: string;
+  deliveryDate?: string;
 };
 
 export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMode = false, backHref = "/trims-purchases" }: any) {
@@ -36,7 +37,8 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
       linkedLines: [],
       manualTotalQty: "",
       rate: "",
-      gst: "5"
+      gst: "5",
+      deliveryDate: ""
     }
   ]);
 
@@ -70,7 +72,8 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
         linkedLines: [],
         manualTotalQty: "",
         rate: "",
-        gst: "5"
+        gst: "5",
+        deliveryDate: ""
       }
     ]);
   };
@@ -263,6 +266,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[120px]">Total Qty (Pcs)</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">Rate (₹)</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">GST %</th>
+                          <th className="px-4 py-3 font-bold text-slate-600 text-center w-[130px]">Delivery Date</th>
                           <th className="px-4 py-3 font-bold text-slate-600 text-center w-[100px]">Amount (₹)</th>
                           {!isViewMode && <th className="px-4 py-3 font-bold text-slate-600 text-center w-[80px]">Action</th>}
                         </tr>
@@ -349,6 +353,15 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                                       <SelectItem value="28">28%</SelectItem>
                                     </SelectContent>
                                   </Select>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <Input
+                                    disabled={isViewMode}
+                                    type="date"
+                                    value={item.deliveryDate || ""}
+                                    onChange={(e) => handleUpdateTrim(item.id, 'deliveryDate', e.target.value)}
+                                    className="w-[120px] h-9 mx-auto text-sm border-slate-200 focus:ring-[#0453B8] shadow-sm bg-white"
+                                  />
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <div className="font-bold text-slate-800">

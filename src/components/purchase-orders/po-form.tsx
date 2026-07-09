@@ -87,7 +87,9 @@ export function PurchaseOrderForm({
     gst: "0",
     image: "",
     soImage: "",
-    avg: "1.80"
+    avg: "1.80",
+    supplierSortNo: "",
+    deliveryDate: ""
   });
 
   useEffect(() => {
@@ -242,7 +244,8 @@ export function PurchaseOrderForm({
       gst: String(item.gst || 0),
       image: item.fabricImage || "",
       soImage: "",
-      avg: String(item.consumptionAvg || "1.80")
+      avg: String(item.consumptionAvg || "1.80"),
+      supplierSortNo: item.supplierSortNo || ""
     });
     setIsManualEntryOpen(true);
   };
@@ -263,7 +266,8 @@ export function PurchaseOrderForm({
       gst: "5",
       image: "",
       soImage: "",
-      avg: "1.80"
+      avg: "1.80",
+      supplierSortNo: ""
     });
     setIsManualEntryOpen(true);
   };
@@ -753,7 +757,8 @@ export function PurchaseOrderForm({
                     gst: "5",
                     image: "",
                     soImage: "",
-                    avg: "1.80"
+                    avg: "1.80",
+                    supplierSortNo: ""
                   });
                   setIsManualEntryOpen(true);
                 }}
@@ -1034,117 +1039,171 @@ export function PurchaseOrderForm({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-5">
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Content</Label>
-                  <Input 
-                    value={manualFormData.type}
-                    onChange={(e) => setManualFormData({...manualFormData, type: e.target.value})}
-                    placeholder="e.g. Cotton Fabric" 
-                    className="h-10 text-sm bg-white" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Color / Shade</Label>
-                  <Input 
-                    value={manualFormData.color}
-                    onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
-                    placeholder="Beige" 
-                    className="h-10 text-sm bg-white" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Width</Label>
-                  <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
-                    <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
-                      <SelectValue placeholder="Select width" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="44&quot;">44"</SelectItem>
-                      <SelectItem value="54&quot;">54"</SelectItem>
-                      <SelectItem value="58&quot;">58"</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">GSM</Label>
-                  <Input 
-                    value={manualFormData.gsm}
-                    onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
-                    placeholder="e.g. 150 GSM" 
-                    className="h-10 text-sm bg-white" 
-                  />
-                </div>
-
-
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
-                  <Input 
-                    type="number"
-                    value={manualFormData.rate}
-                    onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
-                    placeholder="130.00" 
-                    className="h-10 text-sm bg-white" 
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">GST %</Label>
-                  <Select value={manualFormData.gst} onValueChange={(val) => setManualFormData({...manualFormData, gst: val})}>
-                    <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
-                      <SelectValue placeholder="Select GST" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0%</SelectItem>
-                      <SelectItem value="5">5%</SelectItem>
-                      <SelectItem value="12">12%</SelectItem>
-                      <SelectItem value="18">18%</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Amount (₹)</Label>
-                  <Input 
-                    disabled 
-                    value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    className="h-10 text-sm bg-slate-50 font-semibold" 
-                  />
-                </div>
+              {/* Form Fields */}
+              <div className={!selectedSoItemContext ? "flex flex-col md:flex-row gap-8" : "flex flex-col gap-5"}>
                 
+                {/* Left Side: Big Image Uploader (only for manual fabric without SO context) */}
                 {!selectedSoItemContext && (
-                  <div className="flex flex-col gap-2 col-span-2">
-                    <Label className="text-xs font-bold text-slate-600">Fabric Image (Optional)</Label>
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
-                        {manualFormData.image ? (
-                          <img src={manualFormData.image} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-medium">No Image</span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <Input 
-                          disabled={!!editingItem?.soItemId}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const url = URL.createObjectURL(file);
-                              setManualFormData({...manualFormData, image: url});
-                            }
-                          }}
-                          className="h-10 text-sm bg-white cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#F1F5F9] file:text-slate-700 hover:file:bg-slate-200" 
-                        />
-                      </div>
+                  <div className="flex flex-col gap-3 shrink-0 w-[240px]">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Fabric Image</Label>
+                    <div 
+                      className="w-full aspect-square bg-[#F5F6F8] border-2 border-dashed border-slate-300 rounded-xl overflow-hidden flex flex-col items-center justify-center p-2 relative group cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-all"
+                      onClick={() => document.getElementById('manual-fabric-image-upload')?.click()}
+                    >
+                      {manualFormData.image ? (
+                        <>
+                          <img src={manualFormData.image} className="w-full h-full object-cover mix-blend-multiply transition-opacity group-hover:opacity-50" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
+                            <span className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider bg-white/90 px-2 py-1 rounded-md shadow-sm">Change Image</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setManualFormData({...manualFormData, image: ""}); }}
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus className="w-8 h-8 text-slate-300 group-hover:text-[#0453B8] transition-colors mb-2" />
+                          <span className="text-xs font-bold text-slate-400 group-hover:text-[#0453B8] transition-colors">Upload Image</span>
+                          <span className="text-[9px] text-slate-400 mt-1 text-center px-4">Click to browse<br/>(Optional)</span>
+                        </>
+                      )}
                     </div>
+                    <input 
+                      id="manual-fabric-image-upload" 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setManualFormData({...manualFormData, image: URL.createObjectURL(e.target.files[0])});
+                        }
+                      }} 
+                    />
                   </div>
                 )}
+
+                {/* Right Side: Form Fields Grid */}
+                <div className={`flex-1 flex flex-col gap-5 ${selectedSoItemContext ? "" : ""}`}>
+                  
+                  {/* Total Qty (Manual Fabric Only) */}
+                  {!selectedSoItemContext && (
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Total Mtrs / Qty <span className="text-red-500">*</span></Label>
+                      <Input 
+                        type="number"
+                        value={manualFormData.qty}
+                        onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
+                        placeholder="e.g. 500" 
+                        className="h-10 text-sm bg-white font-bold" 
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-slate-600">Supplier Sort No</Label>
+                    <Input 
+                      value={manualFormData.supplierSortNo}
+                      onChange={(e) => setManualFormData({...manualFormData, supplierSortNo: e.target.value})}
+                      placeholder="Enter Sort No" 
+                      className="h-10 text-sm bg-white" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Content</Label>
+                      <Input 
+                        value={manualFormData.type}
+                        onChange={(e) => setManualFormData({...manualFormData, type: e.target.value})}
+                        placeholder="e.g. Cotton Fabric" 
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Color / Shade</Label>
+                      <Input 
+                        value={manualFormData.color}
+                        onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
+                        placeholder="Beige" 
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Width</Label>
+                      <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
+                        <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                          <SelectValue placeholder="Select width" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="44&quot;">44"</SelectItem>
+                          <SelectItem value="54&quot;">54"</SelectItem>
+                          <SelectItem value="58&quot;">58"</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">GSM</Label>
+                      <Input 
+                        value={manualFormData.gsm}
+                        onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
+                        placeholder="e.g. 150 GSM" 
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
+                      <Input 
+                        type="number"
+                        value={manualFormData.rate}
+                        onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
+                        placeholder="130.00" 
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">GST %</Label>
+                      <Select value={manualFormData.gst} onValueChange={(val) => setManualFormData({...manualFormData, gst: val})}>
+                        <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                          <SelectValue placeholder="Select GST" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0%</SelectItem>
+                          <SelectItem value="5">5%</SelectItem>
+                          <SelectItem value="12">12%</SelectItem>
+                          <SelectItem value="18">18%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Amount (₹)</Label>
+                      <Input 
+                        disabled 
+                        value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        className="h-10 text-sm bg-slate-50 font-semibold text-[#0453B8]" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">Delivery Date</Label>
+                      <Input 
+                        type="date"
+                        value={manualFormData.deliveryDate}
+                        onChange={(e) => setManualFormData({...manualFormData, deliveryDate: e.target.value})}
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1168,6 +1227,7 @@ export function PurchaseOrderForm({
                         fabricImage: manualFormData.image || item.fabricImage,
                         consumptionAvg: Number(manualFormData.avg) || item.consumptionAvg,
                         requiredQty: Number(manualFormData.qty) || item.requiredQty,
+                        supplierSortNo: manualFormData.supplierSortNo || item.supplierSortNo,
                       };
                     }
                     return item;
@@ -1195,6 +1255,7 @@ export function PurchaseOrderForm({
                     orderPcs: selectedSoItemContext ? (Object.values(selectedSoItemContext.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number) : undefined,
                     consumptionAvg: Number(manualFormData.avg) || undefined,
                     requiredQty: Number(manualFormData.qty) || undefined,
+                    supplierSortNo: manualFormData.supplierSortNo,
                   };
                   setPoItems(prev => [newItem, ...prev]);
                 }
@@ -1202,7 +1263,7 @@ export function PurchaseOrderForm({
                 setIsManualEntryOpen(false);
                 setEditingItem(null);
                 setManualFormData({
-                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80"
+                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: ""
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
                 <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}

@@ -292,6 +292,7 @@ export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = [
   { id: "cat-2", code: "MT002", name: "Polo T-Shirt", category: "Mens", subcategory: "T-Shirt", type: "Half Sleeves", sqNumber: "1000000002", color: "Navy", rate: 250.00 },
   { id: "cat-3", code: "MH001", name: "Hoodie", category: "Mens", subcategory: "Hoodie", type: "Full Sleeves", sqNumber: "1000000003", color: "Grey", rate: 600.00 },
   { id: "cat-4", code: "WD001", name: "Summer Dress", category: "Womens", subcategory: "Dress", type: "Sleeveless", sqNumber: "1000000004", color: "White", rate: 700.00 },
+  { id: "cat-4b", code: "WD002", name: "Womens Dress Round Neck Half Sleeves sleveless Premium Quality Summer Collection", category: "Womens", subcategory: "Dress", type: "Half Sleeves", sqNumber: "1000000045", color: "Red", rate: 1200.00 },
   { id: "cat-5", code: "WTR001", name: "Slim Fit Trouser", category: "Womens", subcategory: "Trouser", type: "Full Length", sqNumber: "1000000005", color: "Black", rate: 550.00 },
   { id: "cat-6", code: "KT001", name: "Kids T-Shirt", category: "Kids", subcategory: "T-Shirt", type: "Half Sleeves", sqNumber: "1000000006", color: "Blue", rate: 180.00 },
   { id: "cat-7", code: "MS001", name: "Men's Shirt", category: "Mens", subcategory: "Shirt", type: "Full Sleeves", sqNumber: "1000000007", color: "White", rate: 420.00 },

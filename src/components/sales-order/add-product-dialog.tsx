@@ -7,7 +7,7 @@ import { Search, ChevronDown, ChevronUp, Plus, ArrowLeft, Calculator, ImagePlus,
 import { MOCK_CATALOG_PRODUCTS } from "@/data/mock-sales-order";
 import { INITIAL_MASTER_PATTERNS } from "@/data/mock-masters";
 import { CatalogProduct } from "@/types/sales-order";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorDialog } from "@/components/masters/color-dialog";
 import { FabricDialog } from "@/components/masters/fabric-dialog";
@@ -144,7 +144,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setViewMode('search');
       setShowSearch(false);
     } else if (open) {
-      setSelectedProductId(null);
+      setSelectedProductId(catalogItems.length > 0 ? catalogItems[0].id : null);
       setSearchQuery("");
       setIsProductDropdownOpen(false);
       setQuantities({});
@@ -351,117 +351,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
           {viewMode === 'search' && (
             <div className="flex flex-col">
 
-              {/* Audience Filter Tabs */}
-              <div
-                className={`transition-all duration-300 ease-in-out overflow-hidden flex flex-col gap-3 ${
-                  !selectedProduct || showSearch ? "max-h-[200px] opacity-100 mb-4" : "max-h-0 opacity-0 m-0 !gap-0"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {AUDIENCE_FILTERS.map(audience => (
-                    <button
-                      key={audience}
-                      type="button"
-                      className={`h-8 rounded-md border px-4 text-xs font-bold transition-colors ${activeAudience === audience
-                        ? "border-[#0453B8] bg-[#0453B8] text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                        }`}
-                      onClick={() => {
-                        setActiveAudience(audience);
-                        setSelectedProductId(null);
-                        setIsProductDropdownOpen(true);
-                      }}
-                    >
-                      {audience}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold text-[#0453B8] uppercase tracking-wider">Search Catalog</Label>
-                  {selectedProduct && showSearch && (
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-slate-500 hover:text-slate-800 px-2 -mr-2" onClick={() => setShowSearch(false)}>
-                      <ChevronUp className="w-3.5 h-3.5 mr-1" /> Hide Search & Tabs
-                    </Button>
-                  )}
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search by number, product, type, or subcategory..."
-                    className="pl-10 h-12 bg-white border-slate-200 shadow-sm focus-visible:ring-[#0453B8] rounded-md text-base"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setSelectedProductId(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && searchQuery && filteredProducts.length > 0 && !selectedProduct) {
-                        e.preventDefault();
-                        setSelectedProductId(filteredProducts[0].id);
-                        setSearchQuery("");
-                        setShowSearch(false);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Product Selection Area */}
-              {!selectedProduct ? (
-                <div className="mt-4">
-                  {visibleProducts.length === 0 ? (
-                    <div className="flex flex-col min-h-[300px] border border-dashed border-slate-300 rounded-xl bg-white p-6 justify-center items-center">
-                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <Search className="w-8 h-8 text-slate-300" />
-                      </div>
-                      <h3 className="text-slate-700 font-semibold mb-1">No products found</h3>
-                      <p className="text-xs text-slate-500 mb-6">Try adjusting your search or create a new product.</p>
-                      <Button
-                        variant="ghost"
-                        className="text-[#0453B8] hover:bg-blue-50 hover:text-blue-700 font-semibold"
-                        onClick={() => {
-                          setNewProduct(prev => ({ ...prev, code: searchQuery.toUpperCase() }));
-                          setViewMode('create');
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create "{searchQuery}"
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                      {visibleProducts.map(p => {
-                        let imageSrc = "/men casual half shirt.jpg";
-                        const nameLower = p.name.toLowerCase();
-                        if (nameLower.includes("formal") || p.code.startsWith("MS")) {
-                          imageSrc = p.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                        }
-                        if (nameLower.includes("t-shirt") || p.code.startsWith("MT")) {
-                          imageSrc = "/men casual tshirt.jpeg";
-                        }
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => { setSelectedProductId(p.id); setShowSearch(false); }}
-                            className="flex flex-col text-left border border-slate-200 rounded-xl bg-white p-2.5 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all group"
-                          >
-                            <div className="w-full aspect-square bg-[#F5F6F8] rounded-lg overflow-hidden mb-2 p-3 flex items-center justify-center">
-                              <img src={imageSrc} alt={p.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
-                            </div>
-                            <span className="text-[13px] font-extrabold text-slate-900 mb-0.5">{p.code}</span>
-                            <span className="text-xs font-semibold text-slate-700 mb-1 truncate w-full">{p.name}</span>
-                            <span className="text-[10px] text-slate-500">{p.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</span>
-                            <span className="text-[10px] text-slate-500">{p.type}{p.buttons ? ` • ${p.buttons} Buttons` : ""}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* ── Selected Product Detail + Configuration ── */
+              {/* ── Selected Product Detail + Configuration ── */}
+              {selectedProduct && (
                 <div className="border border-slate-200 rounded-xl bg-white p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200">
 
                   <div className="flex flex-col md:flex-row gap-6 items-start mt-2 mb-4">
@@ -529,14 +420,52 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     {/* Right: Form Fields */}
                     <div className="flex-1 w-full flex flex-col gap-4 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
                       
-                      {/* Product Name (Full Width, No Label) */}
-                      <div className="mb-2">
-                        <Input
-                          value={customProductName}
-                          onChange={(e) => setCustomProductName(e.target.value)}
-                          placeholder="e.g. Mens Full Sleeves Regular Collar"
-                          className="h-12 w-full bg-slate-50 border-slate-200 shadow-inner rounded-lg text-lg font-bold px-4 text-slate-900 focus-visible:ring-[#0453B8] placeholder:text-slate-400 placeholder:font-normal"
-                        />
+                      {/* Product Dropdown */}
+                      <div className="flex items-center gap-3">
+                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Product</Label>
+                        <Select value={selectedProductId || ""} onValueChange={(val) => setSelectedProductId(val)}>
+                          <SelectTrigger className="h-auto min-h-10 py-2 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 whitespace-normal text-left [&>span]:line-clamp-none [&>span]:whitespace-normal">
+                            <SelectValue placeholder="Select Product">
+                              {selectedProduct ? selectedProduct.name : "Select Product"}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent position="popper" align="end" className="w-[600px] max-h-[50vh] overflow-y-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-2">
+                              {["Mens", "Womens", "Kids"].map(category => {
+                                const items = catalogItems.filter(p => p.category === category);
+                                if (items.length === 0) return null;
+                                return (
+                                  <SelectGroup key={category} className="mb-2">
+                                    <SelectLabel className="font-extrabold text-[#0453B8] text-[11px] uppercase tracking-wider bg-white sticky top-0 z-10">{category}</SelectLabel>
+                                    {items.map(p => {
+                                      let imageSrc = "/men casual half shirt.jpg";
+                                      const nameLower = p.name.toLowerCase();
+                                      if (nameLower.includes("formal") || p.code.startsWith("MS")) {
+                                        imageSrc = p.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
+                                      }
+                                      if (nameLower.includes("t-shirt") || p.code.startsWith("MT")) {
+                                        imageSrc = "/men casual tshirt.jpeg";
+                                      }
+                                      return (
+                                        <SelectItem key={p.id} value={p.id}>
+                                          <div className="flex items-center gap-3 py-1">
+                                            <div className="w-8 h-8 rounded bg-[#F5F6F8] overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-100">
+                                              <img src={imageSrc} alt={p.name} className="w-full h-full object-cover mix-blend-multiply" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                              <span className="font-bold text-slate-800 text-xs">{p.name}</span>
+                                              <span className="text-[10px] text-slate-500 font-semibold">{p.code} • {p.subcategory}</span>
+                                            </div>
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectGroup>
+                                );
+                              })}
+                            </div>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* 1) Buyer Design No */}
@@ -737,79 +666,16 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       </Button>
                     </div>
 
-                    <div className="grid gap-2 transition-all duration-300" style={{ gridTemplateColumns: 'auto repeat(5, minmax(0, 1fr))' }}>
-                      {/* First row labels */}
-                      <div className="flex flex-col pt-[31px] pr-2 gap-0 justify-start items-end text-[11px] font-bold text-slate-500 shrink-0">
+                    <div className="flex w-full overflow-x-auto gap-2 pb-2 custom-scrollbar transition-all duration-300">
+                      {/* Fixed labels column */}
+                      <div className="flex flex-col pt-[31px] pr-2 gap-0 justify-start items-end text-[11px] font-bold text-slate-500 shrink-0 sticky left-0 bg-white z-10">
                         <div className="h-9 flex items-center">Ratio</div>
                         <div className="h-10 flex items-center">Pcs</div>
                       </div>
                       
-                      {DEFAULT_SIZES.map(size => (
-                        <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white animate-in fade-in zoom-in-95 duration-200">
-                          <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
-                          <div className="flex flex-col bg-white relative overflow-hidden">
-                            {/* Ratio Input */}
-                            <div className="w-full flex items-center transition-all duration-300 ease-in-out border-slate-200 opacity-100 h-9 border-b pointer-events-auto">
-                              <Input
-                                id={`ratio-input-${size}`}
-                                type="number"
-                                min="0"
-                                placeholder="Ratio"
-                                className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-semibold text-slate-900 bg-slate-50 placeholder:text-slate-400 text-[11px]"
-                                value={ratios[size] || ""}
-                                onChange={(e) => setRatios({ ...ratios, [size]: parseInt(e.target.value) || 0 })}
-                                onFocus={(e) => e.target.select()}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
-                                    const currentIndex = allSizes.indexOf(size as any);
-                                    if (currentIndex < allSizes.length - 1) {
-                                      const next = document.getElementById(`ratio-input-${allSizes[currentIndex + 1]}`);
-                                      if (next) { next.focus(); (next as HTMLInputElement).select(); }
-                                    }
-                                  }
-                                }}
-                              />
-                            </div>
-                            {/* Qty Input */}
-                            <div className="w-full flex items-center transition-all duration-300 ease-in-out h-10">
-                              <Input
-                                id={`size-input-${size}`}
-                                type="number"
-                                min="0"
-                                placeholder="Pcs"
-                                className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-black bg-white transition-colors duration-300 text-sm text-[#0453B8]"
-                                value={quantities[size] || ""}
-                                onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
-                                onFocus={(e) => e.target.select()}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const allSizes = showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES;
-                                    const currentIndex = allSizes.indexOf(size as any);
-                                    if (currentIndex < allSizes.length - 1) {
-                                      const next = document.getElementById(`size-input-${allSizes[currentIndex + 1]}`);
-                                      if (next) { next.focus(); (next as HTMLInputElement).select(); }
-                                    }
-                                  }
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Second row labels (if extended sizes shown) */}
-                      {showMoreSizes && (
-                        <div className="flex flex-col pt-[31px] pr-2 gap-0 justify-start items-end text-[11px] font-bold text-slate-500 shrink-0">
-                          <div className="h-9 flex items-center">Ratio</div>
-                          <div className="h-10 flex items-center">Pcs</div>
-                        </div>
-                      )}
-                      
-                      {showMoreSizes && EXTENDED_SIZES.map(size => (
-                        <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white animate-in fade-in zoom-in-95 duration-200">
+                      {/* Size columns */}
+                      {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
+                        <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white shrink-0 w-[85px] animate-in fade-in zoom-in-95 duration-200">
                           <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
                           <div className="flex flex-col bg-white relative overflow-hidden">
                             {/* Ratio Input */}
@@ -926,19 +792,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   <Input placeholder="Auto-filled name" className="h-[48px] w-full text-sm font-medium bg-slate-50 border-slate-200 shadow-sm rounded-lg" value={newProduct.name} readOnly />
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mt-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Code <span className="text-red-500">*</span></Label>
                   <Input placeholder="e.g. MS-001" className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg" value={newProduct.code} onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pocket Style (5)</Label>
-                  <Select value={newProduct.description} onValueChange={(v) => setNewProduct({ ...newProduct, description: v })}>
-                    <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg"><SelectValue placeholder="Select Pocket Style" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="With Pocket">With Pocket</SelectItem>
-                      <SelectItem value="Without Pocket">Without Pocket</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">For (1) <span className="text-red-500">*</span></Label>
@@ -967,6 +823,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     <SelectTrigger className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus:ring-[#0453B8] shadow-sm rounded-lg"><SelectValue placeholder="Select Sleeve Type" /></SelectTrigger>
                     <SelectContent>{MASTER_TYPES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
                   </Select>
+                </div>
+                <div className="flex flex-col gap-2 col-span-2">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Additional Description (5)</Label>
+                  <Input 
+                    placeholder="e.g. Double Pocket with Flap" 
+                    className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg" 
+                    value={newProduct.description} 
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} 
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-8">
