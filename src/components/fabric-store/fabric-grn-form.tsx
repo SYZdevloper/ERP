@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { NotesPanel } from "@/components/sales-order/notes-panel";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
 import { useForm, FormProvider } from "react-hook-form";
@@ -1179,97 +1179,120 @@ export function FabricGrnForm() {
             );
           })()}
 
-            <div className="flex-1 overflow-auto rounded-md border border-slate-200">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0 z-10">
-                  <TableRow>
-                    <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
-                    <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
-                    <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
-                    <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Billed (Mtr) <span className="text-red-500">*</span></TableHead>
-                    <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Actual (Mtr) <span className="text-red-500">*</span></TableHead>
-                    <TableHead className="w-12 py-2.5"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeRollDetails.map((roll, idx) => (
-                    <TableRow key={roll.id}>
-                      <TableCell className="text-center font-semibold text-slate-600 text-xs py-2">{idx + 1}</TableCell>
-                      <TableCell className="py-2">
-                        <Input 
-                          value={roll.rollNo}
-                          onChange={(e) => {
-                            const newDetails = [...activeRollDetails];
-                            newDetails[idx].rollNo = e.target.value;
-                            setActiveRollDetails(newDetails);
-                          }}
-                          className="h-8 text-xs border-slate-200"
-                          placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
-                        />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <Input 
-                          value={roll.color || ""}
-                          onChange={(e) => {
-                            const newDetails = [...activeRollDetails];
-                            newDetails[idx].color = e.target.value;
-                            setActiveRollDetails(newDetails);
-                          }}
-                          className="h-8 text-xs border-slate-200"
-                          placeholder="e.g. Red"
-                        />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <Input 
-                          type="number"
-                          value={roll.billedQty}
-                          onChange={(e) => {
-                            const newDetails = [...activeRollDetails];
-                            newDetails[idx].billedQty = e.target.value;
-                            setActiveRollDetails(newDetails);
-                          }}
-                          className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="0.00"
-                        />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <Input 
-                          type="number"
-                          value={roll.actualQty}
-                          onChange={(e) => {
-                            const newDetails = [...activeRollDetails];
-                            newDetails[idx].actualQty = e.target.value;
-                            setActiveRollDetails(newDetails);
-                          }}
-                          className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="0.00"
-                        />
-                      </TableCell>
-                      <TableCell className="py-2 text-center">
-                        <button 
-                          onClick={() => {
-                            const newDetails = activeRollDetails.filter((_, i) => i !== idx);
-                            setActiveRollDetails(newDetails);
-                          }}
-                          className="text-red-500 hover:text-red-700 p-1"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {(() => {
+              const totalBilled = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.billedQty) || 0), 0);
+              const totalActual = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
+
+              return (
+                <div className="flex-1 overflow-auto rounded-md border border-slate-200">
+                  <Table>
+                    <TableHeader className="bg-slate-50 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
+                        <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
+                        <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
+                        <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Billed (Mtr) <span className="text-red-500">*</span></TableHead>
+                        <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Actual (Mtr) <span className="text-red-500">*</span></TableHead>
+                        <TableHead className="w-12 py-2.5"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {activeRollDetails.map((roll, idx) => (
+                        <TableRow key={roll.id}>
+                          <TableCell className="text-center font-semibold text-slate-600 text-xs py-2">{idx + 1}</TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              value={roll.rollNo}
+                              onChange={(e) => {
+                                const newDetails = [...activeRollDetails];
+                                newDetails[idx].rollNo = e.target.value;
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="h-8 text-xs border-slate-200"
+                              placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              value={roll.color || ""}
+                              onChange={(e) => {
+                                const newDetails = [...activeRollDetails];
+                                newDetails[idx].color = e.target.value;
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="h-8 text-xs border-slate-200"
+                              placeholder="e.g. Red"
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number"
+                              value={roll.billedQty}
+                              onChange={(e) => {
+                                const newDetails = [...activeRollDetails];
+                                newDetails[idx].billedQty = e.target.value;
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0.00"
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number"
+                              value={roll.actualQty}
+                              onChange={(e) => {
+                                const newDetails = [...activeRollDetails];
+                                newDetails[idx].actualQty = e.target.value;
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="h-8 text-xs text-right border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0.00"
+                            />
+                          </TableCell>
+                          <TableCell className="py-2 text-center">
+                            <button 
+                              onClick={() => {
+                                const newDetails = activeRollDetails.filter((_, i) => i !== idx);
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    <TableFooter className="bg-transparent border-t-0">
+                      <TableRow className="hover:bg-transparent border-b-0">
+                        <TableCell colSpan={4}></TableCell>
+                        <TableCell className="py-4 text-center align-top border-t border-slate-200">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-slate-800">{totalBilled.toFixed(2)} Mtr</span>
+                            <span className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Billed Qty</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 text-center align-top border-t border-slate-200">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-[#0453B8]">{totalActual.toFixed(2)} Mtr</span>
+                            <span className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Actual Received</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="border-t border-slate-200"></TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
+                </div>
+              );
+            })()}
           </div>
-          
+
           {(() => {
             const totalBilled = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.billedQty) || 0), 0);
             const totalActual = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
-            
             const shortageRolls = activeRollDetails.filter(r => (Number(r.billedQty) || 0) > (Number(r.actualQty) || 0));
             const totalShortage = shortageRolls.reduce((acc, r) => acc + ((Number(r.billedQty) || 0) - (Number(r.actualQty) || 0)), 0);
-            
             const expectedBilled = Number(activeBilledQtyAsPerBill) || 0;
             const isExceeding = expectedBilled > 0 && totalBilled > expectedBilled + 0.01;
             const isShort = expectedBilled > 0 && totalBilled < expectedBilled - 0.01;
@@ -1277,19 +1300,9 @@ export function FabricGrnForm() {
 
             return (
               <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-600">Total Billed:</span>
-                      <span className={`text-sm font-bold ${doesNotTally ? 'text-red-600' : 'text-slate-800'}`}>{totalBilled.toFixed(2)} Mtr</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#0453B8]">Total Actual:</span>
-                      <span className="text-sm font-bold text-[#0453B8]">{totalActual.toFixed(2)} Mtr</span>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-end">
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm">Cancel</Button>
+                    <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm bg-white">Cancel</Button>
                     <Button onClick={handleSaveRollDetails} disabled={doesNotTally || expectedBilled === 0} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed">Save Roll Details</Button>
                   </div>
                 </div>
@@ -1304,7 +1317,7 @@ export function FabricGrnForm() {
                   </div>
                 )}
                 {totalShortage > 0 && (
-                  <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200 rounded-md">
+                  <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-100 rounded-md">
                     Shortage {totalShortage.toFixed(2)} Meter in Roll No {shortageRolls.map(r => r.rollNo).join(", ")}
                   </div>
                 )}

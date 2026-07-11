@@ -393,21 +393,32 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
 
               {/* PO Number/Date Badges */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center h-full min-h-[105px]">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO NUMBER</span>
-                  <span className="text-base font-black text-[#0453B8] tracking-wide">
-                    {initialPo?.id || "TPO-8006"}
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 invisible">
-                    SPACER
-                  </span>
+                  {(() => {
+                    const poNo = initialPo?.id || "TPO-8006";
+                    const parts = poNo.split("-");
+                    if (parts.length === 2) {
+                      return (
+                        <div className="flex flex-col items-center mt-1">
+                          <span className="text-sm font-extrabold text-[#0453B8] uppercase tracking-widest opacity-90">{parts[0]}</span>
+                          <span className="text-4xl leading-none font-black text-[#0453B8] tracking-tight mt-1.5">{parts[1]}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <span className="text-base font-black text-[#0453B8] tracking-wide">
+                        {poNo}
+                      </span>
+                    );
+                  })()}
                 </div>
-                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center h-full min-h-[105px]">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO DATE</span>
-                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                  <span className="text-[17px] font-black text-[#0453B8] tracking-wide mt-1">
                     {isEditMode ? initialPo?.date || "06-JUN-2026" : "06-JUN-2026"}
                   </span>
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-1.5">
                     SATURDAY
                   </span>
                 </div>

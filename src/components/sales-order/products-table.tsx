@@ -67,7 +67,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
             {fields.map((field, index) => {
               const product = products[index];
               const sizeBreakdown = product.sizeBreakdown;
-              const totalQty = (sizeBreakdown.XS || 0) + (sizeBreakdown.S || 0) + (sizeBreakdown.M || 0) + (sizeBreakdown.L || 0) + (sizeBreakdown.XL || 0) + (sizeBreakdown.XXL || 0) + (sizeBreakdown["3XL"] || 0) + (sizeBreakdown["4XL"] || 0) + (sizeBreakdown["5XL"] || 0) + (sizeBreakdown["6XL"] || 0);
+              const totalQty = Object.values(sizeBreakdown).reduce((sum, qty) => sum + (typeof qty === 'number' ? qty : 0), 0);
               const amount = totalQty * product.rate;
 
               return (

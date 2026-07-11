@@ -362,6 +362,14 @@ export default function CuttingPage() {
               <Package className="w-5 h-5 text-[#0453B8]" />
               2. Fabric Roll Allocation
             </h3>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="border-[#0453B8] text-[#0453B8] hover:bg-blue-50 font-bold px-6">
+                START
+              </Button>
+              <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6">
+                Completed
+              </Button>
+            </div>
           </div>
           
           <div className="flex-1 overflow-auto p-2">

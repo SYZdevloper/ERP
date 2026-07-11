@@ -11,6 +11,16 @@ const SizeBreakdownSchema = z.object({
   "4XL": z.number().min(0).optional(),
   "5XL": z.number().min(0).optional(),
   "6XL": z.number().min(0).optional(),
+  "28": z.number().min(0).optional(),
+  "30": z.number().min(0).optional(),
+  "32": z.number().min(0).optional(),
+  "34": z.number().min(0).optional(),
+  "36": z.number().min(0).optional(),
+  "38": z.number().min(0).optional(),
+  "40": z.number().min(0).optional(),
+  "42": z.number().min(0).optional(),
+  "44": z.number().min(0).optional(),
+  "46": z.number().min(0).optional(),
 });
 
 type SizeBreakdown = z.infer<typeof SizeBreakdownSchema>;

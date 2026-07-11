@@ -18,8 +18,12 @@ interface AddProductDialogProps {
   editProduct?: any;
 }
 
-const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
-const EXTENDED_SIZES = ["XXL", "3XL", "4XL", "5XL", "6XL"] as const;
+const DEFAULT_SHIRT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
+const EXTENDED_SHIRT_SIZES = ["XXL", "3XL", "4XL", "5XL", "6XL"] as const;
+
+const DEFAULT_PANT_SIZES = ["28", "30", "32", "34", "36"] as const;
+const EXTENDED_PANT_SIZES = ["38", "40", "42", "44", "46"] as const;
+
 const AUDIENCE_FILTERS = ["Mens", "Womens", "Kids"] as const;
 type AudienceFilter = typeof AUDIENCE_FILTERS[number];
 
@@ -40,6 +44,9 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
 
   const [showMoreSizes, setShowMoreSizes] = useState(false);
+  const [sizeSystem, setSizeSystem] = useState<"shirts" | "pants">("shirts");
+  const DEFAULT_SIZES: readonly string[] = sizeSystem === "shirts" ? DEFAULT_SHIRT_SIZES : DEFAULT_PANT_SIZES;
+  const EXTENDED_SIZES: readonly string[] = sizeSystem === "shirts" ? EXTENDED_SHIRT_SIZES : EXTENDED_PANT_SIZES;
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [selectedColor, setSelectedColor] = useState("White");
   const [selectedFabric, setSelectedFabric] = useState("Cotton Poplin");
@@ -351,81 +358,86 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
               {selectedProduct && (
                 <div className="border border-slate-200 rounded-xl bg-white p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200">
 
-                  <div className="flex flex-col md:flex-row gap-6 items-start mt-2 mb-4">
+                  <div className="flex flex-col md:flex-row gap-8 items-start mt-4 mb-8">
                     
                     {/* Left: Product Image */}
-                    <div className="w-full md:w-[280px] flex flex-col gap-3 shrink-0">
-                      <div className="border border-slate-200 rounded-xl p-5 flex flex-col items-center gap-4 shadow-sm bg-white text-center">
-                        {(() => {
-                          let imageSrc = "/men casual half shirt.jpg";
-                          const nameLower = selectedProduct.name.toLowerCase();
-                          if (nameLower.includes("formal") || selectedProduct.code.startsWith("MS")) {
-                            imageSrc = selectedProduct.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                          }
-                          if (nameLower.includes("t-shirt") || selectedProduct.code.startsWith("MT")) {
-                            imageSrc = "/men casual tshirt.jpeg";
-                          }
-                          return (
-                            <>
-                              <div
-                                onClick={() => document.getElementById('config-product-image-input')?.click()}
-                                className="relative w-[180px] aspect-square bg-[#F5F6F8] rounded-xl overflow-hidden p-4 cursor-pointer hover:ring-2 hover:ring-[#0453B8] transition-all group shrink-0 mx-auto"
-                              >
-                                <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
-                                
-                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
-                                  <ImagePlus className="w-8 h-8 text-[#0453B8]" />
-                                  <span className="text-[10px] font-bold text-[#0453B8] mt-1 uppercase tracking-wider bg-white/80 px-2 py-1 rounded-md">Change Image</span>
-                                </div>
-
-                                {customImage && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); setCustomImage(null); }}
-                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                  >
-                                    <XIcon className="w-4 h-4" />
-                                  </button>
-                                )}
-                              </div>
-                              <input
-                                id="config-product-image-input"
-                                type="file"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    const url = URL.createObjectURL(e.target.files[0]);
-                                    setCustomImage(url);
-                                  }
-                                }}
-                              />
-                              <div>
-                                <h3 className="text-lg font-extrabold text-slate-900 mb-1">{selectedProduct.code}</h3>
-                                <p className="text-sm font-semibold text-slate-700">{selectedProduct.name}</p>
-                                <p className="text-xs text-slate-500 mt-1">{selectedProduct.subcategory === "T-Shirt" ? "Round Neck" : "Regular Collar"}</p>
-                                <p className="text-xs text-slate-500">{selectedProduct.type}{selectedProduct.buttons ? ` • ${selectedProduct.buttons} Buttons` : ""}</p>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
+                    <div className="w-full md:w-[300px] shrink-0 flex flex-col gap-2">
+                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Image</Label>
+                      {(() => {
+                        let imageSrc = "/men casual half shirt.jpg";
+                        const nameLower = selectedProduct.name.toLowerCase();
+                        if (nameLower.includes("formal") || selectedProduct.code.startsWith("MS")) {
+                          imageSrc = selectedProduct.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
+                        }
+                        if (nameLower.includes("t-shirt") || selectedProduct.code.startsWith("MT")) {
+                          imageSrc = "/men casual tshirt.jpeg";
+                        }
+                        return (
+                          <>
+                            <div
+                              onClick={() => document.getElementById('config-product-image-input')?.click()}
+                              className="relative w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-all group overflow-hidden"
+                            >
+                              {customImage || imageSrc ? (
+                                <>
+                                  <img src={customImage || imageSrc} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
+                                    <ImagePlus className="w-8 h-8 text-[#0453B8]" />
+                                    <span className="text-[10px] font-bold text-[#0453B8] mt-1 uppercase tracking-wider bg-white/80 px-2 py-1 rounded-md">Change Image</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <ImagePlus className="w-8 h-8 text-slate-300 group-hover:text-[#0453B8] transition-colors" />
+                                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#0453B8] mt-1.5 transition-colors">Upload Image</span>
+                                  <span className="text-[9px] text-slate-400 group-hover:text-[#0453B8] mt-0.5 transition-colors">Click to browse</span>
+                                  <span className="text-[9px] text-slate-400 mt-0.5">(Optional)</span>
+                                </>
+                              )}
+                              {customImage && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setCustomImage(null); }}
+                                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                >
+                                  <XIcon className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                            <input
+                              id="config-product-image-input"
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const url = URL.createObjectURL(e.target.files[0]);
+                                  setCustomImage(url);
+                                }
+                              }}
+                            />
+                            <div className="mt-3 text-center">
+                              <h3 className="text-lg font-extrabold text-[#0453B8] mb-1">{selectedProduct.code}</h3>
+                              <p className="text-sm font-semibold text-slate-800">{selectedProduct.name}</p>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
 
-
                     {/* Right: Form Fields */}
-                    <div className="flex-1 w-full flex flex-col gap-4 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                       
                       {/* Product Dropdown */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Product</Label>
+                      <div className="flex flex-col gap-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product *</Label>
                         <Select value={selectedProductId || ""} onValueChange={(val) => setSelectedProductId(val)}>
-                          <SelectTrigger className="h-auto min-h-10 py-2 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 whitespace-normal text-left [&>span]:line-clamp-none [&>span]:whitespace-normal">
+                          <SelectTrigger className="h-[40px] w-full bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 whitespace-normal text-left">
                             <SelectValue placeholder="Select Product">
                               {selectedProduct ? selectedProduct.name : "Select Product"}
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent position="popper" align="end" className="w-[600px] max-h-[50vh] overflow-y-auto">
+                          <SelectContent position="popper" align="start" className="w-[600px] max-h-[50vh] overflow-y-auto">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-2">
                               {["Mens", "Womens", "Kids"].map(category => {
                                 const items = catalogItems.filter(p => p.category === category);
@@ -465,19 +477,19 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       </div>
 
                       {/* 1) Buyer Design No */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Buyer Design</Label>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Buyer Design No</Label>
                         <Input
                           value={sqNumber}
                           onChange={(e) => setSqNumber(e.target.value)}
-                          placeholder="e.g. 10 digit code"
-                          className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                          placeholder="Enter Sort No"
+                          className="h-[40px] bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
                         />
                       </div>
 
                       {/* 2) Rate */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Rate <span className="text-red-500">*</span></Label>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rate (₹) <span className="text-red-500">*</span></Label>
                         <Input
                           ref={rateInputRef}
                           type="number"
@@ -485,19 +497,19 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                           value={customRate}
                           onChange={(e) => setCustomRate(e.target.value)}
                           placeholder="0"
-                          className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
+                          className="h-[40px] bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
                         />
                       </div>
 
                       {/* 3) Brand */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Brand</Label>
-                        <div className="flex items-center gap-2 flex-wrap flex-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                          {["Zara", "H&M", "Levi's", "No Brand"].map((brand) => (
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Brand</Label>
+                        <div className="flex items-center gap-2 flex-wrap flex-1 bg-slate-50 p-1 rounded-lg border border-slate-100 h-[40px] px-2">
+                          {["Zara", "H&M", "Levi's"].map((brand) => (
                             <button
                               key={brand}
                               type="button"
-                              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${brandName === brand
+                              className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${brandName === brand
                                   ? "bg-white text-[#0453B8] shadow-sm border border-blue-200"
                                   : "bg-transparent text-slate-600 hover:bg-slate-200 hover:text-slate-800"
                                 }`}
@@ -506,19 +518,19 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               {brand}
                             </button>
                           ))}
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-[#0453B8] hover:bg-blue-100" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
-                            <Plus className="w-4 h-4" />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-[#0453B8] hover:bg-blue-100 ml-auto" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
+                            <Plus className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
 
                       {/* 4) Pattern No */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Pattern No</Label>
-                        <div className="flex-1 flex items-center gap-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pattern No</Label>
+                        <div className="flex items-center gap-2">
                           <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-10 flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
+                              <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-[40px] flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
                                 {selectedPattern ? selectedPattern : "Select Pattern"}
                                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                               </Button>
@@ -528,7 +540,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                                 <div className="flex items-center border-b px-3">
                                   <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
                                   <Input
-                                    placeholder="Search brand or code..."
+                                    placeholder="Search pattern..."
                                     className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
                                     value={patternSearch}
                                     onChange={(e) => setPatternSearch(e.target.value)}
@@ -554,18 +566,18 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               </div>
                             </PopoverContent>
                           </Popover>
-                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsPatternMasterOpen(true)}>
+                          <Button variant="outline" size="icon" className="h-[40px] w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsPatternMasterOpen(true)}>
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
 
                       {/* 5) Color */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Color <span className="text-red-500">*</span></Label>
-                        <div className="flex-1 flex items-center gap-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Color / Shade <span className="text-red-500">*</span></Label>
+                        <div className="flex items-center gap-2">
                           <Select value={selectedColor} onValueChange={setSelectedColor}>
-                            <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectTrigger className="h-[40px] flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
                               <SelectValue placeholder="Select Color" />
                             </SelectTrigger>
                             <SelectContent>
@@ -585,18 +597,18 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               ))}
                             </SelectContent>
                           </Select>
-                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsColorDialogOpen(true)}>
+                          <Button variant="outline" size="icon" className="h-[40px] w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsColorDialogOpen(true)}>
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
 
                       {/* 6) Fabric */}
-                      <div className="flex items-center gap-3">
-                        <Label className="text-xs font-bold text-slate-700 w-[120px] shrink-0">Fabric <span className="text-red-500">*</span></Label>
-                        <div className="flex-1 flex items-center gap-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Content (Fabric) <span className="text-red-500">*</span></Label>
+                        <div className="flex items-center gap-2">
                           <Select value={selectedFabric} onValueChange={setSelectedFabric}>
-                            <SelectTrigger className="h-10 flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
+                            <SelectTrigger className="h-[40px] flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
                               <SelectValue placeholder="Select Fabric" />
                             </SelectTrigger>
                             <SelectContent>
@@ -606,7 +618,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               <SelectItem value="Polyester">Polyester</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsFabricDialogOpen(true)}>
+                          <Button variant="outline" size="icon" className="h-[40px] w-10 shrink-0 text-[#0453B8] hover:bg-blue-50 border-slate-200" onClick={() => setIsFabricDialogOpen(true)}>
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
@@ -651,16 +663,48 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-[#0453B8] hover:text-blue-800 hover:bg-blue-50 px-3 rounded-full font-semibold shrink-0"
-                        onClick={() => setShowMoreSizes(!showMoreSizes)}
-                      >
-                        {showMoreSizes ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
-                        {showMoreSizes ? "Hide Extended Sizes" : "More Sizes"}
-                      </Button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex gap-1 bg-slate-100 p-0.5 rounded-full mr-2">
+                          <Button
+                            variant={sizeSystem === "shirts" ? "default" : "ghost"}
+                            size="sm"
+                            className={`h-6 text-[11px] px-3 rounded-full ${sizeSystem === "shirts" ? 'bg-[#0453B8] text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
+                            onClick={() => {
+                              setSizeSystem("shirts");
+                              setQuantities({});
+                              setRatios({});
+                              setAdjustmentSize(DEFAULT_SHIRT_SIZES[DEFAULT_SHIRT_SIZES.length - 1]);
+                            }}
+                          >
+                            Shirt Sizes
+                          </Button>
+                          <Button
+                            variant={sizeSystem === "pants" ? "default" : "ghost"}
+                            size="sm"
+                            className={`h-6 text-[11px] px-3 rounded-full ${sizeSystem === "pants" ? 'bg-[#0453B8] text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
+                            onClick={() => {
+                              setSizeSystem("pants");
+                              setQuantities({});
+                              setRatios({});
+                              setAdjustmentSize(DEFAULT_PANT_SIZES[DEFAULT_PANT_SIZES.length - 1]);
+                            }}
+                          >
+                            Pant Sizes
+                          </Button>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-[#0453B8] hover:text-blue-800 hover:bg-blue-50 px-3 rounded-full font-semibold"
+                          onClick={() => setShowMoreSizes(!showMoreSizes)}
+                        >
+                          {showMoreSizes ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
+                          {showMoreSizes ? "Hide Extended Sizes" : "More Sizes"}
+                        </Button>
+                      </div>
                     </div>
+
+
 
                     <div className="flex w-full overflow-x-auto gap-2 pb-2 custom-scrollbar transition-all duration-300">
                       {/* Fixed labels column */}
@@ -671,7 +715,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       
                       {/* Size columns */}
                       {(showMoreSizes ? [...DEFAULT_SIZES, ...EXTENDED_SIZES] : DEFAULT_SIZES).map(size => (
-                        <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white shrink-0 w-[85px] animate-in fade-in zoom-in-95 duration-200">
+                        <div key={size} className="flex flex-col shadow-sm rounded-md overflow-hidden border border-slate-200 bg-white flex-1 min-w-[30px] animate-in fade-in zoom-in-95 duration-200">
                           <div className="text-[11px] text-center font-bold text-slate-700 bg-slate-100 py-1.5 border-b border-slate-200">{size}</div>
                           <div className="flex flex-col bg-white relative overflow-hidden">
                             {/* Ratio Input */}
@@ -736,15 +780,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
           {/* ── Create Product View ── */}
           {viewMode === 'create' && (
             <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+              <div className="flex flex-col md:flex-row gap-8">
 
-                {/* Image upload — spans 2 cols on its own row */}
-                <div className="col-span-2 flex flex-col gap-2">
+                {/* Left Column: Image upload */}
+                <div className="w-full md:w-[240px] shrink-0 flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Image</Label>
                   <div className="flex items-center gap-4">
                     <div
                       onClick={() => document.getElementById('new-product-image-input')?.click()}
-                      className="relative w-[100px] h-[100px] border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-colors group overflow-hidden shrink-0"
+                      className="relative w-full aspect-[4/5] border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-colors group overflow-hidden"
                     >
                       {newProductImage ? (
                         <>
@@ -783,12 +827,14 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-2">
+                {/* Right Column: Form Fields */}
+                <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-5">
+                  <div className="flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Name <span className="text-red-500">*</span></Label>
                   <Input placeholder="Auto-filled name" className="h-[48px] w-full text-sm font-medium bg-slate-50 border-slate-200 shadow-sm rounded-lg" value={newProduct.name} readOnly />
                 </div>
 
-                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex flex-col gap-2">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Code <span className="text-red-500">*</span></Label>
                   <Input placeholder="e.g. MS-001" className="h-[48px] w-full text-sm font-medium bg-white border-slate-200 focus-visible:ring-[#0453B8] shadow-sm rounded-lg" value={newProduct.code} onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} />
                 </div>
@@ -830,7 +876,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 mt-8">
+            </div>
+            <div className="flex justify-end gap-3 mt-8">
                 <Button variant="outline" onClick={() => setViewMode('search')} className="h-10 px-6 border-slate-200 text-slate-700">Cancel</Button>
                 <Button onClick={handleCreateProduct} className="h-10 px-8 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold">Create Product</Button>
               </div>

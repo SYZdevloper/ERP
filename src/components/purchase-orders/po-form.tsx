@@ -755,21 +755,32 @@ export function PurchaseOrderForm({
             <div className="w-full xl:w-[320px] flex flex-col gap-5 flex-shrink-0">
               {/* PO Number/Date Badges */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center h-full min-h-[105px]">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO NUMBER</span>
-                  <span className="text-base font-black text-[#0453B8] tracking-wide">
-                    {initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006")}
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 invisible">
-                    SPACER
-                  </span>
+                  {(() => {
+                    const poNo = initialPo?.id || (type === "Fabric" ? "FPO-1453" : "TPO-8006");
+                    const parts = poNo.split("-");
+                    if (parts.length === 2) {
+                      return (
+                        <div className="flex flex-col items-center mt-1">
+                          <span className="text-sm font-extrabold text-[#0453B8] uppercase tracking-widest opacity-90">{parts[0]}</span>
+                          <span className="text-4xl leading-none font-black text-[#0453B8] tracking-tight mt-1.5">{parts[1]}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <span className="text-base font-black text-[#0453B8] tracking-wide">
+                        {poNo}
+                      </span>
+                    );
+                  })()}
                 </div>
-                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center">
+                <div className="flex flex-col bg-white border border-blue-200/60 rounded-xl p-3 shadow-sm text-center justify-center h-full min-h-[105px]">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">PO DATE</span>
-                  <span className="text-base font-black text-[#0453B8] tracking-wide">
+                  <span className="text-[17px] font-black text-[#0453B8] tracking-wide mt-1">
                     {isEditMode ? initialPo?.date || "06-JUN-2026" : "06-JUN-2026"}
                   </span>
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-1.5">
                     SATURDAY
                   </span>
                 </div>
@@ -922,71 +933,122 @@ export function PurchaseOrderForm({
             </div>
             
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-              {/* Product Info Header for SO Items */}
-              {selectedSoItemContext && (
-                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-5 flex gap-8 items-center">
-                  {/* Big Image on Left */}
-                  <div className="flex flex-col gap-3 shrink-0 w-[160px] bg-white border border-slate-200 rounded-xl p-3 shadow-sm items-center">
+              
+              {/* Form Fields - Unified Side-by-Side Layout */}
+              <div className="flex flex-col md:flex-row gap-8">
+                
+                {/* Left Side: Fabric Image */}
+                <div className="flex flex-col gap-3 shrink-0 w-[240px]">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fabric Image</Label>
+                  
+                  {/* Uploader / Image Card */}
+                  <div 
+                    className="w-full aspect-square bg-[#F5F6F8] border-2 border-dashed border-slate-300 rounded-xl overflow-hidden flex flex-col items-center justify-center p-2 relative group cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-all"
+                    onClick={() => {
+                      if (selectedSoItemContext) {
+                        document.getElementById('so-item-image-upload')?.click();
+                      } else {
+                        document.getElementById('manual-fabric-image-upload')?.click();
+                      }
+                    }}
+                  >
                     {(() => {
-                      let imageSrc = "/men casual half shirt.jpg";
-                      if (selectedSoItemContext.name.includes("T-Shirt")) imageSrc = "/men casual tshirt.jpeg";
-                      else if (selectedSoItemContext.name.includes("Jacket")) imageSrc = "/mens casual full sleeve shirt.jpg";
-                      else if (!selectedSoItemContext.name.includes("Shirt")) imageSrc = "/men regualr fit shirt.jpeg";
-                      
-                      return (
-                        <>
-                          <div 
-                            className="w-full aspect-square bg-[#F5F6F8] rounded-lg overflow-hidden flex items-center justify-center p-2 relative group cursor-pointer hover:ring-2 hover:ring-[#0453B8] transition-all"
-                            onClick={() => document.getElementById('so-item-image-upload')?.click()}
-                          >
-                            <img src={manualFormData.soImage || imageSrc} alt={selectedSoItemContext.name} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
+                      // Determine the image to show
+                      let currentImage = manualFormData.image || "";
+                      let showUploadPrompt = false;
+
+                      if (selectedSoItemContext) {
+                        currentImage = manualFormData.soImage || "";
+                        if (!currentImage) {
+                          // Fallback to SO item type
+                          let fallback = "/men casual half shirt.jpg";
+                          if (selectedSoItemContext.name.includes("T-Shirt")) fallback = "/men casual tshirt.jpeg";
+                          else if (selectedSoItemContext.name.includes("Jacket")) fallback = "/mens casual full sleeve shirt.jpg";
+                          else if (!selectedSoItemContext.name.includes("Shirt")) fallback = "/men regualr fit shirt.jpeg";
+                          currentImage = fallback;
+                        }
+                      }
+
+                      if (currentImage) {
+                        return (
+                          <>
+                            <img src={currentImage} className="w-full h-full object-contain mix-blend-multiply transition-opacity group-hover:opacity-50" />
                             <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
-                              <ImagePlus className="w-6 h-6 text-[#0453B8]" />
-                              <span className="text-[9px] font-bold text-[#0453B8] mt-1 uppercase tracking-wider bg-white/80 px-1.5 py-0.5 rounded-md">Upload</span>
+                              <span className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider bg-white/90 px-2 py-1 rounded-md shadow-sm">Change Image</span>
                             </div>
-                            {manualFormData.soImage && (
+                            {((!selectedSoItemContext && manualFormData.image) || (selectedSoItemContext && manualFormData.soImage)) && (
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); setManualFormData({...manualFormData, soImage: ""}); }}
-                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  if (selectedSoItemContext) {
+                                    setManualFormData({...manualFormData, soImage: ""});
+                                  } else {
+                                    setManualFormData({...manualFormData, image: ""}); 
+                                  }
+                                }}
+                                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
                               >
                                 <X className="w-3 h-3" />
                               </button>
                             )}
-                          </div>
-                          <input 
-                            id="so-item-image-upload" 
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*" 
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                setManualFormData({...manualFormData, soImage: URL.createObjectURL(e.target.files[0])});
-                              }
-                            }} 
-                          />
-                        </>
-                      );
+                          </>
+                        );
+                      } else {
+                        return (
+                          <>
+                            <ImagePlus className="w-8 h-8 text-slate-300 group-hover:text-[#0453B8] transition-colors mb-2" />
+                            <span className="text-xs font-bold text-slate-400 group-hover:text-[#0453B8] transition-colors">Upload Image</span>
+                            <span className="text-[9px] text-slate-400 mt-1 text-center px-4">Click to browse<br/>(Optional)</span>
+                          </>
+                        );
+                      }
                     })()}
-                    <span className="text-xs font-bold text-slate-800 text-center leading-tight">{selectedSoItemContext.name}</span>
                   </div>
+
+                  <input 
+                    id={selectedSoItemContext ? "so-item-image-upload" : "manual-fabric-image-upload"}
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const url = URL.createObjectURL(e.target.files[0]);
+                        if (selectedSoItemContext) {
+                          setManualFormData({...manualFormData, soImage: url});
+                        } else {
+                          setManualFormData({...manualFormData, image: url});
+                        }
+                      }
+                    }} 
+                  />
+
+                  {/* Product Name/Code if SO Context */}
+                  {selectedSoItemContext && (
+                    <div className="mt-2 text-center">
+                      <h3 className="text-base font-extrabold text-[#0453B8] mb-1 leading-tight">{selectedSoItemContext.productId}</h3>
+                      <p className="text-xs font-semibold text-slate-800 leading-snug">{selectedSoItemContext.name}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Form Fields Grid */}
+                <div className="flex-1 flex flex-col gap-5">
                   
-                  {/* Details on Right */}
-                  <div className="flex-1 flex flex-col justify-center">
-                    <h4 className="font-extrabold text-[#0453B8] text-xl mb-3">{selectedSoItemContext.productId} - {selectedSoItemContext.name}</h4>
-                    
-                    <div className="flex items-center justify-between bg-white px-6 py-5 border border-slate-200 rounded-xl shadow-sm">
+                  {/* SO Stats Row (Only when SO is selected) */}
+                  {selectedSoItemContext && (
+                    <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm mb-2">
                       <div className="flex flex-col gap-1">
                         <div className="text-[10px] font-bold text-slate-500 uppercase">SO Qty</div>
-                        <div className="font-extrabold text-slate-800 text-xl flex items-baseline gap-1">
+                        <div className="font-extrabold text-slate-800 text-lg flex items-baseline gap-1">
                           {(Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)} 
-                          <span className="text-sm font-semibold text-slate-500">Pcs</span>
+                          <span className="text-xs font-semibold text-slate-500">Pcs</span>
                         </div>
                       </div>
                       
                       <div className="flex flex-col gap-1">
                         <div className="text-[10px] font-bold text-slate-500 uppercase">Buyer Design No.</div>
-                        <div className="font-bold text-slate-800 text-base">{selectedSoItemContext.sqNumber || "N/A"}</div>
+                        <div className="font-bold text-slate-800 text-sm">{selectedSoItemContext.sqNumber || "N/A"}</div>
                       </div>
 
                       <div className="flex flex-col gap-1">
@@ -1000,69 +1062,17 @@ export function PurchaseOrderForm({
                             const newQty = (Number(newAvg) * soQty).toFixed(2);
                             setManualFormData({...manualFormData, avg: newAvg, qty: newQty});
                           }}
-                          className="h-9 text-sm font-bold bg-white w-24 text-center border-2 border-slate-300 rounded-lg focus:ring-[#0453B8]"
+                          className="h-8 text-xs font-bold bg-white w-20 text-center border border-slate-300 rounded-lg focus:ring-[#0453B8]"
                         />
                       </div>
 
                       <div className="flex flex-col gap-1 items-end">
-                        <div className="text-[10px] font-bold text-red-600 uppercase">Total Mtrs</div>
-                        <div className="font-black text-red-600 text-2xl leading-none">{manualFormData.qty}</div>
+                        <div className="text-[10px] font-bold text-red-600 uppercase">Total Mtrs <span className="text-red-500">*</span></div>
+                        <div className="font-black text-red-600 text-xl leading-none">{manualFormData.qty || "0"}</div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* Form Fields */}
-              <div className={!selectedSoItemContext ? "flex flex-col md:flex-row gap-8" : "flex flex-col gap-5"}>
-                
-                {/* Left Side: Big Image Uploader (only for manual fabric without SO context) */}
-                {!selectedSoItemContext && (
-                  <div className="flex flex-col gap-3 shrink-0 w-[240px]">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Fabric Image</Label>
-                    <div 
-                      className="w-full aspect-square bg-[#F5F6F8] border-2 border-dashed border-slate-300 rounded-xl overflow-hidden flex flex-col items-center justify-center p-2 relative group cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-all"
-                      onClick={() => document.getElementById('manual-fabric-image-upload')?.click()}
-                    >
-                      {manualFormData.image ? (
-                        <>
-                          <img src={manualFormData.image} className="w-full h-full object-cover mix-blend-multiply transition-opacity group-hover:opacity-50" />
-                          <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5">
-                            <span className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider bg-white/90 px-2 py-1 rounded-md shadow-sm">Change Image</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setManualFormData({...manualFormData, image: ""}); }}
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <ImagePlus className="w-8 h-8 text-slate-300 group-hover:text-[#0453B8] transition-colors mb-2" />
-                          <span className="text-xs font-bold text-slate-400 group-hover:text-[#0453B8] transition-colors">Upload Image</span>
-                          <span className="text-[9px] text-slate-400 mt-1 text-center px-4">Click to browse<br/>(Optional)</span>
-                        </>
-                      )}
-                    </div>
-                    <input 
-                      id="manual-fabric-image-upload" 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          setManualFormData({...manualFormData, image: URL.createObjectURL(e.target.files[0])});
-                        }
-                      }} 
-                    />
-                  </div>
-                )}
-
-                {/* Right Side: Form Fields Grid */}
-                <div className={`flex-1 flex flex-col gap-5 ${selectedSoItemContext ? "" : ""}`}>
-                  
                   {/* Total Qty (Manual Fabric Only) */}
                   {!selectedSoItemContext && (
                     <div className="flex flex-col gap-2">
