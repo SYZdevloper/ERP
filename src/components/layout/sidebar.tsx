@@ -16,6 +16,7 @@ export function Sidebar() {
   const isTrimsStoreActive = pathname.startsWith("/trims-store");
   const isInventoryActive = pathname.startsWith("/inventory");
   const isMastersActive = pathname.startsWith("/masters");
+  const isFabricIssueActive = pathname.startsWith("/fabric-issue");
   
   const isProductionActive = pathname === "/production";
   const isCuttingActive = pathname.startsWith("/production/cutting");
@@ -89,6 +90,24 @@ export function Sidebar() {
             >
               <Package className="w-5 h-5 shrink-0" />
               {isExpanded && <span className="truncate">Fabric GRN</span>}
+            </Link>
+          </div>
+
+          {/* Fabric Issue Link */}
+          <div className="relative">
+            {isFabricIssueActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/fabric-issue"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isFabricIssueActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Factory className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Fabric Issue</span>}
             </Link>
           </div>
 

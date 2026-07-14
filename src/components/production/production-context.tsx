@@ -15,7 +15,7 @@ const initialMockCards: JobCard[] = [
   { id: "JC-002", soId: "SO-2026-002", style: "Sports Shorts", currentPhase: "Stitching", totalReceived: 300, goodQty: 298, badQty: 2, handoverStatus: "Accepted", pendingReplacementCount: 0 },
   { id: "JC-003", soId: "SO-2026-003", style: "Basic Tee", currentPhase: "Stitching", totalReceived: 150, goodQty: 150, badQty: 0, handoverStatus: "Pending_Acceptance", pendingReplacementCount: 0 },
   { id: "JC-004", soId: "SO-2026-004", style: "Polo Shirt", currentPhase: "Washing", totalReceived: 400, goodQty: 400, badQty: 0, handoverStatus: "Accepted", pendingReplacementCount: 0 },
-  { id: "JC-005", soId: "SO-2026-005", style: "Denim Jeans", currentPhase: "Finishing", totalReceived: 250, goodQty: 250, badQty: 0, handoverStatus: "Pending_Acceptance", pendingReplacementCount: 0 },
+  { id: "JC-005", soId: "SO-2026-005", style: "Denim Jeans", currentPhase: "Warehouse", totalReceived: 250, goodQty: 250, badQty: 0, handoverStatus: "Pending_Acceptance", pendingReplacementCount: 0 },
   { id: "JC-007", soId: "SO-2026-007", style: "Windbreaker Jacket", currentPhase: "Stitching", totalReceived: 250, goodQty: 247, badQty: 0, handoverStatus: "Accepted", pendingReplacementCount: 3 },
 ];
 

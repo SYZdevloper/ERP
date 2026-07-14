@@ -23,8 +23,10 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
     totalReceived: 0, goodQty: 0, badQty: 0, handoverStatus: "Accepted" as HandoverStatus, pendingReplacementCount: 0
   };
 
-  const [receiveGood, setReceiveGood] = useState(card.totalReceived.toString());
-  const [receiveBad, setReceiveBad] = useState("0");
+  const [receiveCut, setReceiveCut] = useState(card.totalReceived.toString());
+  const [receiveDamage, setReceiveDamage] = useState("0");
+  const [receiveLost, setReceiveLost] = useState("0");
+  const [receiveOk, setReceiveOk] = useState(card.totalReceived.toString());
   const [rejectionNote, setRejectionNote] = useState("");
 
   const phases: Phase[] = ["Cutting", "Stitching", "Washing", "Finishing", "Warehouse"];
@@ -34,13 +36,15 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
   };
 
   const acceptHandover = () => {
-    const good = parseInt(receiveGood) || 0;
-    const bad = parseInt(receiveBad) || 0;
+    const ok = parseInt(receiveOk) || 0;
+    const damage = parseInt(receiveDamage) || 0;
+    const lost = parseInt(receiveLost) || 0;
+    const totalBad = damage + lost;
     updateJobCard(id, {
       handoverStatus: "Accepted",
-      goodQty: good,
-      badQty: bad,
-      totalReceived: good + bad
+      goodQty: ok,
+      badQty: totalBad,
+      totalReceived: ok + totalBad
     });
   };
 
@@ -142,30 +146,57 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
               </p>
               
               <div className="flex flex-col md:flex-row gap-6 mb-6 items-stretch">
-                <div className="flex-1 flex flex-col justify-between">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Good Pieces</label>
+                <div className="flex-[2] flex flex-col justify-between">
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 min-w-[120px]">
+                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Buyer Design No.</label>
+                      <span className="text-xl font-black text-slate-800">NT-WP-2026</span>
+                    </div>
+                    
+                    <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 min-w-[100px]">
+                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Cut Pcs</label>
                       <Input 
                         type="number" 
-                        value={receiveGood} 
-                        onChange={(e) => setReceiveGood(e.target.value)}
-                        className="h-11 text-lg font-black text-emerald-600 focus-visible:ring-[#0453B8]"
+                        value={receiveCut} 
+                        onChange={(e) => setReceiveCut(e.target.value)}
+                        className="h-8 border-none bg-transparent p-0 text-2xl font-black text-slate-800 focus-visible:ring-0 shadow-none px-0"
                       />
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Defective / Missing</label>
+                    
+                    <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 min-w-[100px]">
+                      <label className="text-[9px] font-bold text-amber-700 uppercase tracking-wider block mb-1">Damage</label>
                       <Input 
                         type="number" 
-                        value={receiveBad} 
-                        onChange={(e) => setReceiveBad(e.target.value)}
-                        className="h-11 text-lg font-black text-red-600 focus-visible:ring-[#0453B8]"
+                        value={receiveDamage} 
+                        onChange={(e) => setReceiveDamage(e.target.value)}
+                        className="h-8 border-none bg-transparent p-0 text-2xl font-black text-amber-700 focus-visible:ring-0 shadow-none px-0"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 bg-red-50 border border-red-200 rounded-lg p-3 min-w-[100px]">
+                      <label className="text-[9px] font-bold text-red-700 uppercase tracking-wider block mb-1">Lost Pcs</label>
+                      <Input 
+                        type="number" 
+                        value={receiveLost} 
+                        onChange={(e) => setReceiveLost(e.target.value)}
+                        className="h-8 border-none bg-transparent p-0 text-2xl font-black text-red-700 focus-visible:ring-0 shadow-none px-0"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3 min-w-[100px]">
+                      <label className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block mb-1">OK Pcs</label>
+                      <Input 
+                        type="number" 
+                        value={receiveOk} 
+                        onChange={(e) => setReceiveOk(e.target.value)}
+                        className="h-8 border-none bg-transparent p-0 text-2xl font-black text-emerald-700 focus-visible:ring-0 shadow-none px-0"
                       />
                     </div>
                   </div>
 
-                  {(parseInt(receiveGood) || 0) + (parseInt(receiveBad) || 0) !== card.totalReceived && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4 text-xs font-medium text-amber-800 flex items-start gap-2 h-full">
+                  {((parseInt(receiveOk) || 0) + (parseInt(receiveDamage) || 0) + (parseInt(receiveLost) || 0)) !== card.totalReceived && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4 text-xs font-medium text-amber-800 flex items-start gap-2">
                       <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
                       <p><strong>Discrepancy Detected:</strong> The sum does not match the Expected batch size ({card.totalReceived}).</p>
                     </div>
