@@ -345,6 +345,24 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 )}
               </div>
             </div>
+            {viewMode === 'search' && !editProduct && (
+              <div>
+                <Button variant="outline" className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm" onClick={() => document.getElementById('bulk-upload-input')?.click()}>
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Bulk Add
+                </Button>
+                <input
+                  id="bulk-upload-input"
+                  type="file"
+                  className="hidden"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      alert("Bulk add functionality will process " + e.target.files[0].name);
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
         </DialogHeader>
 

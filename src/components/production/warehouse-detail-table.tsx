@@ -25,10 +25,10 @@ export function WarehouseDetailTable({ id }: WarehouseDetailTableProps) {
 
   // Dummy data for tabular breakdown
   const [items, setItems] = useState([
-    { sku: "NT-WP-2026-S-BLU", size: "S", color: "Blue", expected: 50, received: 50, damage: 0, note: "" },
-    { sku: "NT-WP-2026-M-BLU", size: "M", color: "Blue", expected: 100, received: 98, damage: 2, note: "Stitching error on hem" },
-    { sku: "NT-WP-2026-L-BLU", size: "L", color: "Blue", expected: 75, received: 75, damage: 0, note: "" },
-    { sku: "NT-WP-2026-XL-BLU", size: "XL", color: "Blue", expected: 25, received: 25, damage: 0, note: "" },
+    { sku: "NT-WP-2026-S-BLU", size: "S", color: "Blue", expected: 50, received: 50, damage: 0, note: "", image: "/men regualr fit shirt.jpeg" },
+    { sku: "NT-WP-2026-M-BLU", size: "M", color: "Blue", expected: 100, received: 98, damage: 2, note: "Stitching error on hem", image: "/men regualr fit shirt.jpeg" },
+    { sku: "NT-WP-2026-L-BLU", size: "L", color: "Blue", expected: 75, received: 75, damage: 0, note: "", image: "/men regualr fit shirt.jpeg" },
+    { sku: "NT-WP-2026-XL-BLU", size: "XL", color: "Blue", expected: 25, received: 25, damage: 0, note: "", image: "/men regualr fit shirt.jpeg" },
   ]);
 
   const handleBack = () => {
@@ -96,6 +96,7 @@ export function WarehouseDetailTable({ id }: WarehouseDetailTableProps) {
           <Table>
             <TableHeader className="bg-slate-50 sticky top-0 z-10">
               <TableRow className="border-b border-slate-200">
+                <TableHead className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider w-[80px] text-center">Image</TableHead>
                 <TableHead className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider w-[200px]">SKU</TableHead>
                 <TableHead className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Size</TableHead>
                 <TableHead className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Color</TableHead>
@@ -108,6 +109,15 @@ export function WarehouseDetailTable({ id }: WarehouseDetailTableProps) {
             <TableBody>
               {items.map((item, index) => (
                 <TableRow key={index} className="hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="px-4 py-3 text-center">
+                    <div className="w-10 h-10 mx-auto rounded overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                      {item.image ? (
+                        <img src={item.image} alt={item.sku} className="w-full h-full object-contain mix-blend-multiply" />
+                      ) : (
+                        <span className="text-xs text-slate-400">N/A</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="px-4 py-3">
                     <span className="text-sm font-bold text-slate-800">{item.sku}</span>
                   </TableCell>

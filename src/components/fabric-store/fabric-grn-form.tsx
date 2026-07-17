@@ -1182,9 +1182,11 @@ export function FabricGrnForm() {
             {(() => {
               const totalBilled = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.billedQty) || 0), 0);
               const totalActual = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
+              const currentEntry = entries.find(e => e.id === activeRollEntryId);
 
               return (
-                <div className="flex-1 overflow-auto rounded-md border border-slate-200">
+                <div className="flex-1 flex gap-5 min-h-0">
+                  <div className="flex-1 overflow-auto rounded-md border border-slate-200">
                   <Table>
                     <TableHeader className="bg-slate-50 sticky top-0 z-10">
                       <TableRow>
@@ -1283,6 +1285,19 @@ export function FabricGrnForm() {
                       </TableRow>
                     </TableFooter>
                   </Table>
+                  </div>
+                  {currentEntry?.image && (
+                    <div className="w-[240px] shrink-0 flex flex-col gap-2">
+                      <div className="text-xs font-bold text-slate-700">Product Image</div>
+                      <div className="flex-1 border border-slate-200 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center p-2 min-h-[200px]">
+                        {currentEntry.image.startsWith('http') || currentEntry.image.startsWith('/') ? (
+                          <img src={currentEntry.image} alt={currentEntry.description} className="w-full h-full object-contain mix-blend-multiply" />
+                        ) : (
+                          <ImageIcon className="w-12 h-12 text-slate-300" />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
