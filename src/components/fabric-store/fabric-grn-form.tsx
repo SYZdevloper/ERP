@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Trash2, Plus, FileText, CheckCircle2, Paperclip, Edit2, Image as ImageIcon, Upload } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, FileText, CheckCircle2, Paperclip, Edit2, Image as ImageIcon, Upload, Printer } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -1135,32 +1135,32 @@ export function FabricGrnForm() {
 
               return (
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg shrink-0">
-                  <div className="flex items-center gap-8 px-2">
+                  <div className="flex flex-wrap items-center gap-6 px-2">
                     <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Order Qty</Label>
+                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Qty</Label>
                       <div className="text-lg font-black text-slate-800">{orderQty}</div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Qty</Label>
                       <div className="text-lg font-black text-[#0453B8]">{receivedQty}</div>
                     </div>
+                    <div className="h-10 w-px bg-blue-200 mx-2 hidden sm:block"></div>
                     <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-red-500 uppercase">Balance</Label>
-                      <div className="text-lg font-black text-red-600">{balance}</div>
+                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Rate</Label>
+                      <div className="text-lg font-black text-slate-800">₹{currentEntry?.rate || 0}</div>
                     </div>
-                    <div className="h-10 w-px bg-blue-200 mx-2"></div>
                     <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-slate-700 uppercase">Billed Qty as per Bill <span className="text-red-500">*</span></Label>
-                      <div className="flex items-center">
-                        <Input 
-                          type="number"
-                          value={activeBilledQtyAsPerBill}
-                          onChange={(e) => setActiveBilledQtyAsPerBill(e.target.value)}
-                          placeholder="e.g. 300"
-                          className="h-8 w-28 text-sm font-bold border-blue-200 focus-visible:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="ml-2 text-xs font-medium text-slate-500">Mtr</span>
-                      </div>
+                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Rate</Label>
+                      <div className="text-lg font-black text-[#0453B8]">₹{currentEntry?.rate || 0}</div>
+                    </div>
+                    <div className="h-10 w-px bg-blue-200 mx-2 hidden sm:block"></div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Width</Label>
+                      <div className="text-lg font-black text-slate-800">{currentEntry?.width || '-'}</div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Width</Label>
+                      <div className="text-lg font-black text-[#0453B8]">{currentEntry?.width || '-'}</div>
                     </div>
                   </div>
               <Button 
@@ -1253,15 +1253,59 @@ export function FabricGrnForm() {
                             />
                           </TableCell>
                           <TableCell className="py-2 text-center">
-                            <button 
-                              onClick={() => {
-                                const newDetails = activeRollDetails.filter((_, i) => i !== idx);
-                                setActiveRollDetails(newDetails);
-                              }}
-                              className="text-red-500 hover:text-red-700 p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-center gap-2">
+                              <button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const printWindow = window.open('', '_blank', 'width=400,height=300');
+                                  if (printWindow) {
+                                    const currentEntry = entries.find(e => e.id === activeRollEntryId);
+                                    printWindow.document.write(`
+                                      <html>
+                                        <head>
+                                          <title>Print Roll Sticker</title>
+                                          <style>
+                                            body { font-family: Arial, sans-serif; padding: 20px; width: 300px; border: 1px solid #ccc; margin: 0 auto; text-align: center; }
+                                            h2 { margin: 0 0 10px 0; font-size: 18px; }
+                                            .details { text-align: left; margin-bottom: 15px; font-size: 14px; }
+                                            .details div { margin-bottom: 5px; }
+                                            .barcode { font-family: 'Courier New', Courier, monospace; font-size: 24px; letter-spacing: 2px; margin-top: 10px; }
+                                          </style>
+                                        </head>
+                                        <body>
+                                          <h2>FABRIC ROLL STICKER</h2>
+                                          <div class="details">
+                                            <div><strong>Roll No:</strong> ${roll.rollNo || 'N/A'}</div>
+                                            <div><strong>Color:</strong> ${roll.color || 'N/A'}</div>
+                                            <div><strong>Fabric:</strong> ${currentEntry?.description || 'N/A'}</div>
+                                            <div><strong>Received Qty:</strong> ${roll.actualQty || '0'} Mtr</div>
+                                          </div>
+                                          <div class="barcode">*${roll.rollNo || '0000'}*</div>
+                                          <script>
+                                            window.onload = () => { window.print(); window.close(); }
+                                          </script>
+                                        </body>
+                                      </html>
+                                    `);
+                                    printWindow.document.close();
+                                  }
+                                }}
+                                className="text-slate-500 hover:text-[#0453B8] p-1 transition-colors"
+                                title="Print Sticker"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  const newDetails = activeRollDetails.filter((_, i) => i !== idx);
+                                  setActiveRollDetails(newDetails);
+                                }}
+                                className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                                title="Delete Roll"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1304,33 +1348,17 @@ export function FabricGrnForm() {
           </div>
 
           {(() => {
-            const totalBilled = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.billedQty) || 0), 0);
-            const totalActual = activeRollDetails.reduce((acc, curr) => acc + (Number(curr.actualQty) || 0), 0);
             const shortageRolls = activeRollDetails.filter(r => (Number(r.billedQty) || 0) > (Number(r.actualQty) || 0));
             const totalShortage = shortageRolls.reduce((acc, r) => acc + ((Number(r.billedQty) || 0) - (Number(r.actualQty) || 0)), 0);
-            const expectedBilled = Number(activeBilledQtyAsPerBill) || 0;
-            const isExceeding = expectedBilled > 0 && totalBilled > expectedBilled + 0.01;
-            const isShort = expectedBilled > 0 && totalBilled < expectedBilled - 0.01;
-            const doesNotTally = expectedBilled > 0 && Math.abs(totalBilled - expectedBilled) > 0.01;
 
             return (
               <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex flex-col gap-3">
                 <div className="flex items-center justify-end">
                   <div className="flex items-center gap-3">
                     <Button variant="outline" onClick={() => setIsRollDetailsOpen(false)} className="h-9 px-4 text-sm bg-white">Cancel</Button>
-                    <Button onClick={handleSaveRollDetails} disabled={doesNotTally || expectedBilled === 0} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed">Save Roll Details</Button>
+                    <Button onClick={handleSaveRollDetails} className="bg-[#0453B8] hover:bg-blue-700 text-white h-9 px-4 text-sm">Save Roll Details</Button>
                   </div>
                 </div>
-                {isExceeding && (
-                  <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-200 rounded-md">
-                    Error: Total Billed Qty ({totalBilled.toFixed(2)}) exceeds Billed Qty as per Bill ({expectedBilled.toFixed(2)}). You cannot enter more than the Billed Qty.
-                  </div>
-                )}
-                {isShort && (
-                  <div className="text-amber-600 font-bold text-sm bg-amber-50 p-2 border border-amber-200 rounded-md">
-                    Warning: Total Billed Qty ({totalBilled.toFixed(2)}) is less than Billed Qty as per Bill ({expectedBilled.toFixed(2)}). Please tally to save.
-                  </div>
-                )}
                 {totalShortage > 0 && (
                   <div className="text-red-600 font-bold text-sm bg-red-50 p-2 border border-red-100 rounded-md">
                     Shortage {totalShortage.toFixed(2)} Meter in Roll No {shortageRolls.map(r => r.rollNo).join(", ")}

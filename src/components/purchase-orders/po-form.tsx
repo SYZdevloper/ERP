@@ -90,7 +90,8 @@ export function PurchaseOrderForm({
     soImage: "",
     avg: "1.80",
     supplierSortNo: "",
-    deliveryDate: ""
+    deliveryDate: "",
+    deliveryDays: ""
   });
 
   useEffect(() => {
@@ -247,7 +248,8 @@ export function PurchaseOrderForm({
       soImage: "",
       avg: String(item.consumptionAvg || "1.80"),
       supplierSortNo: item.supplierSortNo || "",
-      deliveryDate: ""
+      deliveryDate: "",
+      deliveryDays: ""
     });
     setIsManualEntryOpen(true);
   };
@@ -270,7 +272,8 @@ export function PurchaseOrderForm({
       soImage: "",
       avg: "1.80",
       supplierSortNo: "",
-      deliveryDate: ""
+      deliveryDate: "",
+      deliveryDays: ""
     });
     setIsManualEntryOpen(true);
   };
@@ -732,7 +735,8 @@ export function PurchaseOrderForm({
                     soImage: "",
                     avg: "1.80",
                     supplierSortNo: "",
-                    deliveryDate: ""
+                    deliveryDate: "",
+                    deliveryDays: ""
                   });
                   setIsManualEntryOpen(true);
                 }}
@@ -1178,6 +1182,26 @@ export function PurchaseOrderForm({
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      <Label className="text-xs font-bold text-slate-600">No. of Days</Label>
+                      <Input 
+                        type="number"
+                        value={manualFormData.deliveryDays || ""}
+                        onChange={(e) => {
+                          const days = e.target.value;
+                          let newDeliveryDate = manualFormData.deliveryDate;
+                          if (days && !isNaN(Number(days))) {
+                            const date = new Date();
+                            date.setDate(date.getDate() + Number(days));
+                            newDeliveryDate = date.toISOString().split('T')[0];
+                          }
+                          setManualFormData({...manualFormData, deliveryDays: days, deliveryDate: newDeliveryDate});
+                        }}
+                        placeholder="e.g. 15" 
+                        className="h-10 text-sm bg-white" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-600">Delivery Date</Label>
                       <Input 
                         type="date"
@@ -1247,7 +1271,7 @@ export function PurchaseOrderForm({
                 setIsManualEntryOpen(false);
                 setEditingItem(null);
                 setManualFormData({
-                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: ""
+                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: "", deliveryDays: ""
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
                 <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}

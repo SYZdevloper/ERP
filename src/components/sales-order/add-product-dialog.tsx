@@ -346,7 +346,17 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
               </div>
             </div>
             {viewMode === 'search' && !editProduct && (
-              <div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm"
+                  onClick={() => {
+                    setSelectedProductId(null);
+                    setViewMode('create');
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> New Product
+                </Button>
                 <Button variant="outline" className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm" onClick={() => document.getElementById('bulk-upload-input')?.click()}>
                   <Plus className="w-3.5 h-3.5 mr-1.5" /> Bulk Add
                 </Button>
@@ -923,18 +933,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
             </div>
             
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 px-4 text-sm font-bold border-[#0453B8] text-[#0453B8] hover:bg-blue-50 gap-2"
-                onClick={() => {
-                  setSelectedProductId(null);
-                  setViewMode('create');
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                New Product
-              </Button>
               {selectedProduct ? (
                 <>
                   <Button variant="outline" onClick={() => setSelectedProductId(null)} className="h-10 px-5 border-slate-200 text-slate-700 font-semibold">
@@ -959,7 +957,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       </DialogContent>
 
       {/* Render Master Dialogs outside of the main DialogContent so they overlay correctly */}
-      <MasterDialog title="Color" open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen} initialData={null} onSave={handleSaveColor} fields={[{ name: "name", label: "Name", type: "text", required: true }, { name: "hexCode", label: "Hex Code", type: "color", required: true }]} />
+      <MasterDialog title="Color" open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen} initialData={null} onSave={handleSaveColor} fields={[{ name: "name", label: "Name", type: "text", required: true }]} />
       <MasterDialog title="Fabric" open={isFabricDialogOpen} onOpenChange={setIsFabricDialogOpen} initialData={null} onSave={handleSaveFabric} fields={[{ name: "name", label: "Name", type: "text", required: true }]} />
       <MasterDialog title="Fit" open={isFitDialogOpen} onOpenChange={setIsFitDialogOpen} initialData={null} onSave={handleSaveFit} fields={[{ name: "name", label: "Name", type: "text", required: true }]} />
       <MasterDialog title="Pattern" open={isPatternMasterOpen} onOpenChange={setIsPatternMasterOpen} initialData={null} onSave={handleSavePattern} fields={[{ name: "code", label: "Pattern Code", type: "text", required: true }, { name: "brand", label: "Brand", type: "text", required: true }, { name: "fit", label: "Fit", type: "text", required: true }, { name: "image", label: "Pattern Image", type: "image" }]} />

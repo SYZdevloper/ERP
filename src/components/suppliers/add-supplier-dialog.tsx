@@ -4,13 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Supplier } from "@/types/supplier";
 
 interface AddSupplierDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSave: (data: any) => void;
   editSupplier?: Supplier | null;
 }
@@ -24,13 +24,15 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
     email: "",
     gstState: "",
     gstin: "",
-    paymentTerms: "30 days credit",
+    paymentTerms: "Credit",
     creditDays: "30",
+    advancePercentage: "",
     billingAddress: ""
   });
 
   useEffect(() => {
     if (open && editSupplier) {
+      // eslint-disable-next-line
       setFormData({
         name: editSupplier.name || "",
         category: editSupplier.category || "Both",
@@ -39,11 +41,13 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
         email: editSupplier.email || "",
         gstState: editSupplier.gstState || "",
         gstin: editSupplier.gstin || "",
-        paymentTerms: editSupplier.paymentTerms || "30 days credit",
+        paymentTerms: editSupplier.paymentTerms || "Credit",
         creditDays: editSupplier.creditDays?.toString() || "30",
+        advancePercentage: editSupplier.advancePercentage?.toString() || "",
         billingAddress: editSupplier.billingAddress || ""
       });
     } else if (open) {
+      // eslint-disable-next-line
       setFormData({
         name: "",
         category: "Both",
@@ -52,8 +56,9 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
         email: "",
         gstState: "",
         gstin: "",
-        paymentTerms: "30 days credit",
+        paymentTerms: "Credit",
         creditDays: "30",
+        advancePercentage: "",
         billingAddress: ""
       });
     }
@@ -167,20 +172,36 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
                   onChange={(e) => handleChange("paymentTerms", e.target.value)}
                   className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900 font-medium"
                 >
-                  <option value="30 days credit">30 days credit</option>
-                  <option value="50% advance">50% advance</option>
-                  <option value="Cash on delivery">Cash on delivery</option>
+                  <option value="Credit">Credit</option>
+                  <option value="Advance">Advance</option>
+                  <option value="Against Delivery">Against Delivery</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-bold text-slate-600">Credit Days</Label>
-                <Input 
-                  type="number"
-                  value={formData.creditDays}
-                  onChange={(e) => handleChange("creditDays", e.target.value)}
-                  className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
-                />
-              </div>
+              {formData.paymentTerms === "Credit" && (
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Credit Days</Label>
+                  <Input 
+                    type="number"
+                    value={formData.creditDays}
+                    onChange={(e) => handleChange("creditDays", e.target.value)}
+                    className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
+                  />
+                </div>
+              )}
+              {formData.paymentTerms === "Advance" && (
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Advance %</Label>
+                  <Input 
+                    type="number"
+                    value={formData.advancePercentage}
+                    onChange={(e) => handleChange("advancePercentage", e.target.value)}
+                    className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
+                  />
+                </div>
+              )}
+              {formData.paymentTerms === "Against Delivery" && (
+                <div className="flex flex-col gap-2"></div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">

@@ -11,10 +11,11 @@ import { ImagePlus } from "lucide-react";
 export interface DialogField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "image" | "color";
+  type: "text" | "textarea" | "image" | "color" | "custom";
   required?: boolean;
   placeholder?: string;
   gridCols?: 1 | 2; // Default is 1
+  render?: (formData: any, handleChange: (field: string, value: any) => void, errors: any) => React.ReactNode;
 }
 
 export interface MasterDialogProps<T> {
@@ -144,6 +145,8 @@ export function MasterDialog<T extends { [key: string]: any }>({
                         <span className="text-[11px] text-slate-500 mt-1">PNG, JPG or SVG up to 2MB</span>
                       </div>
                     )}
+
+                    {field.type === "custom" && field.render && field.render(formData, handleChange, errors)}
                     
                     {errors[field.name] && <p className="text-xs text-red-500">{errors[field.name]}</p>}
                   </div>

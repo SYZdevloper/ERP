@@ -27,6 +27,7 @@ export default function CuttingPage() {
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [rollEntries, setRollEntries] = useState<Record<string, { layerLength: string, noOfLayer: string, damage: string, short: string }>>({});
   const [revisions, setRevisions] = useState<{ id: string, timestamp: Date, entries: typeof rollEntries }[]>([]);
+  const [pcsPerBundle, setPcsPerBundle] = useState(25);
 
 
   const handleSaveProgress = () => {
@@ -108,6 +109,39 @@ export default function CuttingPage() {
       };
     });
   }, [productData, rollEntries]);
+
+  const generatedBundles = React.useMemo(() => {
+    let bundleCounter = 1;
+    let globalPieceCounter = 1;
+    const bundles: { lotNo: string; bundleNo: number; color: string; size: string; qty: number; startRange: number; endRange: number }[] = [];
+    const lotNo = "1";
+
+    computedSizeEntries.forEach(entry => {
+      const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+      sizes.forEach(size => {
+        const qty = parseFloat(entry.sizes[size]) || 0;
+        if (qty > 0) {
+          let remainingQty = qty;
+          while (remainingQty > 0) {
+            const currentBundleQty = Math.min(remainingQty, pcsPerBundle);
+            bundles.push({
+              lotNo: lotNo,
+              bundleNo: bundleCounter++,
+              color: entry.color,
+              size: size,
+              qty: currentBundleQty,
+              startRange: globalPieceCounter,
+              endRange: globalPieceCounter + currentBundleQty - 1
+            });
+            globalPieceCounter += currentBundleQty;
+            remainingQty -= currentBundleQty;
+          }
+        }
+      });
+    });
+
+    return bundles;
+  }, [computedSizeEntries, pcsPerBundle]);
 
   if (!productData) return null;
 
@@ -540,6 +574,55 @@ export default function CuttingPage() {
                       {computedSizeEntries.reduce((sum, e) => sum + e.totalPcs, 0)} Pcs
                     </td>
                   </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Bundle Generation */}
+          <div className="border-t border-slate-200 bg-white shrink-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] relative mt-4">
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">4. Bundle Sorting</h3>
+                <span className="font-bold text-[#0453B8] text-sm">(Auto Generated)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-bold text-slate-700">Pcs Per Bundle:</Label>
+                <Input 
+                  type="number" 
+                  value={pcsPerBundle} 
+                  onChange={(e) => setPcsPerBundle(Number(e.target.value) || 25)} 
+                  className="w-20 h-8"
+                />
+              </div>
+            </div>
+            <div className="p-4 overflow-x-auto max-h-[400px] overflow-y-auto">
+              <table className="w-full border-collapse border border-slate-300 text-sm text-center">
+                <thead className="sticky top-0 bg-white shadow-sm z-10">
+                  <tr>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Lot No</th>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Bundle No</th>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Color</th>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Size</th>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Quantity (Pcs)</th>
+                    <th className="border border-slate-300 py-2 px-2 font-bold text-slate-800">Piece Range</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generatedBundles.length > 0 ? generatedBundles.map((b, i) => (
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="border border-slate-300 py-1.5 px-2">{b.lotNo}</td>
+                      <td className="border border-slate-300 py-1.5 px-2 font-bold text-[#0453B8]">{b.bundleNo}</td>
+                      <td className="border border-slate-300 py-1.5 px-2">{b.color}</td>
+                      <td className="border border-slate-300 py-1.5 px-2 font-bold">{b.size}</td>
+                      <td className="border border-slate-300 py-1.5 px-2">{b.qty}</td>
+                      <td className="border border-slate-300 py-1.5 px-2 text-slate-600 font-medium">{b.startRange} - {b.endRange}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-slate-500 font-medium">No bundles generated. Please enter roll details to generate sizes.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

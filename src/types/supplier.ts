@@ -12,5 +12,6 @@ export interface Supplier {
   gstin?: string;
   paymentTerms?: string;
   creditDays?: number;
+  advancePercentage?: number;
   billingAddress?: string;
 }

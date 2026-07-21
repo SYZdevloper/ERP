@@ -77,7 +77,9 @@ export interface MasterBuyer {
   accountDeptNo: string;
   warehouseDeptNo: string;
   transport: string;
-  creditTerms: string;
+  paymentTerms: string;
+  creditDays?: number;
+  advancePercentage?: number;
   defaultAgent: string;
   defaultBrand?: string;
   companyName: string;
@@ -94,7 +96,8 @@ export const INITIAL_MASTER_BUYERS: MasterBuyer[] = [
     accountDeptNo: "ACC-101",
     warehouseDeptNo: "WH-201",
     transport: "Blue Dart",
-    creditTerms: "30 Days",
+    paymentTerms: "Credit",
+    creditDays: 30,
     defaultAgent: "Ramesh Kumar",
     companyName: "Zara Fashion Pvt Limited",
     billingAddress: "45 Fashion Street, Mumbai, MH",
@@ -108,7 +111,8 @@ export const INITIAL_MASTER_BUYERS: MasterBuyer[] = [
     accountDeptNo: "ACC-102",
     warehouseDeptNo: "WH-205",
     transport: "Delhivery",
-    creditTerms: "45 Days",
+    paymentTerms: "Credit",
+    creditDays: 45,
     defaultAgent: "Suresh Singh",
     companyName: "H&M Retail",
     billingAddress: "12 Retail Hub, Delhi",
@@ -122,7 +126,8 @@ export const INITIAL_MASTER_BUYERS: MasterBuyer[] = [
     accountDeptNo: "ACC-103",
     warehouseDeptNo: "WH-206",
     transport: "FedEx",
-    creditTerms: "15 Days",
+    paymentTerms: "Credit",
+    creditDays: 15,
     defaultAgent: "Amit Sharma",
     companyName: "benaton",
     billingAddress: "Mumbai, MH",

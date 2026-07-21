@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Package, Users, Activity, AlertTriangle, ChevronRight } from "lucide-react";
+import { Package, Users, Activity, AlertTriangle, ChevronRight, Play, Square, Clock, Barcode } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 /* ── Yield & Defect Tracking (top-right card) ── */
 export function StitchingYieldTracking({ card, onRequestReplacement }: {
@@ -50,6 +52,192 @@ export function StitchingYieldTracking({ card, onRequestReplacement }: {
             <ChevronRight className="w-4 h-4 text-red-400 ml-auto" />
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Bundle Scanning Tracker ── */
+export function StitchingScanTracker() {
+  const [scanInput, setScanInput] = useState("");
+  const [selectedOperator, setSelectedOperator] = useState("Suresh");
+  const [selectedOperation, setSelectedOperation] = useState("Collar Making");
+  
+  const [activeJobs, setActiveJobs] = useState<{id: string, bundle: string, operator: string, operation: string, startTime: Date}[]>([]);
+  const [completedJobs, setCompletedJobs] = useState<{id: string, bundle: string, operator: string, operation: string, startTime: Date, endTime: Date, duration: string}[]>([]);
+
+  // Update timer every second
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleScan = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!scanInput.trim()) return;
+    const bundle = scanInput.trim();
+    
+    // Check if it's already active
+    const activeIndex = activeJobs.findIndex(j => j.bundle === bundle && j.operation === selectedOperation);
+    
+    if (activeIndex >= 0) {
+      // Complete it
+      const job = activeJobs[activeIndex];
+      const endTime = new Date();
+      const diffMs = endTime.getTime() - job.startTime.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      const duration = `${diffMins}m ${diffSecs}s`;
+      
+      setCompletedJobs(prev => [{...job, endTime, duration}, ...prev]);
+      setActiveJobs(prev => prev.filter((_, i) => i !== activeIndex));
+    } else {
+      // Start it
+      setActiveJobs(prev => [{
+        id: Math.random().toString(),
+        bundle,
+        operator: selectedOperator,
+        operation: selectedOperation,
+        startTime: new Date()
+      }, ...prev]);
+    }
+    setScanInput("");
+  };
+
+  const getDuration = (start: Date) => {
+    const diffMs = new Date().getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffSecs = Math.floor((diffMs % 60000) / 1000);
+    return `${diffMins}m ${diffSecs}s`;
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-4">
+      <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+          <Barcode className="w-4 h-4 text-[#0453B8]" /> Bundle Scanning Station
+        </h3>
+        <div className="text-xs text-slate-500 font-medium">Scan bundle barcode to Start / Complete operation</div>
+      </div>
+      
+      <div className="p-5">
+        <form onSubmit={handleScan} className="flex flex-col md:flex-row gap-4 items-end mb-6 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+          <div className="flex-1 flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Operator</label>
+            <Select value={selectedOperator} onValueChange={setSelectedOperator}>
+              <SelectTrigger className="h-10 bg-white border-slate-200 shadow-sm font-semibold text-slate-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Suresh">Suresh</SelectItem>
+                <SelectItem value="Rakesh">Rakesh</SelectItem>
+                <SelectItem value="Mahesh">Mahesh</SelectItem>
+                <SelectItem value="Nilesh">Nilesh</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex-1 flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Operation</label>
+            <Select value={selectedOperation} onValueChange={setSelectedOperation}>
+              <SelectTrigger className="h-10 bg-white border-slate-200 shadow-sm font-semibold text-slate-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Collar Making">Collar Making</SelectItem>
+                <SelectItem value="Collar Attaching">Collar Attaching</SelectItem>
+                <SelectItem value="Sleeve Attaching">Sleeve Attaching</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex-[2] flex flex-col gap-1.5 relative">
+            <label className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider">Scan Barcode (Bundle No)</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Barcode className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+                <Input 
+                  value={scanInput}
+                  onChange={e => setScanInput(e.target.value)}
+                  placeholder="e.g. Bundle-1-S"
+                  className="h-10 pl-10 bg-white border-blue-200 focus-visible:ring-blue-500 font-bold shadow-sm"
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="h-10 bg-[#0453B8] hover:bg-blue-700 font-bold px-6">
+                Scan
+              </Button>
+            </div>
+          </div>
+        </form>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Active Jobs */}
+          <div className="flex flex-col border border-slate-200 rounded-lg overflow-hidden">
+            <div className="bg-amber-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+              <h4 className="font-bold text-amber-800 text-xs flex items-center gap-1.5">
+                <Play className="w-3.5 h-3.5" /> In Progress ({activeJobs.length})
+              </h4>
+            </div>
+            <div className="p-0 overflow-y-auto max-h-[180px]">
+              {activeJobs.length === 0 ? (
+                <div className="p-6 text-center text-xs font-medium text-slate-400">No active bundles</div>
+              ) : (
+                <Table className="w-full">
+                  <TableBody>
+                    {activeJobs.map(job => (
+                      <TableRow key={job.id} className="hover:bg-slate-50/50">
+                        <TableCell className="py-2 px-3">
+                          <div className="font-bold text-slate-800 text-xs">{job.bundle}</div>
+                          <div className="text-[10px] text-slate-500">{job.operation}</div>
+                        </TableCell>
+                        <TableCell className="py-2 px-3 text-xs font-semibold text-slate-700">{job.operator}</TableCell>
+                        <TableCell className="py-2 px-3 text-right">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                            <Clock className="w-3 h-3" /> {getDuration(job.startTime)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </div>
+
+          {/* Completed Jobs */}
+          <div className="flex flex-col border border-slate-200 rounded-lg overflow-hidden">
+            <div className="bg-emerald-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+              <h4 className="font-bold text-emerald-800 text-xs flex items-center gap-1.5">
+                <Square className="w-3.5 h-3.5" /> Completed Today ({completedJobs.length})
+              </h4>
+            </div>
+            <div className="p-0 overflow-y-auto max-h-[180px]">
+              {completedJobs.length === 0 ? (
+                <div className="p-6 text-center text-xs font-medium text-slate-400">No completed bundles yet</div>
+              ) : (
+                <Table className="w-full">
+                  <TableBody>
+                    {completedJobs.map(job => (
+                      <TableRow key={job.id} className="hover:bg-slate-50/50">
+                        <TableCell className="py-2 px-3">
+                          <div className="font-bold text-slate-800 text-xs">{job.bundle}</div>
+                          <div className="text-[10px] text-slate-500">{job.operation}</div>
+                        </TableCell>
+                        <TableCell className="py-2 px-3 text-xs font-semibold text-slate-700">{job.operator}</TableCell>
+                        <TableCell className="py-2 px-3 text-right">
+                          <span className="text-[10px] text-slate-400 block">{job.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          <span className="text-xs font-bold text-emerald-600">{job.duration}</span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

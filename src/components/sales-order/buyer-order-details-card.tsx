@@ -198,7 +198,49 @@ export function BuyerOrderDetailsCard({
           { name: "accountDeptNo", label: "Account Dept Number", type: "text" },
           { name: "warehouseDeptNo", label: "Warehouse Dept Number", type: "text" },
           { name: "transport", label: "Transport", type: "text", placeholder: "Preferred transport service" },
-          { name: "creditTerms", label: "Credit Terms", type: "text", placeholder: "e.g. 30 Days, 60 Days" },
+          { 
+            name: "paymentTerms", 
+            label: "Payment Terms", 
+            type: "custom", 
+            gridCols: 2,
+            render: (formData, handleChange) => (
+              <div className="grid grid-cols-2 gap-5 w-full">
+                <div className="flex flex-col gap-2">
+                  <select 
+                    value={formData.paymentTerms || "Credit"}
+                    onChange={(e) => handleChange("paymentTerms", e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900 font-medium"
+                  >
+                    <option value="Credit">Credit</option>
+                    <option value="Advance">Advance</option>
+                    <option value="Against Delivery">Against Delivery</option>
+                  </select>
+                </div>
+                {(!formData.paymentTerms || formData.paymentTerms === "Credit") && (
+                  <div className="flex flex-col gap-2">
+                    <Input 
+                      type="number"
+                      placeholder="Credit Days (e.g. 30)"
+                      value={formData.creditDays || ""}
+                      onChange={(e) => handleChange("creditDays", e.target.value)}
+                      className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
+                    />
+                  </div>
+                )}
+                {formData.paymentTerms === "Advance" && (
+                  <div className="flex flex-col gap-2">
+                    <Input 
+                      type="number"
+                      placeholder="Advance %"
+                      value={formData.advancePercentage || ""}
+                      onChange={(e) => handleChange("advancePercentage", e.target.value)}
+                      className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          },
           { name: "defaultAgent", label: "Agent by Default", type: "text" },
           { name: "defaultBrand", label: "Default Brand", type: "text", placeholder: "e.g. Zara" },
           { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN" },

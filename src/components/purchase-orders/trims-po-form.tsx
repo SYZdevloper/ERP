@@ -14,6 +14,7 @@ import { SupplierAddressCard } from "@/components/purchase-orders/supplier-addre
 import { MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
 import { useForm, FormProvider } from "react-hook-form";
+import { SelectSalesOrderItemsDialog } from "./select-so-items-dialog";
 
 export type TrimItemRow = {
   id: string;
@@ -45,6 +46,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
 
   const [activeTrimIdForLinking, setActiveTrimIdForLinking] = useState<string | null>(null);
   const [showAddress, setShowAddress] = useState(true);
+  const [activeSoForLines, setActiveSoForLines] = useState<boolean>(false);
 
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(initialPo?.buyer || "");
   const [selectedSupplier, setSelectedSupplier] = useState<string>(initialPo?.supplier || "");
@@ -73,6 +75,35 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
 
   const handleDeleteTrim = (id: string) => {
     setTrimItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleSoItemNext = (selectedSoItems: any[], trimItem?: string) => {
+    const linkedLines = selectedSoItems.map(item => {
+       const pcs = Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number;
+       return {
+          id: item.id,
+          soNo: item.soNo,
+          soItemCode: item.soItem,
+          style: item.name,
+          color: item.color,
+          requiredQty: pcs,
+          alreadyOrdered: 0
+       };
+    });
+
+    setTrimItems(prev => [
+      ...prev,
+      {
+        id: `trim-${Date.now()}`,
+        itemType: trimItem || "Main Label",
+        description: "",
+        linkedLines: linkedLines,
+        manualTotalQty: "",
+        rate: "",
+        gst: "5",
+        deliveryDate: ""
+      }
+    ]);
   };
 
   const handleSaveLinkedLines = (linkedLines: LinkedLine[]) => {
@@ -216,10 +247,14 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
 
                 <div className="p-6 flex-1 flex flex-col">
                   {!isViewMode && (
-                    <div className="mb-4">
+                    <div className="mb-4 flex gap-3">
                       <Button onClick={handleAddTrim} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Trim Item
+                      </Button>
+                      <Button onClick={() => setActiveSoForLines(true)} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Select Sales Order Items
                       </Button>
                     </div>
                   )}
@@ -530,6 +565,21 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
             </>
           )}
         </div>
+
+        {activeSoForLines && (
+          <SelectSalesOrderItemsDialog
+            open={activeSoForLines}
+            onOpenChange={setActiveSoForLines}
+            buyerId={selectedBuyerId || ""}
+            existingPoItems={[]}
+            onNext={(selectedSoItems, trimItem) => {
+              handleSoItemNext(selectedSoItems, trimItem);
+              setActiveSoForLines(false);
+            }}
+            type="Trims"
+            supplierName={selectedSupplier}
+          />
+        )}
 
         {activeTrimDetails && (
           <LinkSoLinesDialog

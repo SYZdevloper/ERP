@@ -25,7 +25,6 @@ export default function ColorPage() {
 
   const fields: DialogField[] = [
     { name: "name", label: "Name", type: "text", required: true, placeholder: "e.g. Red" },
-    { name: "hexCode", label: "Hex Code", type: "color", required: true },
   ];
 
   return (
@@ -51,17 +50,6 @@ export default function ColorPage() {
                 data={data}
                 columns={[
                   { key: "name", header: "Name" },
-                  { key: "hexCode", header: "Hex Code" },
-                  { 
-                    key: "preview", 
-                    header: "Preview",
-                    render: (_, row) => (
-                      <div 
-                        className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" 
-                        style={{ backgroundColor: row.hexCode }}
-                      />
-                    )
-                  }
                 ]}
                 onAdd={() => { setEditingItem(null); setIsDialogOpen(true); }}
                 onEdit={(item) => { setEditingItem(item); setIsDialogOpen(true); }}

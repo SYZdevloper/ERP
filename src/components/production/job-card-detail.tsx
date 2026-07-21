@@ -7,7 +7,7 @@ import { Phase, HandoverStatus, JobCard } from "./department-list";
 import { useProduction } from "./production-context";
 import { ArrowLeft, UserCheck, AlertTriangle, ArrowRight, CornerDownRight, CheckCircle2, XCircle, Package, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { StitchingYieldTracking, StitchingRecentOperations, StitchingBundleOperations } from "./stitching-content";
+import { StitchingYieldTracking, StitchingRecentOperations, StitchingBundleOperations, StitchingScanTracker } from "./stitching-content";
 
 interface JobCardDetailProps {
   id: string;
@@ -407,12 +407,15 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
 
       {/* ── BOTTOM SECTION: TABLES (50/50) ── */}
       {isStitching && (
-        <div className="w-full max-w-[1600px] grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <div className="flex flex-col min-w-0">
-            <StitchingRecentOperations />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <StitchingBundleOperations />
+        <div className="w-full max-w-[1600px] flex flex-col gap-4">
+          <StitchingScanTracker />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="flex flex-col min-w-0">
+              <StitchingRecentOperations />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <StitchingBundleOperations />
+            </div>
           </div>
         </div>
       )}
