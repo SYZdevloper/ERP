@@ -34,7 +34,7 @@ const MASTER_SUBCATEGORIES = ["T-Shirt", "Shirt", "Hoodie", "Dress", "Trouser", 
 const MASTER_TYPES = ["Half Sleeves", "Full Sleeves", "Sleeveless", "Full Length", "Knee Length"];
 const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Round Neck", "V-Neck", "Polo"];
 
-export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct }: AddProductDialogProps) {
+export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct, initialSearchQuery }: AddProductDialogProps) {
   const [catalogItems, setCatalogItems] = useState<CatalogProduct[]>(MOCK_CATALOG_PRODUCTS);
   const [viewMode, setViewMode] = useState<'search' | 'create'>('search');
   const [showSearch, setShowSearch] = useState(true);

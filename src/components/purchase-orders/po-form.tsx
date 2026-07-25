@@ -781,7 +781,6 @@ export function PurchaseOrderForm({
                 specLabel={specLabel}
                 type={type}
               />
-            </div>
 
               <AttachmentsModal isReadOnly={isViewMode} />
               <NotesPanel isReadOnly={isViewMode} />
