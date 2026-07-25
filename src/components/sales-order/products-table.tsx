@@ -3,7 +3,7 @@ import { SalesOrder, ProductLineItem } from "@/types/sales-order";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Image as ImageIcon, X, Scissors } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon, X, Scissors, Edit2 } from "lucide-react";
 import { SizeBreakdownRow } from "./size-breakdown-row";
 import { AddProductDialog } from "./add-product-dialog";
 import { BomConfigDialog } from "./bom-config-dialog";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 
 export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: { isReadOnly?: boolean, hideEditDetails?: boolean }) {
   const { control, register, watch } = useFormContext<SalesOrder>();
-  const { fields, prepend, remove, update } = useFieldArray({
+  const { fields, prepend, append, remove, update } = useFieldArray({
     control,
     name: "products",
   });
@@ -21,6 +21,8 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
   const [viewingProduct, setViewingProduct] = useState<ProductLineItem | null>(null);
   const [trimConfigProduct, setTrimConfigProduct] = useState<ProductLineItem | null>(null);
   const [trimConfigIndex, setTrimConfigIndex] = useState<number | null>(null);
+  const [sizeBreakdownIndex, setSizeBreakdownIndex] = useState<number | null>(null);
+  const [initialSearchQuery, setInitialSearchQuery] = useState("");
 
   const products = watch("products");
   const salesOrderNo = watch("salesOrderNo") || "Draft SO";
@@ -37,12 +39,6 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</div>
           <h2 className="text-base font-semibold text-slate-800">Products</h2>
         </div>
-        {!isReadOnly && (
-          <Button variant="primary" className="h-10 px-4" onClick={(e) => { e.preventDefault(); setIsAddProductOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
-        )}
       </div>
 
       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
@@ -54,7 +50,6 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
               <TableHead className="w-[70px] px-2">Line No.</TableHead>
               <TableHead className="w-[90px] px-2">Color</TableHead>
               {!hideEditDetails && <TableHead className="w-[90px] px-2">Pattern</TableHead>}
-              {!hideEditDetails && <TableHead className="min-w-[180px] text-center px-1">Size Breakup (Qty)</TableHead>}
               {!hideEditDetails && <TableHead className="w-[70px] text-center px-1">Total Qty</TableHead>}
               {!hideEditDetails && <TableHead className="w-[80px] text-center px-1">Rate (₹)</TableHead>}
               {!hideEditDetails && <TableHead className="w-[100px] text-right px-2">Amount (₹)</TableHead>}
@@ -120,17 +115,13 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                       </div>
                     </TableCell>
                   )}
-                  {!hideEditDetails && (
-                    <TableCell className="flex justify-center px-1 py-2">
-                      <SizeBreakdownRow index={index} />
-                    </TableCell>
-                  )}
+
                   {!hideEditDetails && (
                     <TableCell className="text-center font-semibold text-slate-800 px-1 py-2">
                       {isReadOnly ? (
                         <div 
                           className="mx-auto flex h-[30px] w-[50px] items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-sm font-semibold text-slate-900 cursor-pointer hover:bg-blue-100 transition-colors"
-                          onClick={() => handleEdit(index)}
+                          onClick={() => setSizeBreakdownIndex(index)}
                         >
                           {totalQty}
                         </div>
@@ -140,7 +131,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                           className="mx-auto flex h-[30px] w-[50px] items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-sm font-semibold text-slate-900 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0453B8]/30"
                           onClick={(e) => {
                             e.preventDefault();
-                            handleEdit(index);
+                            setSizeBreakdownIndex(index);
                           }}
                         >
                           {totalQty}
@@ -178,23 +169,59 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                   )}
                   {!isReadOnly && (
                     <TableCell className="text-center px-1 py-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                        onClick={() => remove(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                          onClick={() => handleEdit(index)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
               );
             })}
+            
+            {/* Quick Add Row */}
+            {!isReadOnly && (
+              <TableRow className="bg-slate-50/30 hover:bg-slate-50/50 transition-colors">
+                <TableCell className="text-center text-sm font-medium text-slate-400 px-1 py-2">
+                  <Plus className="w-4 h-4 mx-auto" />
+                </TableCell>
+                <TableCell colSpan={hideEditDetails ? 6 : 8} className="px-2 py-2">
+                  <Input 
+                    placeholder="Type product name (e.g. Mens Cuban collar) and press Enter to add..."
+                    className="h-8 text-sm bg-white border-dashed border-slate-300 focus-visible:ring-1 focus-visible:ring-blue-500 w-full max-w-md shadow-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = e.currentTarget.value.trim();
+                        if (val) {
+                          setInitialSearchQuery(val);
+                          setIsAddProductOpen(true);
+                          e.currentTarget.value = "";
+                        }
+                      }
+                    }}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
           <TableFooter className="bg-slate-50 border-t border-slate-200">
             <TableRow>
-              <TableCell colSpan={hideEditDetails ? 4 : 6} className="text-right font-bold text-slate-800 px-2 py-3">Total</TableCell>
+              <TableCell colSpan={hideEditDetails ? 4 : 5} className="text-right font-bold text-slate-800 px-2 py-3">Total</TableCell>
               {!hideEditDetails && (
                 <TableCell className="text-center font-bold text-slate-800 px-1 py-3">
                   {products.reduce((acc, p) => acc + Object.values(p.sizeBreakdown).reduce((sum, qty) => sum + (typeof qty === 'number' ? qty : 0), 0), 0)}
@@ -246,10 +273,12 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
               update(editingIndex, product);
               setEditingIndex(null);
             } else {
-              prepend(product);
+              append(product);
             }
+            setInitialSearchQuery("");
           }}
           editProduct={editingIndex !== null ? products[editingIndex] : undefined}
+          initialSearchQuery={initialSearchQuery}
         />
       )}
 
@@ -337,6 +366,46 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           </DialogContent>
         </Dialog>
       )}
+      {/* Size Breakdown Dialog */}
+      <Dialog open={sizeBreakdownIndex !== null} onOpenChange={(open) => !open && setSizeBreakdownIndex(null)}>
+        <DialogContent className="sm:max-w-md bg-white p-0 overflow-hidden shadow-2xl border-0">
+          <DialogHeader className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <DialogTitle className="text-lg font-bold text-slate-900">
+              Sizewise Detail
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6">
+            {sizeBreakdownIndex !== null && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded bg-slate-100 overflow-hidden flex-shrink-0">
+                    {products[sizeBreakdownIndex]?.image ? (
+                      <img src={products[sizeBreakdownIndex].image} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">{products[sizeBreakdownIndex]?.name}</h3>
+                    <p className="text-xs text-slate-500">{products[sizeBreakdownIndex]?.color} • {products[sizeBreakdownIndex]?.pattern?.code || "No Pattern"}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                  <SizeBreakdownRow index={sizeBreakdownIndex} />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+            <Button variant="outline" onClick={() => setSizeBreakdownIndex(null)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

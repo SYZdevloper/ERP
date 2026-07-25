@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Search, Download, Plus, MoreHorizontal, Eye, Edit2, FileText, IndianRupee, ClipboardList, Truck, Activity } from "lucide-react";
+import { Search, Download, Plus, MoreHorizontal, Eye, Edit2, FileText, IndianRupee, ClipboardList, Truck, Activity, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +18,13 @@ import { formatDate } from "@/lib/utils";
 import { MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 
 export default function SalesOrdersPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [displayLimit, setDisplayLimit] = useState(10);
+
+  // Mock admin status for now as requested
+  const isAdmin = true;
 
   const filteredOrders = useMemo(() => {
     let filtered = MOCK_SALES_ORDERS_LIST;
@@ -154,12 +159,13 @@ export default function SalesOrdersPage() {
              <Table>
                <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead className="px-4 w-[14%]">Sr No.</TableHead>
+                    <TableHead className="px-4 w-[8%]">Sr No.</TableHead>
+                    <TableHead className="px-4 w-[14%]">SO No.</TableHead>
                     <TableHead className="px-4 w-[12%]">Date</TableHead>
-                    <TableHead className="px-4 w-[24%]">Buyer</TableHead>
-                    <TableHead className="px-4 w-[15%]">Amount (₹)</TableHead>
-                    <TableHead className="px-4 w-[15%]">Delivery Date</TableHead>
-                    <TableHead className="px-4 w-[12%] !text-center">Delivery Status</TableHead>
+                    <TableHead className="px-4 w-[22%]">Buyer</TableHead>
+                    <TableHead className="px-4 w-[14%]">Amount (₹)</TableHead>
+                    <TableHead className="px-4 w-[12%]">Delivery Date</TableHead>
+                    <TableHead className="px-4 w-[10%] !text-center">Delivery Status</TableHead>
                     <TableHead className="px-4 !text-center w-[8%]">Action</TableHead>
                   </TableRow>
                </TableHeader>
@@ -170,62 +176,76 @@ export default function SalesOrdersPage() {
                    </TableRow>
                  ) : (
                    paginatedOrders.map((order, index) => (
-                     <TableRow key={order.id}>
-                       <TableCell className="px-4 py-3 text-[13px] font-medium text-slate-800">
-                         {String(index + 1).padStart(2, '0')}
-                       </TableCell>
-                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.orderDate)}</TableCell>
-                       <TableCell className="px-4 py-3">
-                         <div className="flex items-center gap-3">
-                           <div className="w-9 h-9 rounded-full bg-[#F8FAFC] text-slate-700 flex items-center justify-center font-medium text-[13px] shrink-0 border border-slate-200">
-                             {(() => {
-                               const words = order.buyer.split(' ').filter(Boolean);
-                               return words.length >= 2 
-                                 ? (words[0][0] + words[1][0]).toUpperCase()
-                                 : order.buyer.substring(0, 2).toUpperCase();
-                             })()}
-                           </div>
-                           <div className="flex flex-col">
-                             <span className="text-[13px] font-medium text-slate-800">{order.buyer}</span>
-                             <span className="text-[11px] text-slate-500">{order.location}</span>
-                           </div>
-                         </div>
-                       </TableCell>
-                       <TableCell className="px-4 py-3 text-[13px] text-slate-600 font-medium">
-                         {order.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                       </TableCell>
-                       <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.deliveryDate)}</TableCell>
-                       <TableCell className="px-4 py-3 text-center">
-                         <StatusBadge status={order.status} />
-                       </TableCell>
-                       <TableCell className="px-4 py-3 text-center">
-                         <DropdownMenu>
-                           <DropdownMenuTrigger asChild>
-                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 border border-slate-200">
-                               <MoreHorizontal className="h-4 w-4" />
-                             </Button>
-                           </DropdownMenuTrigger>
-                           <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg border-slate-200">
-                             <DropdownMenuItem className="p-0 cursor-pointer">
-                               <Link href={`/sales-orders/${order.id}`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
-                                 <Eye className="mr-2 h-4 w-4 text-slate-400" /> View Details
-                               </Link>
-                             </DropdownMenuItem>
-                             <DropdownMenuItem className="p-0 cursor-pointer">
-                               <Link href={`/sales-orders/${order.id}/edit`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
-                                 <Edit2 className="mr-2 h-4 w-4 text-slate-400" /> Edit Order
-                               </Link>
-                             </DropdownMenuItem>
-
-                             <DropdownMenuItem className="p-0 cursor-pointer">
-                               <Link href={`/sales-orders/${order.id}/tracking`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
-                                 <Activity className="mr-2 h-4 w-4 text-slate-400" /> Fabric Tracking
-                               </Link>
-                             </DropdownMenuItem>
-                           </DropdownMenuContent>
-                         </DropdownMenu>
-                       </TableCell>
-                     </TableRow>
+                      <TableRow 
+                        key={order.id} 
+                        className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        onDoubleClick={() => router.push(`/sales-orders/${order.id}`)}
+                      >
+                        <TableCell className="px-4 py-3 text-[13px] font-medium text-slate-800">
+                          {String(index + 1).padStart(2, '0')}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px] font-bold text-[#0453B8]">{order.soNo}</TableCell>
+                        <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.orderDate)}</TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-[#F8FAFC] text-slate-700 flex items-center justify-center font-medium text-[13px] shrink-0 border border-slate-200">
+                              {(() => {
+                                const words = order.buyer.split(' ').filter(Boolean);
+                                return words.length >= 2 
+                                  ? (words[0][0] + words[1][0]).toUpperCase()
+                                  : order.buyer.substring(0, 2).toUpperCase();
+                              })()}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-medium text-slate-800">{order.buyer}</span>
+                              <span className="text-[11px] text-slate-500">{order.location}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px] text-slate-600 font-medium">
+                          {order.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px] text-slate-600">{formatDate(order.deliveryDate)}</TableCell>
+                        <TableCell className="px-4 py-3 text-center">
+                          <StatusBadge status={order.status} />
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 border border-slate-200">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg border-slate-200">
+                              <DropdownMenuItem className="p-0 cursor-pointer">
+                                <Link href={`/sales-orders/${order.id}`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
+                                  <Eye className="mr-2 h-4 w-4 text-slate-400" /> View
+                                </Link>
+                              </DropdownMenuItem>
+                              {isAdmin && (
+                                <>
+                                  <DropdownMenuItem className="p-0 cursor-pointer">
+                                    <Link href={`/sales-orders/${order.id}/edit`} className="flex items-center w-full px-2 py-2 text-slate-700 font-medium">
+                                      <Edit2 className="mr-2 h-4 w-4 text-slate-400" /> Edit
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="p-0 cursor-pointer" onSelect={(e) => {
+                                    e.preventDefault();
+                                    if(confirm("Are you sure you want to cancel this order?")) {
+                                      // Implement cancellation logic here
+                                      alert("Order Cancelled!");
+                                    }
+                                  }}>
+                                    <div className="flex items-center w-full px-2 py-2 text-red-600 font-medium">
+                                      <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancel
+                                    </div>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
                    ))
                  )}
                </TableBody>

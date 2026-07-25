@@ -86,7 +86,10 @@ export function FabricGrnForm() {
   const [isRollDetailsOpen, setIsRollDetailsOpen] = useState(false);
   const [activeRollEntryId, setActiveRollEntryId] = useState<string | null>(null);
   const [activeBilledQtyAsPerBill, setActiveBilledQtyAsPerBill] = useState<string>("");
-  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, billedQty: string, actualQty: string, color?: string }[]>([]);
+  const [activeHeaderReceivedQty, setActiveHeaderReceivedQty] = useState<string>("");
+  const [activeHeaderReceivedRate, setActiveHeaderReceivedRate] = useState<string>("");
+  const [activeHeaderReceivedWidth, setActiveHeaderReceivedWidth] = useState<string>("");
+  const [activeRollDetails, setActiveRollDetails] = useState<{ id: string, rollNo: string, width?: string, billedQty: string, actualQty: string, color?: string }[]>([]);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [manualFormData, setManualFormData] = useState({
@@ -107,6 +110,7 @@ export function FabricGrnForm() {
     const newRolls = Array.from({ length: count }).map((_, idx) => ({
       id: Math.random().toString(),
       rollNo: `R-${(idx + 1).toString().padStart(2, '0')}`,
+      width: "",
       billedQty: mtrPerRoll,
       actualQty: mtrPerRoll,
       color: ""
@@ -117,6 +121,9 @@ export function FabricGrnForm() {
   const handleOpenRollDetails = (entry: RollEntry) => {
     setActiveRollEntryId(entry.id);
     setActiveBilledQtyAsPerBill(entry.billedQtyAsPerBill ? entry.billedQtyAsPerBill.toString() : "");
+    setActiveHeaderReceivedQty(entry.mtrQty ? entry.mtrQty.toString() : "");
+    setActiveHeaderReceivedRate(entry.rate ? entry.rate.toString() : "");
+    setActiveHeaderReceivedWidth(entry.width ? entry.width.toString() : "");
     if (entry.rollDetails && entry.rollDetails.length > 0) {
       setActiveRollDetails(entry.rollDetails.map(r => ({ ...r, billedQty: r.billedQty.toString(), actualQty: r.actualQty.toString() })));
     } else {
@@ -140,9 +147,17 @@ export function FabricGrnForm() {
     const totalActual = validRolls.reduce((acc, curr) => acc + curr.actualQty, 0);
     const totalBilled = validRolls.reduce((acc, curr) => acc + curr.billedQty, 0);
     const expectedBilled = Number(activeBilledQtyAsPerBill) || 0;
+    const headerReceivedQty = Number(activeHeaderReceivedQty) || 0;
+    const headerReceivedRate = Number(activeHeaderReceivedRate) || 0;
+    const headerReceivedWidth = activeHeaderReceivedWidth || "";
 
     if (expectedBilled > 0 && Math.abs(totalBilled - expectedBilled) > 0.01) {
       alert(`Total Billed Qty of rolls (${totalBilled.toFixed(2)}) must tally with the Billed Qty as per Bill (${expectedBilled.toFixed(2)}).`);
+      return;
+    }
+
+    if (headerReceivedQty > 0 && Math.abs(totalActual - headerReceivedQty) > 0.01) {
+      alert(`Total actual meter of rolls (${totalActual.toFixed(2)}) must tally with the Received Qty in header (${headerReceivedQty.toFixed(2)}).`);
       return;
     }
     
@@ -154,11 +169,15 @@ export function FabricGrnForm() {
     
     setEntries(entries.map(e => {
       if (e.id === activeRollEntryId) {
-        const amount = totalActual * e.rate;
+        const rateToUse = headerReceivedRate > 0 ? headerReceivedRate : e.rate;
+        const widthToUse = headerReceivedWidth || e.width;
+        const amount = totalActual * rateToUse;
         return {
           ...e,
           rollDetails: validRolls,
           mtrQty: totalActual,
+          rate: rateToUse,
+          width: widthToUse,
           billedQtyAsPerBill: expectedBilled,
           amount: amount
         };
@@ -1134,40 +1153,81 @@ export function FabricGrnForm() {
               const balance = Math.max(0, orderQty - receivedQty);
 
               return (
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg shrink-0">
-                  <div className="flex flex-wrap items-center gap-6 px-2">
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Qty</Label>
-                      <div className="text-lg font-black text-slate-800">{orderQty}</div>
+                <div className="mb-5 flex items-start gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-lg shrink-0">
+                  <div className="flex-1 grid grid-cols-3 divide-x divide-slate-100">
+                    {/* Quantity Section */}
+                    <div className="flex flex-col gap-4 px-4">
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ordered Qty</Label>
+                        <div className="text-xl font-black text-slate-800">{orderQty}</div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider flex items-center gap-1">
+                          Received Qty <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={activeHeaderReceivedQty}
+                            onChange={(e) => setActiveHeaderReceivedQty(e.target.value)}
+                            placeholder="e.g. 500"
+                            className="h-10 w-32 text-base font-bold border-blue-200 bg-blue-50/30 focus-visible:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-colors"
+                          />
+                          <span className="ml-2 text-sm font-semibold text-slate-500">Mtr</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Qty</Label>
-                      <div className="text-lg font-black text-[#0453B8]">{receivedQty}</div>
+
+                    {/* Rate Section */}
+                    <div className="flex flex-col gap-4 px-4">
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ordered Rate</Label>
+                        <div className="text-xl font-black text-slate-800">₹{currentEntry?.rate || 0}</div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider flex items-center gap-1">
+                          Received Rate <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative w-32">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0453B8] text-sm font-bold">₹</span>
+                          <Input 
+                            type="number"
+                            value={activeHeaderReceivedRate}
+                            onChange={(e) => setActiveHeaderReceivedRate(e.target.value)}
+                            placeholder="0.00"
+                            className="h-10 pl-8 text-base font-bold border-blue-200 bg-blue-50/30 focus-visible:ring-[#0453B8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-colors"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-10 w-px bg-blue-200 mx-2 hidden sm:block"></div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Rate</Label>
-                      <div className="text-lg font-black text-slate-800">₹{currentEntry?.rate || 0}</div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Rate</Label>
-                      <div className="text-lg font-black text-[#0453B8]">₹{currentEntry?.rate || 0}</div>
-                    </div>
-                    <div className="h-10 w-px bg-blue-200 mx-2 hidden sm:block"></div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Ordered Width</Label>
-                      <div className="text-lg font-black text-slate-800">{currentEntry?.width || '-'}</div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] font-bold text-[#0453B8] uppercase">Received Width</Label>
-                      <div className="text-lg font-black text-[#0453B8]">{currentEntry?.width || '-'}</div>
+
+                    {/* Width Section */}
+                    <div className="flex flex-col gap-4 px-4">
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ordered Width</Label>
+                        <div className="text-xl font-black text-slate-800">{currentEntry?.width || "-"}</div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] font-bold text-[#0453B8] uppercase tracking-wider flex items-center gap-1">
+                          Received Width <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="flex items-center">
+                          <Input 
+                            type="text"
+                            value={activeHeaderReceivedWidth}
+                            onChange={(e) => setActiveHeaderReceivedWidth(e.target.value)}
+                            placeholder='e.g. 62"'
+                            className="h-10 w-32 text-base font-bold border-blue-200 bg-blue-50/30 focus-visible:ring-[#0453B8] transition-colors"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
               <Button 
                 onClick={() => {
                   setActiveRollDetails([
                     ...activeRollDetails, 
-                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, billedQty: "", actualQty: "", color: "" }
+                    { id: Math.random().toString(), rollNo: `R-${(activeRollDetails.length + 1).toString().padStart(2, '0')}`, width: "", billedQty: "", actualQty: "", color: "" }
                   ]);
                 }}
                 variant="outline" 
@@ -1192,6 +1252,7 @@ export function FabricGrnForm() {
                       <TableRow>
                         <TableHead className="w-12 text-center py-2.5 text-xs font-bold text-slate-700">Sr</TableHead>
                         <TableHead className="py-2.5 text-xs font-bold text-slate-700">Roll No.</TableHead>
+                        <TableHead className="py-2.5 text-xs font-bold text-slate-700">Width</TableHead>
                         <TableHead className="py-2.5 text-xs font-bold text-slate-700">Color</TableHead>
                         <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Billed (Mtr) <span className="text-red-500">*</span></TableHead>
                         <TableHead className="w-28 py-2.5 text-xs font-bold text-slate-700 text-right">Actual (Mtr) <span className="text-red-500">*</span></TableHead>
@@ -1212,6 +1273,18 @@ export function FabricGrnForm() {
                               }}
                               className="h-8 text-xs border-slate-200"
                               placeholder={`R-${(idx + 1).toString().padStart(2, '0')}`}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              value={roll.width || ""}
+                              onChange={(e) => {
+                                const newDetails = [...activeRollDetails];
+                                newDetails[idx].width = e.target.value;
+                                setActiveRollDetails(newDetails);
+                              }}
+                              className="h-8 text-xs border-slate-200"
+                              placeholder="e.g. 58"
                             />
                           </TableCell>
                           <TableCell className="py-2">

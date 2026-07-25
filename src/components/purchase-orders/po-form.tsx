@@ -30,6 +30,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface PurchaseOrderFormProps {
   initialPo?: any;
@@ -91,8 +96,17 @@ export function PurchaseOrderForm({
     avg: "1.80",
     supplierSortNo: "",
     deliveryDate: "",
-    deliveryDays: ""
+    deliveryDays: "",
+    unit: "Meter"
   });
+
+  const [availableUnits, setAvailableUnits] = useState(["Meter", "KG", "Yard"]);
+  const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
+  const [newUnitText, setNewUnitText] = useState("");
+
+  const [availableWidths, setAvailableWidths] = useState(['44"', '54"', '58"']);
+  const [isWidthDropdownOpen, setIsWidthDropdownOpen] = useState(false);
+  const [newWidthText, setNewWidthText] = useState("");
 
   useEffect(() => {
     if (poItems.length > 0) setShowAddress(false);
@@ -249,7 +263,8 @@ export function PurchaseOrderForm({
       avg: String(item.consumptionAvg || "1.80"),
       supplierSortNo: item.supplierSortNo || "",
       deliveryDate: "",
-      deliveryDays: ""
+      deliveryDays: "",
+      unit: "Meter"
     });
     setIsManualEntryOpen(true);
   };
@@ -273,7 +288,8 @@ export function PurchaseOrderForm({
       avg: "1.80",
       supplierSortNo: "",
       deliveryDate: "",
-      deliveryDays: ""
+      deliveryDays: "",
+      unit: "Meter"
     });
     setIsManualEntryOpen(true);
   };
@@ -642,70 +658,81 @@ export function PurchaseOrderForm({
 
                     {/* Designs Table View */}
                     <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
-                      <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
-                        <table className="w-full text-sm text-left">
-                          <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                            <tr>
-                              <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
-                              <th className="px-4 py-3 font-bold text-slate-700">Image</th>
-                              <th className="px-4 py-3 font-bold text-slate-700">Style / Design</th>
-                              <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {(() => {
-                              const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
-                              const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
-                              
-                              if (availableDesigns.length === 0) {
-                                return (
-                                  <tr>
-                                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
-                                  </tr>
-                                );
-                              }
+                      <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-slate-50/50 shadow-sm max-h-[400px] p-4">
+                        {(() => {
+                          const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
+                          const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
+                          
+                          if (availableDesigns.length === 0) {
+                            return (
+                              <div className="flex items-center justify-center h-32 text-slate-500 text-sm">
+                                No available designs found.
+                              </div>
+                            );
+                          }
 
-                              return availableDesigns.map((item: any) => {
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                              {availableDesigns.map((item: any) => {
                                 const isAdded = poItems.some(poItem => poItem.soItemId === item.id);
-                                const reqQty = type === "Fabric" ? item.requiredQtyMtr : Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0);
+                                const imgUrl = item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
+                                               item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
+                                               item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
+                                               "/men regualr fit shirt.jpeg";
 
                                 return (
-                                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-4 py-3">
-                                      <div className="font-bold text-[#0453B8]">{item.soNo}</div>
-                                      <div className="text-xs text-slate-500 font-medium">Line {item.soItem.split('-')[1]}</div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <div className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50">
-                                        <img src={
-                                          item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
-                                          item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
-                                          item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
-                                          "/men regualr fit shirt.jpeg"
-                                        } alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                  <div 
+                                    key={item.id}
+                                    onDoubleClick={() => {
+                                      if (!isAdded) handleOpenAddFabricForSoItem(item);
+                                    }}
+                                    className={`relative flex flex-col p-3 rounded-xl border transition-all ${
+                                      isAdded 
+                                        ? 'border-emerald-500 bg-emerald-50/50 cursor-default' 
+                                        : 'border-slate-200 bg-white hover:border-[#0453B8] hover:shadow-md cursor-pointer'
+                                    }`}
+                                  >
+                                    {isAdded && (
+                                      <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-sm">
+                                        <Check className="w-3 h-3" />
                                       </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <div className="font-bold text-slate-800">{item.productId}</div>
-                                      <div className="text-xs text-slate-600 font-medium">{item.name}</div>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                      <Button 
-                                        variant={isAdded ? "ghost" : "outline"}
-                                        size="sm" 
-                                        disabled={isAdded}
-                                        onClick={() => handleOpenAddFabricForSoItem(item)}
-                                        className={`h-7 text-xs font-semibold ${isAdded ? 'text-emerald-600 bg-emerald-50' : 'border-[#0453B8] text-[#0453B8] hover:bg-blue-50'}`}
-                                      >
-                                        {isAdded ? "Added" : "Select"}
-                                      </Button>
-                                    </td>
-                                  </tr>
+                                    )}
+                                    <div className="w-full aspect-[3/4] flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 mb-3">
+                                      <img src={imgUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                    </div>
+                                    <div className="flex flex-col flex-1">
+                                      <div className="flex items-center justify-between gap-2 mb-1">
+                                        <span className="text-xs font-bold text-[#0453B8] truncate" title={item.soNo}>{item.soNo}</span>
+                                        <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{item.soItem.split('-')[1]}</span>
+                                      </div>
+                                      <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-auto" title={item.productId}>{item.productId}</div>
+                                      <div className="text-[10px] text-slate-600 line-clamp-1" title={item.name}>{item.name}</div>
+                                      
+                                      {!isAdded && (
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenAddFabricForSoItem(item);
+                                          }}
+                                          className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
+                                        >
+                                          Select
+                                        </Button>
+                                      )}
+                                      {isAdded && (
+                                        <div className="w-full mt-3 h-7 flex items-center justify-center text-[10px] font-bold text-emerald-600 bg-emerald-100/50 rounded-md">
+                                          Added
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 );
-                              });
-                            })()}
-                          </tbody>
-                        </table>
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -736,7 +763,8 @@ export function PurchaseOrderForm({
                     avg: "1.80",
                     supplierSortNo: "",
                     deliveryDate: "",
-                    deliveryDays: ""
+                    deliveryDays: "",
+                    unit: "Meter"
                   });
                   setIsManualEntryOpen(true);
                 }}
@@ -753,6 +781,10 @@ export function PurchaseOrderForm({
                 specLabel={specLabel}
                 type={type}
               />
+            </div>
+
+              <AttachmentsModal isReadOnly={isViewMode} />
+              <NotesPanel isReadOnly={isViewMode} />
             </div>
 
             {/* Right Column (Sidebar) */}
@@ -797,10 +829,6 @@ export function PurchaseOrderForm({
                   </div>
                 )}
               </div>
-
-              <NotesPanel isReadOnly={isViewMode} />
-              
-              <AttachmentsModal isReadOnly={isViewMode} />
 
               {/* PO Summary Totals */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -1071,7 +1099,70 @@ export function PurchaseOrderForm({
                       </div>
 
                       <div className="flex flex-col gap-1 items-end">
-                        <div className="text-[10px] font-bold text-red-600 uppercase">Total Mtrs <span className="text-red-500">*</span></div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-red-600 uppercase">Total</span>
+                          <Popover open={isUnitDropdownOpen} onOpenChange={setIsUnitDropdownOpen}>
+                            <PopoverTrigger asChild>
+                              <button className="flex items-center gap-1 text-[10px] font-bold text-red-600 uppercase hover:bg-red-50 px-1 rounded transition-colors">
+                                {manualFormData.unit} <ChevronDown className="w-3 h-3" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-48 p-2" align="end">
+                              <div className="flex flex-col gap-1">
+                                {availableUnits.map(u => (
+                                  <button 
+                                    key={u} 
+                                    className="text-left px-2 py-1.5 text-sm rounded hover:bg-slate-100 font-medium text-slate-700"
+                                    onClick={() => {
+                                      setManualFormData({...manualFormData, unit: u});
+                                      setIsUnitDropdownOpen(false);
+                                    }}
+                                  >
+                                    {u}
+                                  </button>
+                                ))}
+                                <div className="border-t border-slate-100 my-1"></div>
+                                <div className="flex gap-2 items-center px-1">
+                                  <Input 
+                                    placeholder="Add unit..." 
+                                    className="h-7 text-xs" 
+                                    value={newUnitText}
+                                    onChange={(e) => setNewUnitText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && newUnitText.trim()) {
+                                        const newUnit = newUnitText.trim();
+                                        if (!availableUnits.includes(newUnit)) {
+                                          setAvailableUnits([...availableUnits, newUnit]);
+                                        }
+                                        setManualFormData({...manualFormData, unit: newUnit});
+                                        setNewUnitText("");
+                                        setIsUnitDropdownOpen(false);
+                                      }
+                                    }}
+                                  />
+                                  <Button 
+                                    size="sm" 
+                                    className="h-7 px-2"
+                                    onClick={() => {
+                                      if (newUnitText.trim()) {
+                                        const newUnit = newUnitText.trim();
+                                        if (!availableUnits.includes(newUnit)) {
+                                          setAvailableUnits([...availableUnits, newUnit]);
+                                        }
+                                        setManualFormData({...manualFormData, unit: newUnit});
+                                        setNewUnitText("");
+                                        setIsUnitDropdownOpen(false);
+                                      }
+                                    }}
+                                  >
+                                    Add
+                                  </Button>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <span className="text-red-500">*</span>
+                        </div>
                         <div className="font-black text-red-600 text-xl leading-none">{manualFormData.qty || "0"}</div>
                       </div>
                     </div>
@@ -1080,14 +1171,26 @@ export function PurchaseOrderForm({
                   {/* Total Qty (Manual Fabric Only) */}
                   {!selectedSoItemContext && (
                     <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Total Mtrs / Qty <span className="text-red-500">*</span></Label>
-                      <Input 
-                        type="number"
-                        value={manualFormData.qty}
-                        onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
-                        placeholder="e.g. 500" 
-                        className="h-10 text-sm bg-white font-bold" 
-                      />
+                      <Label className="text-xs font-bold text-slate-600">Total {manualFormData.unit} / Qty <span className="text-red-500">*</span></Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="number"
+                          value={manualFormData.qty}
+                          onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
+                          placeholder="e.g. 500" 
+                          className="h-10 text-sm bg-white font-bold flex-1" 
+                        />
+                        <Select value={manualFormData.unit} onValueChange={(val) => setManualFormData({...manualFormData, unit: val})}>
+                          <SelectTrigger className="w-24 h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
+                            <SelectValue placeholder="Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableUnits.map(u => (
+                              <SelectItem key={u} value={u}>{u}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )}
 
@@ -1122,18 +1225,69 @@ export function PurchaseOrderForm({
                       />
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 relative">
                       <Label className="text-xs font-bold text-slate-600">Width</Label>
-                      <Select value={manualFormData.width} onValueChange={(val) => setManualFormData({...manualFormData, width: val})}>
-                        <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
-                          <SelectValue placeholder="Select width" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="44&quot;">44"</SelectItem>
-                          <SelectItem value="54&quot;">54"</SelectItem>
-                          <SelectItem value="58&quot;">58"</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Popover open={isWidthDropdownOpen} onOpenChange={setIsWidthDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full h-10 border-slate-200 justify-between bg-white font-medium px-3 text-slate-700 font-normal">
+                            {manualFormData.width || "Select width"}
+                            <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                          <div className="flex flex-col gap-1">
+                            {availableWidths.map(w => (
+                              <button 
+                                key={w} 
+                                className="text-left px-2 py-1.5 text-sm rounded hover:bg-slate-100 font-medium text-slate-700"
+                                onClick={() => {
+                                  setManualFormData({...manualFormData, width: w});
+                                  setIsWidthDropdownOpen(false);
+                                }}
+                              >
+                                {w}
+                              </button>
+                            ))}
+                            <div className="border-t border-slate-100 my-1"></div>
+                            <div className="flex gap-2 items-center px-1">
+                              <Input 
+                                placeholder="Custom width..." 
+                                className="h-8 text-xs flex-1" 
+                                value={newWidthText}
+                                onChange={(e) => setNewWidthText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && newWidthText.trim()) {
+                                    const newW = newWidthText.trim();
+                                    if (!availableWidths.includes(newW)) {
+                                      setAvailableWidths([...availableWidths, newW]);
+                                    }
+                                    setManualFormData({...manualFormData, width: newW});
+                                    setNewWidthText("");
+                                    setIsWidthDropdownOpen(false);
+                                  }
+                                }}
+                              />
+                              <Button 
+                                size="sm" 
+                                className="h-8 px-3"
+                                onClick={() => {
+                                  if (newWidthText.trim()) {
+                                    const newW = newWidthText.trim();
+                                    if (!availableWidths.includes(newW)) {
+                                      setAvailableWidths([...availableWidths, newW]);
+                                    }
+                                    setManualFormData({...manualFormData, width: newW});
+                                    setNewWidthText("");
+                                    setIsWidthDropdownOpen(false);
+                                  }
+                                }}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -1271,7 +1425,7 @@ export function PurchaseOrderForm({
                 setIsManualEntryOpen(false);
                 setEditingItem(null);
                 setManualFormData({
-                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: "", deliveryDays: ""
+                  type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: "", deliveryDays: "", unit: "Meter"
                 });
               }} className="bg-[#0453B8] hover:bg-blue-700 text-white font-bold">
                 <Check className="w-4 h-4 mr-2" /> {editingItem ? "Save Changes" : "Add to PO"}

@@ -16,6 +16,7 @@ interface AddProductDialogProps {
   onOpenChange: (open: boolean) => void;
   onAddProduct: (product: any) => void;
   editProduct?: any;
+  initialSearchQuery?: string;
 }
 
 const DEFAULT_SHIRT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
@@ -148,8 +149,12 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setShowSearch(false);
     } else if (open) {
       setSelectedProductId(catalogItems.length > 0 ? catalogItems[0].id : null);
-      setSearchQuery("");
-      setIsProductDropdownOpen(false);
+      setSearchQuery(initialSearchQuery || "");
+      if (initialSearchQuery) {
+        setIsProductDropdownOpen(true);
+      } else {
+        setIsProductDropdownOpen(false);
+      }
       setQuantities({});
       setSelectedColor("White");
       setSelectedFabric("Cotton Poplin");
@@ -327,7 +332,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[1000px] h-[90vh] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
+      <DialogContent className="sm:max-w-[1100px] h-[90vh] bg-slate-50 p-0 overflow-hidden flex flex-col shadow-2xl border-0">
         <DialogHeader className="px-6 py-3 border-b border-slate-200 bg-white shadow-sm z-10 flex-shrink-0">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
@@ -386,10 +391,10 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
               {selectedProduct && (
                 <div className="border border-slate-200 rounded-xl bg-white p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200">
 
-                  <div className="flex flex-col md:flex-row gap-8 items-start mt-4 mb-8">
+                  <div className="flex flex-col md:flex-row gap-6 items-start mt-2 mb-4">
                     
                     {/* Left: Product Image */}
-                    <div className="w-full md:w-[300px] shrink-0 flex flex-col gap-2">
+                    <div className="w-full md:w-[350px] shrink-0 flex flex-col gap-2">
                       <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product Image</Label>
                       {(() => {
                         let imageSrc = "/men casual half shirt.jpg";
@@ -454,54 +459,86 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                     </div>
 
                     {/* Right: Form Fields */}
-                    <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
                       
                       {/* Product Dropdown */}
                       <div className="flex flex-col gap-2 md:col-span-2">
                         <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product *</Label>
-                        <Select value={selectedProductId || ""} onValueChange={(val) => setSelectedProductId(val)}>
-                          <SelectTrigger className="h-[40px] w-full bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 whitespace-normal text-left">
-                            <SelectValue placeholder="Select Product">
-                              {selectedProduct ? selectedProduct.name : "Select Product"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent position="popper" align="start" className="w-[600px] max-h-[50vh] overflow-y-auto">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-2">
-                              {["Mens", "Womens", "Kids"].map(category => {
-                                const items = catalogItems.filter(p => p.category === category);
-                                if (items.length === 0) return null;
-                                return (
-                                  <SelectGroup key={category} className="mb-2">
-                                    <SelectLabel className="font-extrabold text-[#0453B8] text-[11px] uppercase tracking-wider bg-white sticky top-0 z-10">{category}</SelectLabel>
-                                    {items.map(p => {
-                                      let imageSrc = "/men casual half shirt.jpg";
-                                      const nameLower = p.name.toLowerCase();
-                                      if (nameLower.includes("formal") || p.code.startsWith("MS")) {
-                                        imageSrc = p.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                                      }
-                                      if (nameLower.includes("t-shirt") || p.code.startsWith("MT")) {
-                                        imageSrc = "/men casual tshirt.jpeg";
-                                      }
-                                      return (
-                                        <SelectItem key={p.id} value={p.id}>
-                                          <div className="flex items-center gap-3 py-1">
-                                            <div className="w-8 h-8 rounded bg-[#F5F6F8] overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-100">
-                                              <img src={imageSrc} alt={p.name} className="w-full h-full object-cover mix-blend-multiply" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                              <span className="font-bold text-slate-800 text-xs">{p.name}</span>
-                                              <span className="text-[10px] text-slate-500 font-semibold">{p.code} • {p.subcategory}</span>
-                                            </div>
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectGroup>
-                                );
-                              })}
+                        <Popover open={isProductDropdownOpen} onOpenChange={setIsProductDropdownOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" aria-expanded={isProductDropdownOpen} className="h-[40px] w-full justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 px-3 whitespace-normal text-left overflow-hidden">
+                              <span className="truncate">{selectedProduct ? selectedProduct.name : "Select Product"}</span>
+                              <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[600px] p-0" align="start">
+                            <div className="flex flex-col">
+                              <div className="flex items-center border-b px-3">
+                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
+                                <Input
+                                  placeholder="Search by product name, code, category..."
+                                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                              </div>
+                              <div className="max-h-[50vh] overflow-y-auto p-2">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-2">
+                                  {["Mens", "Womens", "Kids"].map(category => {
+                                    const items = catalogItems.filter(p => p.category === category && (!searchQuery || 
+                                      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())
+                                    ));
+                                    if (items.length === 0) return null;
+                                    return (
+                                      <div key={category} className="mb-2">
+                                        <div className="font-extrabold text-[#0453B8] text-[11px] uppercase tracking-wider bg-white sticky top-0 z-10 py-1">{category}</div>
+                                        <div className="flex flex-col gap-1">
+                                          {items.map(p => {
+                                            let imageSrc = "/men casual half shirt.jpg";
+                                            const nameLower = p.name.toLowerCase();
+                                            if (nameLower.includes("formal") || p.code.startsWith("MS")) {
+                                              imageSrc = p.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
+                                            }
+                                            if (nameLower.includes("t-shirt") || p.code.startsWith("MT")) {
+                                              imageSrc = "/men casual tshirt.jpeg";
+                                            }
+                                            return (
+                                              <button
+                                                key={p.id}
+                                                className="w-full text-left flex items-center gap-3 py-1.5 px-2 hover:bg-slate-50 rounded-md transition-colors"
+                                                onClick={() => {
+                                                  setSelectedProductId(p.id);
+                                                  setIsProductDropdownOpen(false);
+                                                }}
+                                              >
+                                                <div className="w-8 h-8 rounded bg-[#F5F6F8] overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-100">
+                                                  <img src={imageSrc} alt={p.name} className="w-full h-full object-cover mix-blend-multiply" />
+                                                </div>
+                                                <div className="flex flex-col overflow-hidden">
+                                                  <span className="font-bold text-slate-800 text-xs truncate">{p.name}</span>
+                                                  <span className="text-[10px] text-slate-500 font-semibold truncate">{p.code} • {p.subcategory}</span>
+                                                </div>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {catalogItems.filter(p => !searchQuery || 
+                                  p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                  p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())
+                                ).length === 0 && (
+                                  <div className="text-center py-6 text-slate-500 text-sm font-medium">No products found matching "{searchQuery}"</div>
+                                )}
+                              </div>
                             </div>
-                          </SelectContent>
-                        </Select>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       {/* 1) Buyer Design No */}
@@ -631,13 +668,13 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         </div>
                       </div>
 
-                      {/* 6) Fabric */}
+                      {/* 6) Content */}
                       <div className="flex flex-col gap-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Content (Fabric) <span className="text-red-500">*</span></Label>
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Content <span className="text-red-500">*</span></Label>
                         <div className="flex items-center gap-2">
                           <Select value={selectedFabric} onValueChange={setSelectedFabric}>
                             <SelectTrigger className="h-[40px] flex-1 bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold">
-                              <SelectValue placeholder="Select Fabric" />
+                              <SelectValue placeholder="Select Content" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Cotton Poplin">Cotton Poplin</SelectItem>

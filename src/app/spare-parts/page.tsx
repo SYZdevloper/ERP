@@ -1,0 +1,266 @@
+"use client";
+
+import React, { useState } from "react";
+import { useSpareParts, SparePartIssue } from "@/context/spare-parts-context";
+import { useMaintenance } from "@/context/maintenance-context";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, Plus, Archive, Settings, CalendarClock, Trash2 } from "lucide-react";
+
+export default function SparePartsPage() {
+  const { issues, addIssue, deleteIssue } = useSpareParts();
+  const { machines } = useMaintenance();
+  
+  const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState("");
+  
+  const [formData, setFormData] = useState({
+    product_name: "",
+    issue_to: "",
+    issue_date: new Date().toISOString().split('T')[0],
+    reason: "",
+    machine_id: "",
+    expected_receiving_date: new Date().toISOString().split('T')[0],
+    quantity: 1,
+  });
+
+  function resetForm() {
+    setFormData({
+      product_name: "",
+      issue_to: "",
+      issue_date: new Date().toISOString().split('T')[0],
+      reason: "",
+      machine_id: "",
+      expected_receiving_date: new Date().toISOString().split('T')[0],
+      quantity: 1,
+    });
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const machine = machines.find(m => m.id === formData.machine_id);
+    
+    const newIssue: SparePartIssue = {
+      id: `SPI-${Math.floor(Math.random() * 10000)}`,
+      product_name: formData.product_name,
+      image_url: null,
+      issue_to: formData.issue_to,
+      issue_date: formData.issue_date,
+      reason: formData.reason,
+      machine_number: machine?.machine_code || formData.machine_id,
+      expected_receiving_date: formData.expected_receiving_date,
+      quantity: formData.quantity,
+    };
+    addIssue(newIssue);
+    resetForm();
+    setShowForm(false);
+  }
+
+  function handleDelete(id: string) {
+    if (confirm("Delete this spare part issue record?")) {
+      deleteIssue(id);
+    }
+  }
+
+  const filtered = issues.filter((i) => {
+    return (
+      !search ||
+      i.product_name.toLowerCase().includes(search.toLowerCase()) ||
+      i.issue_to.toLowerCase().includes(search.toLowerCase()) ||
+      i.machine_number.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  const today = new Date().toISOString().split('T')[0];
+  const totalIssued = issues.reduce((sum, i) => sum + i.quantity, 0);
+  const pendingReceive = issues.filter(i => i.expected_receiving_date > today).length;
+
+  return (
+    <div className="flex flex-col h-full bg-slate-50/50 p-6 overflow-y-auto custom-scrollbar">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Spare Parts Issue</h1>
+          <p className="text-sm text-slate-500 mt-1">Track spare parts issued to mechanics and machines.</p>
+        </div>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-1 items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center shrink-0">
+            <Archive className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-500">Total Parts Issued</span>
+            <span className="text-2xl font-bold text-slate-800 leading-tight">{totalIssued}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">All time</span>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-1 items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <CalendarClock className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-500">Pending Receive</span>
+            <span className="text-2xl font-bold text-slate-800 leading-tight">{pendingReceive}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Items to be returned</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col flex-1 min-h-0 overflow-hidden">
+        {/* Controls */}
+        <div className="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search part, technician, machine..."
+                className="pl-9 h-9 bg-slate-50/50 border-slate-200 text-[13px] focus-visible:ring-[#0453B8]"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button onClick={() => { resetForm(); setShowForm(true); }} className="h-9 px-4 font-semibold shadow-md text-[13px] bg-[#0453B8] hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Issue Spare Part
+            </Button>
+          </div>
+        </div>
+
+      {/* Form Dialog */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Issue Spare Part</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 space-y-2">
+                <Label>Product Name / Part Name <span className="text-red-500">*</span></Label>
+                <Input required placeholder="E.g. Juki Hook Assembly" value={formData.product_name} onChange={e => setFormData({ ...formData, product_name: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Issue To (Technician) <span className="text-red-500">*</span></Label>
+                <Input required placeholder="Tech - Rajesh" value={formData.issue_to} onChange={e => setFormData({ ...formData, issue_to: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Machine Number <span className="text-red-500">*</span></Label>
+                <Select required value={formData.machine_id} onValueChange={v => setFormData({ ...formData, machine_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select machine..." /></SelectTrigger>
+                  <SelectContent>
+                    {machines.map(m => <SelectItem key={m.id} value={m.id}>{m.machine_code} - {m.machine_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Quantity <span className="text-red-500">*</span></Label>
+                <Input type="number" min="1" required value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Reason <span className="text-red-500">*</span></Label>
+                <Input required placeholder="Damaged, Routine Replacement..." value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Issue Date <span className="text-red-500">*</span></Label>
+                <Input type="date" required value={formData.issue_date} onChange={e => setFormData({ ...formData, issue_date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Expected Receiving Date <span className="text-red-500">*</span></Label>
+                <Input type="date" required value={formData.expected_receiving_date} onChange={e => setFormData({ ...formData, expected_receiving_date: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+              <Button type="button" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</Button>
+              <Button type="submit" className="bg-[#0453B8] hover:bg-blue-700">Issue Part</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+        <div className="overflow-y-auto flex-1 min-h-0">
+          <Table>
+            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+              <TableRow>
+                <TableHead>Part Details</TableHead>
+                <TableHead>Issued To</TableHead>
+                <TableHead>Machine</TableHead>
+                <TableHead>Dates</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((i) => (
+                <TableRow key={i.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden relative">
+                        {i.image_url ? (
+                          <img src={i.image_url} alt={i.product_name} className="object-cover w-full h-full" />
+                        ) : (
+                          <Settings className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900">{i.product_name}</p>
+                        <p className="text-xs font-semibold text-slate-500 max-w-[200px] truncate">{i.reason}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-semibold text-slate-700">{i.issue_to}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 inline-block">
+                      {i.machine_number}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <p><span className="text-slate-500 font-semibold mr-1">Issued:</span> <span className="font-bold text-slate-700">{new Date(i.issue_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></p>
+                      <p className="text-xs mt-0.5"><span className="text-slate-400 font-semibold mr-1">Expected:</span> <span className="font-semibold text-slate-600">{new Date(i.expected_receiving_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-black text-lg text-slate-700">{i.quantity}</span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleDelete(i.id)} 
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 border-transparent shadow-none"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-16 text-slate-400">
+                    <Archive className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p className="font-semibold">No spare part issues found.</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -5,8 +5,14 @@ import { EMPTY_SALES_ORDER, MOCK_SALES_ORDERS_LIST, MOCK_BUYERS } from "@/data/m
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Share2, FileText } from "lucide-react";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { OrderHeader } from "@/components/sales-order/order-header";
 import { BuyerOrderDetailsCard } from "@/components/sales-order/buyer-order-details-card";
@@ -135,6 +141,8 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                 <ProductsTable isReadOnly={isReadOnly} hideEditDetails={hideEditDetails} />
               </div>
+              <AttachmentsModal isReadOnly={isReadOnly} />
+              <NotesPanel isReadOnly={isReadOnly} />
             </div>
 
             {/* Right Column (Information Rail) */}
@@ -180,8 +188,6 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
                 )}
               </div>
 
-              <NotesPanel isReadOnly={isReadOnly} />
-              <AttachmentsModal isReadOnly={isReadOnly} />
               <OrderSummaryPanel isReadOnly={isReadOnly} />
             </div>
 
@@ -204,9 +210,28 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
             <Button type="button" variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6">
               Save Draft
             </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6">
+                  Share
+                  <ChevronDown className="w-4 h-4 ml-2 opacity-80" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="cursor-pointer gap-2">
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  <span>Share as PDF</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2">
+                  <Share2 className="w-4 h-4 text-slate-500" />
+                  <span>Share via Email</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button type="submit" className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
               Save
-              <ChevronDown className="w-4 h-4 ml-2 opacity-80" />
             </Button>
           </div>
         )}

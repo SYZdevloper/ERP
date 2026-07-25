@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database, Package, Archive, Factory, Scissors, Droplets, CheckSquare, Settings2, ClipboardCheck } from "lucide-react";
+import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database, Package, Archive, Factory, Scissors, Droplets, CheckSquare, Settings2, ClipboardCheck, Wrench, ShieldCheck, Box } from "lucide-react";
 import Link from "next/link";
 
 export function Sidebar() {
@@ -17,6 +17,9 @@ export function Sidebar() {
   const isInventoryActive = pathname.startsWith("/inventory");
   const isMastersActive = pathname.startsWith("/masters");
   const isFabricIssueActive = pathname.startsWith("/fabric-issue");
+  const isMaintenanceActive = pathname.startsWith("/maintenance");
+  const isVisitorsActive = pathname.startsWith("/visitors");
+  const isSparePartsActive = pathname.startsWith("/spare-parts");
   
   const isProductionActive = pathname === "/production";
   const isCuttingActive = pathname.startsWith("/production/cutting");
@@ -251,8 +254,70 @@ export function Sidebar() {
             </div>
           </div>
 
+          {/* Facilities & Admin Group */}
+          <div className="pt-2 mt-2 border-t border-white/10">
+            <div className={`px-4 text-xs font-bold text-white/50 uppercase tracking-wider mb-2 ${isExpanded ? 'block' : 'hidden'}`}>
+              Facilities & Admin
+            </div>
+
+          {/* Maintenance Link */}
+          <div className="relative mt-1">
+            {isMaintenanceActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/maintenance"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isMaintenanceActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Wrench className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Maintenance</span>}
+            </Link>
+          </div>
+
+          {/* Spare Parts Link */}
+          <div className="relative mt-1">
+            {isSparePartsActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/spare-parts"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isSparePartsActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Box className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Spare Parts</span>}
+            </Link>
+          </div>
+
+          {/* Visitors Link */}
+          <div className="relative mt-1">
+            {isVisitorsActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/visitors"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isVisitorsActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Users className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Visitors Gate</span>}
+            </Link>
+          </div>
+
+          </div>
+
           {/* Masters Link */}
-          <div className="relative">
+          <div className="relative mt-4 pt-4 border-t border-white/10">
             {isMastersActive && (
               <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
             )}

@@ -106,21 +106,47 @@ export default function TechpackPage() {
       {/* Main Control Panel */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-end gap-4">
 
-        <div className="flex-1 max-w-sm">
+        <div className="flex-1 max-w-lg">
           <div className="text-sm font-bold text-[#0453B8] mb-1">{orderData?.buyerName || "Buyer Name"}</div>
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Item Name</label>
-          <Select value={selectedProductId} onValueChange={handleProductChange}>
-            <SelectTrigger className="h-12 border-slate-200 focus:ring-[#0453B8] font-bold text-slate-800 text-base shadow-sm">
-              <SelectValue placeholder="Select a product" />
-            </SelectTrigger>
-            <SelectContent>
-              {orderData.products.map(product => (
-                <SelectItem key={product.id} value={product.id} className="font-semibold">
-                  {product.style}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Product</label>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+            {orderData.products.filter(p => p.fabricRolls.length > 0).map(product => (
+              <button
+                key={product.id}
+                onClick={() => handleProductChange(product.id)}
+                className={`relative flex flex-col items-center gap-1 shrink-0 p-1 rounded-xl border-2 transition-all ${
+                  selectedProductId === product.id 
+                    ? 'border-[#0453B8] bg-blue-50 shadow-sm' 
+                    : 'border-transparent hover:border-slate-200 hover:bg-slate-50'
+                }`}
+                title={product.style}
+              >
+                <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100">
+                  {product.image ? (
+                    <img src={product.image} alt={product.style} className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="w-6 h-6 m-auto mt-4 text-slate-300" />
+                  )}
+                </div>
+                <span className={`text-[9px] font-bold max-w-[60px] truncate ${selectedProductId === product.id ? 'text-[#0453B8]' : 'text-slate-600'}`}>
+                  {product.style.split('-')[0].trim()}
+                </span>
+                
+                {selectedProductId === product.id && (
+                  <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#0453B8] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                  </div>
+                )}
+              </button>
+            ))}
+            
+            {orderData.products.filter(p => p.fabricRolls.length > 0).length === 0 && (
+              <div className="text-xs font-semibold text-red-500 py-4 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" /> No products with fabric inwarded.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 max-w-[240px]">
