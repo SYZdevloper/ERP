@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, UserCircle2, Clock, LogOut } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, UserCircle2, Clock, LogOut, Camera } from "lucide-react";
 import Image from "next/image";
 
 export default function VisitorsPage() {
@@ -21,6 +22,7 @@ export default function VisitorsPage() {
     mobile_number: "",
     whom_to_visit: "",
     purpose: "",
+    photo_url: "",
   });
 
   function resetForm() {
@@ -29,6 +31,7 @@ export default function VisitorsPage() {
       mobile_number: "",
       whom_to_visit: "",
       purpose: "",
+      photo_url: "",
     });
   }
 
@@ -39,7 +42,7 @@ export default function VisitorsPage() {
       in_time: new Date().toISOString(),
       out_time: null,
       name: formData.name,
-      photo_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name)}`, // mock photo
+      photo_url: formData.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name)}`,
       mobile_number: formData.mobile_number,
       whom_to_visit: formData.whom_to_visit,
       purpose: formData.purpose,
@@ -115,6 +118,30 @@ export default function VisitorsPage() {
             <DialogTitle>Gate Pass - New Visitor</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="flex flex-col items-center justify-center mb-4">
+              <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                {formData.photo_url ? (
+                  <img src={formData.photo_url} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Camera className="w-6 h-6 text-slate-400 mb-1 group-hover:text-blue-500 transition-colors" />
+                    <span className="text-[10px] text-slate-400 font-medium group-hover:text-blue-500 transition-colors">Capture</span>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFormData({ ...formData, photo_url: URL.createObjectURL(file) });
+                    }
+                  }} 
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Visitor Name <span className="text-red-500">*</span></Label>
               <Input required placeholder="E.g. Amit Sharma" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
@@ -125,11 +152,35 @@ export default function VisitorsPage() {
             </div>
             <div className="space-y-2">
               <Label>Whom to Visit <span className="text-red-500">*</span></Label>
-              <Input required placeholder="Host Name / Department" value={formData.whom_to_visit} onChange={e => setFormData({ ...formData, whom_to_visit: e.target.value })} />
+              <Select required value={formData.whom_to_visit} onValueChange={v => setFormData({ ...formData, whom_to_visit: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Host / Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HR Department">HR Department</SelectItem>
+                  <SelectItem value="Admin Department">Admin Department</SelectItem>
+                  <SelectItem value="IT Department">IT Department</SelectItem>
+                  <SelectItem value="Sales Team">Sales Team</SelectItem>
+                  <SelectItem value="Management">Management</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Purpose <span className="text-red-500">*</span></Label>
-              <Input required placeholder="Meeting, Delivery, etc." value={formData.purpose} onChange={e => setFormData({ ...formData, purpose: e.target.value })} />
+              <Select required value={formData.purpose} onValueChange={v => setFormData({ ...formData, purpose: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Meeting">Meeting</SelectItem>
+                  <SelectItem value="Interview">Interview</SelectItem>
+                  <SelectItem value="Delivery">Delivery</SelectItem>
+                  <SelectItem value="Maintenance">Maintenance</SelectItem>
+                  <SelectItem value="Vendor Visit">Vendor Visit</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center gap-2 mt-4">

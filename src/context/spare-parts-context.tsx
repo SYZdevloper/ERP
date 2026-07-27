@@ -12,6 +12,9 @@ export interface SparePartIssue {
   machine_number: string;
   expected_receiving_date: string;
   quantity: number;
+  status?: 'issued' | 'received';
+  received_date?: string;
+  received_quantity?: number;
 }
 
 interface SparePartsContextType {
@@ -19,6 +22,7 @@ interface SparePartsContextType {
   setIssues: React.Dispatch<React.SetStateAction<SparePartIssue[]>>;
   addIssue: (issue: SparePartIssue) => void;
   deleteIssue: (id: string) => void;
+  updateIssue: (id: string, updates: Partial<SparePartIssue>) => void;
 }
 
 const initialIssues: SparePartIssue[] = [
@@ -32,6 +36,7 @@ const initialIssues: SparePartIssue[] = [
     machine_number: "SM-001",
     expected_receiving_date: "2026-07-25",
     quantity: 1,
+    status: 'issued',
   },
   {
     id: "SPI-002",
@@ -43,6 +48,7 @@ const initialIssues: SparePartIssue[] = [
     machine_number: "SM-002",
     expected_receiving_date: "2026-07-22",
     quantity: 3,
+    status: 'issued',
   }
 ];
 
@@ -59,8 +65,12 @@ export function SparePartsProvider({ children }: { children: React.ReactNode }) 
     setIssues(prev => prev.filter(i => i.id !== id));
   };
 
+  const updateIssue = (id: string, updates: Partial<SparePartIssue>) => {
+    setIssues(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+  };
+
   return (
-    <SparePartsContext.Provider value={{ issues, setIssues, addIssue, deleteIssue }}>
+    <SparePartsContext.Provider value={{ issues, setIssues, addIssue, deleteIssue, updateIssue }}>
       {children}
     </SparePartsContext.Provider>
   );

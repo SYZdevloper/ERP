@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Trash2, Plus, FileText, CheckCircle2, Paperclip, Edit2, Image as ImageIcon, Upload, Printer } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, FileText, CheckCircle2, Paperclip, Edit2, Image as ImageIcon, Upload, Printer, X } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -79,6 +79,7 @@ export function FabricGrnForm() {
   const [poFilter, setPoFilter] = useState("");
   const [shortReceiptPrompt, setShortReceiptPrompt] = useState<{isOpen: boolean, entryId: string | null, totalMeters: number, orderedQty: number}>({ isOpen: false, entryId: null, totalMeters: 0, orderedQty: 0 });
   const [entries, setEntries] = useState<RollEntry[]>([]);
+  const [viewingDesign, setViewingDesign] = useState<any | null>(null);
 
   // Popup States
   const [isLoadPoItemsOpen, setIsLoadPoItemsOpen] = useState(false);
@@ -537,9 +538,13 @@ export function FabricGrnForm() {
                                     <div className="text-xs text-slate-500 font-medium">Line {String(idx + 1).padStart(2, '0')}</div>
                                   </td>
                                   <td className="px-4 py-3">
-                                    <div className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50">
+                                    <button 
+                                      type="button"
+                                      onClick={() => setViewingDesign(item)}
+                                      className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50 hover:ring-2 hover:ring-[#0453B8] transition-all cursor-pointer"
+                                    >
                                       <img src={item.image || "/men regualr fit shirt.jpeg"} alt={item.material} className="w-full h-full object-contain mix-blend-multiply" />
-                                    </div>
+                                    </button>
                                   </td>
                                   <td className="px-4 py-3">
                                     <div className="font-bold text-slate-800">{item.material}</div>
@@ -1485,6 +1490,70 @@ export function FabricGrnForm() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {viewingDesign && (
+        <Dialog open={!!viewingDesign} onOpenChange={() => setViewingDesign(null)}>
+          <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-white shadow-2xl border-0 [&>button]:hidden">
+            <DialogHeader className="px-6 py-4 border-b border-slate-200 flex flex-row items-center justify-between bg-white shadow-sm z-10">
+              <DialogTitle className="text-xl font-bold text-[#0F172A]">Design Details</DialogTitle>
+              <button onClick={() => setViewingDesign(null)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-0 max-h-[80vh] overflow-y-auto">
+              <div className="bg-slate-100 flex items-center justify-center p-6 border-r border-slate-200">
+                {viewingDesign.image ? (
+                  <img src={viewingDesign.image} alt={viewingDesign.material} className="max-w-full max-h-[400px] object-contain drop-shadow-md rounded" />
+                ) : (
+                  <div className="text-slate-400 flex flex-col items-center">
+                    <ImageIcon className="w-16 h-16 text-slate-300 mb-4" />
+                    <span>No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Style / Design</h3>
+                  <p className="text-lg font-bold text-slate-900">{viewingDesign.material}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Color</h3>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: viewingDesign.color.toLowerCase() === 'navy' ? '#000080' : viewingDesign.color.toLowerCase() }} />
+                      <p className="text-md font-semibold text-slate-700">{viewingDesign.color}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Fabric Type</h3>
+                    <p className="text-md font-semibold text-slate-700">{viewingDesign.type || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">GSM</h3>
+                    <p className="text-md font-semibold text-slate-700">{viewingDesign.gsm}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Width</h3>
+                    <p className="text-md font-semibold text-slate-700">{viewingDesign.width}"</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ordered Qty</h3>
+                    <p className="text-md font-bold text-slate-900">{viewingDesign.orderedQty} Mtr</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rate</h3>
+                    <p className="text-md font-bold text-[#0453B8]">₹ {(viewingDesign.rate || 0).toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </FormProvider>
   );
 }

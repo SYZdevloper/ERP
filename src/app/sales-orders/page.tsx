@@ -130,10 +130,10 @@ export default function SalesOrdersPage() {
                    <SelectValue placeholder="Filter by Status" />
                  </SelectTrigger>
                  <SelectContent>
-                   <SelectItem value="All">All Statuses ({MOCK_SALES_ORDERS_LIST.length})</SelectItem>
-                   <SelectItem value="Draft">Draft ({MOCK_SALES_ORDERS_LIST.filter(o => o.status === "Draft").length})</SelectItem>
-                   <SelectItem value="Confirmed">Confirmed ({MOCK_SALES_ORDERS_LIST.filter(o => o.status === "Confirmed").length})</SelectItem>
-                   <SelectItem value="Cancelled">Cancelled ({MOCK_SALES_ORDERS_LIST.filter(o => o.status === "Cancelled").length})</SelectItem>
+                   <SelectItem value="All">All</SelectItem>
+                   <SelectItem value="Confirmed">Confirmed</SelectItem>
+                   <SelectItem value="Draft">Draft</SelectItem>
+                   <SelectItem value="Cancelled">Cancelled</SelectItem>
                  </SelectContent>
                </Select>
              </div>

@@ -7,6 +7,8 @@ import { Plus, Trash2, Image as ImageIcon, X, Scissors, Edit2 } from "lucide-rea
 import { SizeBreakdownRow } from "./size-breakdown-row";
 import { AddProductDialog } from "./add-product-dialog";
 import { BomConfigDialog } from "./bom-config-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { MOCK_CATALOG_PRODUCTS } from "@/data/mock-sales-order";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -17,18 +19,22 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
     name: "products",
   });
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'search' | 'create'>('search');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [viewingProduct, setViewingProduct] = useState<ProductLineItem | null>(null);
   const [trimConfigProduct, setTrimConfigProduct] = useState<ProductLineItem | null>(null);
   const [trimConfigIndex, setTrimConfigIndex] = useState<number | null>(null);
   const [sizeBreakdownIndex, setSizeBreakdownIndex] = useState<number | null>(null);
   const [initialSearchQuery, setInitialSearchQuery] = useState("");
+  const [quickAddSearch, setQuickAddSearch] = useState("");
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const products = watch("products");
   const salesOrderNo = watch("salesOrderNo") || "Draft SO";
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
+    setDialogMode('search');
     setIsAddProductOpen(true);
   };
 
@@ -39,6 +45,34 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</div>
           <h2 className="text-base font-semibold text-slate-800">Products</h2>
         </div>
+        {!isReadOnly && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm"
+              onClick={() => {
+                setDialogMode('create');
+                setIsAddProductOpen(true);
+              }}
+            >
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> New Product
+            </Button>
+            <Button variant="outline" className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm" onClick={() => document.getElementById('bulk-upload-input')?.click()}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> Bulk Add
+            </Button>
+            <input
+              id="bulk-upload-input"
+              type="file"
+              className="hidden"
+              accept=".xlsx,.xls,.csv"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  alert("Bulk add functionality will process " + e.target.files[0].name);
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
@@ -200,21 +234,58 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                   <Plus className="w-4 h-4 mx-auto" />
                 </TableCell>
                 <TableCell colSpan={hideEditDetails ? 6 : 8} className="px-2 py-2">
-                  <Input 
-                    placeholder="Type product name (e.g. Mens Cuban collar) and press Enter to add..."
-                    className="h-8 text-sm bg-white border-dashed border-slate-300 focus-visible:ring-1 focus-visible:ring-blue-500 w-full max-w-md shadow-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const val = e.currentTarget.value.trim();
-                        if (val) {
-                          setInitialSearchQuery(val);
-                          setIsAddProductOpen(true);
-                          e.currentTarget.value = "";
-                        }
-                      }
-                    }}
-                  />
+                  <Popover open={isQuickAddOpen} onOpenChange={setIsQuickAddOpen}>
+                    <PopoverTrigger asChild>
+                      <Input 
+                        placeholder="Type product name (e.g. Mens Cuban collar) and press Enter to add..."
+                        className="h-8 text-sm bg-white border-dashed border-slate-300 focus-visible:ring-1 focus-visible:ring-blue-500 w-full max-w-md shadow-sm"
+                        value={quickAddSearch}
+                        onChange={(e) => {
+                          setQuickAddSearch(e.target.value);
+                          setIsQuickAddOpen(true);
+                        }}
+                        onFocus={() => setIsQuickAddOpen(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim();
+                            if (val) {
+                              setInitialSearchQuery(val);
+                              setDialogMode('search');
+                              setIsAddProductOpen(true);
+                              setQuickAddSearch("");
+                              setIsQuickAddOpen(false);
+                            }
+                          }
+                        }}
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                      <div className="max-h-[300px] overflow-y-auto py-2">
+                        {MOCK_CATALOG_PRODUCTS
+                          .filter(p => !quickAddSearch || p.name.toLowerCase().includes(quickAddSearch.toLowerCase()) || p.code.toLowerCase().includes(quickAddSearch.toLowerCase()))
+                          .map(p => (
+                            <button
+                              key={p.id}
+                              className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
+                              onClick={() => {
+                                setInitialSearchQuery(p.name);
+                                setDialogMode('search');
+                                setIsAddProductOpen(true);
+                                setQuickAddSearch("");
+                                setIsQuickAddOpen(false);
+                              }}
+                            >
+                              <span className="font-bold text-sm text-slate-900">{p.name}</span>
+                              <span className="text-xs text-slate-500">{p.code} • {p.subcategory}</span>
+                            </button>
+                          ))}
+                        {MOCK_CATALOG_PRODUCTS.filter(p => !quickAddSearch || p.name.toLowerCase().includes(quickAddSearch.toLowerCase()) || p.code.toLowerCase().includes(quickAddSearch.toLowerCase())).length === 0 && (
+                          <div className="px-4 py-3 text-sm text-slate-500 text-center">No products found</div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </TableCell>
               </TableRow>
             )}
@@ -279,6 +350,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
           }}
           editProduct={editingIndex !== null ? products[editingIndex] : undefined}
           initialSearchQuery={initialSearchQuery}
+          initialViewMode={dialogMode}
         />
       )}
 

@@ -1099,7 +1099,7 @@ export function PurchaseOrderForm({
 
                       <div className="flex flex-col gap-1 items-end">
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-bold text-red-600 uppercase">Total</span>
+                          <span className="text-[10px] font-bold text-red-600 uppercase">Order Qty</span>
                           <Popover open={isUnitDropdownOpen} onOpenChange={setIsUnitDropdownOpen}>
                             <PopoverTrigger asChild>
                               <button className="flex items-center gap-1 text-[10px] font-bold text-red-600 uppercase hover:bg-red-50 px-1 rounded transition-colors">
@@ -1162,7 +1162,14 @@ export function PurchaseOrderForm({
                           </Popover>
                           <span className="text-red-500">*</span>
                         </div>
-                        <div className="font-black text-red-600 text-xl leading-none">{manualFormData.qty || "0"}</div>
+                        <div className="mt-1">
+                          <Input 
+                            type="number"
+                            value={manualFormData.qty}
+                            onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
+                            className="h-8 text-lg font-black bg-white w-24 text-right border border-slate-300 rounded-lg focus:ring-[#0453B8] text-red-600 px-2"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}

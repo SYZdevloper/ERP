@@ -17,6 +17,7 @@ interface AddProductDialogProps {
   onAddProduct: (product: any) => void;
   editProduct?: any;
   initialSearchQuery?: string;
+  initialViewMode?: 'search' | 'create';
 }
 
 const DEFAULT_SHIRT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
@@ -34,9 +35,9 @@ const MASTER_SUBCATEGORIES = ["T-Shirt", "Shirt", "Hoodie", "Dress", "Trouser", 
 const MASTER_TYPES = ["Half Sleeves", "Full Sleeves", "Sleeveless", "Full Length", "Knee Length"];
 const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Round Neck", "V-Neck", "Polo"];
 
-export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct, initialSearchQuery }: AddProductDialogProps) {
+export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct, initialSearchQuery, initialViewMode = 'search' }: AddProductDialogProps) {
   const [catalogItems, setCatalogItems] = useState<CatalogProduct[]>(MOCK_CATALOG_PRODUCTS);
-  const [viewMode, setViewMode] = useState<'search' | 'create'>('search');
+  const [viewMode, setViewMode] = useState<'search' | 'create'>(initialViewMode);
   const [showSearch, setShowSearch] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -163,7 +164,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setSqNumber("");
       setBrandName("");
       setShowMoreSizes(false);
-      setViewMode('search');
+      setViewMode(initialViewMode);
       setShowSearch(true);
       setShowTags(true);
       setCustomImage(null);
@@ -350,34 +351,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                 )}
               </div>
             </div>
-            {viewMode === 'search' && !editProduct && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm"
-                  onClick={() => {
-                    setSelectedProductId(null);
-                    setViewMode('create');
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1.5" /> New Product
-                </Button>
-                <Button variant="outline" className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm" onClick={() => document.getElementById('bulk-upload-input')?.click()}>
-                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Bulk Add
-                </Button>
-                <input
-                  id="bulk-upload-input"
-                  type="file"
-                  className="hidden"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      alert("Bulk add functionality will process " + e.target.files[0].name);
-                    }
-                  }}
-                />
-              </div>
-            )}
           </div>
         </DialogHeader>
 

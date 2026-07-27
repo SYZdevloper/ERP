@@ -10,13 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Archive, Settings, CalendarClock, Trash2 } from "lucide-react";
+import { Search, Plus, Archive, Settings, CalendarClock, Trash2, CheckCircle2, Camera, Package } from "lucide-react";
 
 export default function SparePartsPage() {
-  const { issues, addIssue, deleteIssue } = useSpareParts();
+  const { issues, addIssue, deleteIssue, updateIssue } = useSpareParts();
   const { machines } = useMaintenance();
   
   const [showForm, setShowForm] = useState(false);
+  const [showReceiveForm, setShowReceiveForm] = useState(false);
+  const [receivingIssue, setReceivingIssue] = useState<SparePartIssue | null>(null);
+  const [receiveData, setReceiveData] = useState({ received_date: new Date().toISOString().split('T')[0], received_quantity: 1 });
   const [search, setSearch] = useState("");
   
   const [formData, setFormData] = useState({
@@ -27,6 +30,7 @@ export default function SparePartsPage() {
     machine_id: "",
     expected_receiving_date: new Date().toISOString().split('T')[0],
     quantity: 1,
+    image_url: "",
   });
 
   function resetForm() {
@@ -38,6 +42,7 @@ export default function SparePartsPage() {
       machine_id: "",
       expected_receiving_date: new Date().toISOString().split('T')[0],
       quantity: 1,
+      image_url: "",
     });
   }
 
@@ -48,7 +53,7 @@ export default function SparePartsPage() {
     const newIssue: SparePartIssue = {
       id: `SPI-${Math.floor(Math.random() * 10000)}`,
       product_name: formData.product_name,
-      image_url: null,
+      image_url: formData.image_url || null,
       issue_to: formData.issue_to,
       issue_date: formData.issue_date,
       reason: formData.reason,
@@ -67,6 +72,19 @@ export default function SparePartsPage() {
     }
   }
 
+  function handleReceiveSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (receivingIssue) {
+      updateIssue(receivingIssue.id, {
+        status: 'received',
+        received_date: receiveData.received_date,
+        received_quantity: receiveData.received_quantity,
+      });
+    }
+    setShowReceiveForm(false);
+    setReceivingIssue(null);
+  }
+
   const filtered = issues.filter((i) => {
     return (
       !search ||
@@ -78,7 +96,7 @@ export default function SparePartsPage() {
 
   const today = new Date().toISOString().split('T')[0];
   const totalIssued = issues.reduce((sum, i) => sum + i.quantity, 0);
-  const pendingReceive = issues.filter(i => i.expected_receiving_date > today).length;
+  const pendingReceive = issues.filter(i => i.status !== 'received').length;
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50 p-6 overflow-y-auto custom-scrollbar">
@@ -110,6 +128,16 @@ export default function SparePartsPage() {
             <span className="text-[13px] font-medium text-slate-500">Pending Receive</span>
             <span className="text-2xl font-bold text-slate-800 leading-tight">{pendingReceive}</span>
             <span className="text-[11px] text-slate-400 mt-0.5">Items to be returned</span>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-1 items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Package className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[13px] font-medium text-slate-500">Parts In Stock</span>
+            <span className="text-2xl font-bold text-slate-800 leading-tight">1,245</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Available in inventory</span>
           </div>
         </div>
       </div>
@@ -145,6 +173,30 @@ export default function SparePartsPage() {
             <DialogTitle>Issue Spare Part</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="flex flex-col items-center justify-center mb-2">
+              <div className="w-24 h-24 rounded-lg bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                {formData.image_url ? (
+                  <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Camera className="w-6 h-6 text-slate-400 mb-1 group-hover:text-blue-500 transition-colors" />
+                    <span className="text-[10px] text-slate-400 font-medium group-hover:text-blue-500 transition-colors">Photo</span>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFormData({ ...formData, image_url: URL.createObjectURL(file) });
+                    }
+                  }} 
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 space-y-2">
                 <Label>Product Name / Part Name <span className="text-red-500">*</span></Label>
@@ -184,6 +236,29 @@ export default function SparePartsPage() {
             <div className="flex justify-end gap-2 pt-4 border-t mt-4">
               <Button type="button" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</Button>
               <Button type="submit" className="bg-[#0453B8] hover:bg-blue-700">Issue Part</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receive Form Dialog */}
+      <Dialog open={showReceiveForm} onOpenChange={setShowReceiveForm}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Receive Spare Part</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleReceiveSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Received Date <span className="text-red-500">*</span></Label>
+              <Input type="date" required value={receiveData.received_date} onChange={e => setReceiveData({ ...receiveData, received_date: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Received Quantity <span className="text-red-500">*</span></Label>
+              <Input type="number" min="1" max={receivingIssue?.quantity || 1} required value={receiveData.received_quantity} onChange={e => setReceiveData({ ...receiveData, received_quantity: parseInt(e.target.value) || 1 })} />
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+              <Button type="button" variant="outline" onClick={() => setShowReceiveForm(false)}>Cancel</Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Receive</Button>
             </div>
           </form>
         </DialogContent>
@@ -235,8 +310,26 @@ export default function SparePartsPage() {
                   </TableCell>
                   <TableCell>
                     <span className="font-black text-lg text-slate-700">{i.quantity}</span>
+                    {i.status === 'received' && (
+                      <div className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded inline-block ml-2">Returned: {i.received_quantity}</div>
+                    )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
+                    {i.status !== 'received' && (
+                      <Button 
+                        title="Receive Part"
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => {
+                          setReceivingIssue(i);
+                          setReceiveData({ received_date: new Date().toISOString().split('T')[0], received_quantity: i.quantity });
+                          setShowReceiveForm(true);
+                        }} 
+                        className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-transparent shadow-none mr-1"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       size="icon" 
