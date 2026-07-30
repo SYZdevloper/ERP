@@ -1,7 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
-import { ProductionProvider } from "@/components/production/production-context";
 
-export default function ProductionLayout({
+export default function SampleMakingLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -12,9 +11,7 @@ export default function ProductionLayout({
       <main className="flex-1 overflow-hidden bg-white/50 relative">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/50 via-slate-50/20 to-transparent"></div>
         <div className="absolute inset-0 z-10">
-          <ProductionProvider>
-            {children}
-          </ProductionProvider>
+          {children}
         </div>
       </main>
     </div>

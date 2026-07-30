@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,7 +46,7 @@ export function TrimsGrnForm() {
     }
   });
 
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useState("All Suppliers");
   const [po, setPo] = useState("");
   const [poLoaded, setPoLoaded] = useState(false);
   
@@ -75,6 +75,45 @@ export function TrimsGrnForm() {
   });
 
   const [selectedPoItems, setSelectedPoItems] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape to close dialogs
+      if (e.key === 'Escape') {
+        setIsLoadPoItemsOpen(false);
+        setIsManualEntryOpen(false);
+      }
+      
+      // Alt shortcuts
+      if (e.altKey) {
+        if (e.key.toLowerCase() === 'l' && poLoaded) {
+          e.preventDefault();
+          setIsLoadPoItemsOpen(true);
+        } else if (e.key.toLowerCase() === 'm' && poLoaded) {
+          e.preventDefault();
+          handleOpenManualEntry();
+        } else if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          // Simulate Save & Confirm
+          console.log("Saving GRN...");
+        }
+      }
+      
+      // Ctrl + Enter to save dialogs if open
+      if (e.ctrlKey && e.key === 'Enter') {
+        if (isManualEntryOpen && manualFormData.itemType && manualFormData.description && manualFormData.qty && manualFormData.rate) {
+          e.preventDefault();
+          handleSaveManualEntry();
+        } else if (isLoadPoItemsOpen) {
+          e.preventDefault();
+          handleAddSelectedPoItems();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [poLoaded, isManualEntryOpen, isLoadPoItemsOpen, manualFormData, selectedPoItems]);
 
   const handleOpenManualEntry = () => {
     setEditingEntryId(null);
@@ -224,6 +263,7 @@ export function TrimsGrnForm() {
                       <SelectValue placeholder="Select Supplier" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="All Suppliers">All Suppliers</SelectItem>
                       {INITIAL_SUPPLIERS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -298,11 +338,11 @@ export function TrimsGrnForm() {
                 <div className="flex items-center gap-3">
                   <Button onClick={() => setIsLoadPoItemsOpen(true)} disabled={!poLoaded} variant="outline" className="h-8 px-3 text-[#0453B8] border-blue-200 hover:bg-blue-50 font-semibold text-xs bg-white shadow-sm">
                     <FileText className="w-3.5 h-3.5 mr-1.5" />
-                    Load PO Items
+                    Load PO Items <kbd className="ml-2 px-1 bg-white border border-blue-200 rounded text-[9px] text-blue-500">Alt+L</kbd>
                   </Button>
                   <Button onClick={handleOpenManualEntry} disabled={!poLoaded} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    Manual Entry
+                    Manual Entry <kbd className="ml-2 px-1 bg-white border border-[#00A86B]/30 rounded text-[9px] text-[#00A86B]">Alt+M</kbd>
                   </Button>
                 </div>
               </div>
@@ -342,16 +382,16 @@ export function TrimsGrnForm() {
                         <TableCell className="text-center text-slate-600 py-3 px-2 text-xs font-semibold">{entry.srNo}</TableCell>
                         <TableCell className="py-3 px-2 text-center">
                           {entry.image ? (
-                            <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
+                            <div className="w-16 h-16 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
                               {entry.image.startsWith('http') || entry.image.startsWith('/') ? (
                                 <img src={entry.image} alt={entry.description} className="w-full h-full object-cover" />
                               ) : (
-                                <ImageIcon className="w-5 h-5 text-slate-400" />
+                                <ImageIcon className="w-6 h-6 text-slate-400" />
                               )}
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto cursor-pointer hover:bg-slate-100 transition-colors">
-                              <Plus className="w-4 h-4 text-slate-300" />
+                            <div className="w-16 h-16 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto cursor-pointer hover:bg-slate-100 transition-colors">
+                              <Plus className="w-6 h-6 text-slate-300" />
                             </div>
                           )}
                         </TableCell>
@@ -508,9 +548,10 @@ export function TrimsGrnForm() {
         <Button variant="outline" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium h-10 px-6">
           <FileText className="w-4 h-4 mr-2 opacity-70" /> Save Draft
         </Button>
-        <Button className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm">
+        <Button className="h-10 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-medium shadow-sm flex items-center">
           <CheckCircle2 className="w-4 h-4 mr-2" />
           Save & Confirm GRN
+          <kbd className="ml-3 px-1.5 py-0.5 bg-blue-600 rounded text-[10px] border border-blue-400">Alt+S</kbd>
         </Button>
       </div>
     </div>
@@ -568,16 +609,16 @@ export function TrimsGrnForm() {
                       </TableCell>
                       <TableCell className="py-2 text-center">
                         {item.image ? (
-                          <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
+                          <div className="w-16 h-16 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
                             {item.image.startsWith('http') || item.image.startsWith('/') ? (
                               <img src={item.image} alt={item.itemType} className="w-full h-full object-cover" />
                             ) : (
-                              <ImageIcon className="w-5 h-5 text-slate-400" />
+                              <ImageIcon className="w-6 h-6 text-slate-400" />
                             )}
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
-                            <ImageIcon className="w-4 h-4 text-slate-300" />
+                          <div className="w-16 h-16 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
+                            <ImageIcon className="w-6 h-6 text-slate-300" />
                           </div>
                         )}
                       </TableCell>

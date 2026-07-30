@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trash2, Edit2, FileText, ArrowRight, Save, Plus, MapPin, Link2 } from "lucide-react";
+import { ArrowLeft, Trash2, Edit2, FileText, ArrowRight, Save, Plus, MapPin, Link2, Settings2, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LinkSoLinesDialog, LinkedLine } from "./link-so-lines-dialog";
@@ -14,7 +15,7 @@ import { SupplierAddressCard } from "@/components/purchase-orders/supplier-addre
 import { MOCK_SALES_ORDERS_LIST } from "@/data/mock-sales-order";
 import { AttachmentsModal } from "@/components/sales-order/attachments-modal";
 import { useForm, FormProvider } from "react-hook-form";
-import { SelectSalesOrderItemsDialog } from "./select-so-items-dialog";
+import { SelectSalesOrderItemsDialog, ALL_SO_ITEMS } from "./select-so-items-dialog";
 
 export type TrimItemRow = {
   id: string;
@@ -22,6 +23,7 @@ export type TrimItemRow = {
   description: string;
   linkedLines: LinkedLine[];
   manualTotalQty?: string | number;
+  sizeBreakdown?: Record<string, number>;
   rate?: string | number;
   gst?: string;
   deliveryDate?: string;
@@ -47,8 +49,18 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
   const [activeTrimIdForLinking, setActiveTrimIdForLinking] = useState<string | null>(null);
   const [showAddress, setShowAddress] = useState(true);
   const [activeSoForLines, setActiveSoForLines] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"address" | "so-table">("address");
+  const [soFilter, setSoFilter] = useState("");
 
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(initialPo?.buyer || "");
+
+  useEffect(() => {
+    if (selectedBuyerId) {
+      setViewMode("so-table");
+    } else {
+      setViewMode("address");
+    }
+  }, [selectedBuyerId]);
   const [selectedSupplier, setSelectedSupplier] = useState<string>(initialPo?.supplier || "");
 
   const supplierAddressInfo = selectedSupplier ? (SUPPLIER_ADDRESSES[selectedSupplier] || SUPPLIER_ADDRESSES["ABC Buttons Ltd."]) : null;
@@ -208,26 +220,137 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                   <div className="mt-4 overflow-hidden relative">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-bold text-slate-800">
-                        Supplier Address
+                        {viewMode === "address" ? "Supplier Address" : `Available Designs for ${selectedBuyerId}`}
                       </h3>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowAddress(!showAddress)}
-                        className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
-                      >
-                        {showAddress ? "Hide Address" : "Unhide Address"}
-                      </Button>
+                      {!isViewMode && viewMode === "so-table" && (
+                        <div className="flex-1 max-w-sm ml-4">
+                          <Input 
+                            placeholder="Filter by SO..." 
+                            value={soFilter}
+                            onChange={(e) => setSoFilter(e.target.value)}
+                            className="h-8 text-xs bg-white"
+                          />
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        {selectedBuyerId && !isViewMode && (
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setViewMode(viewMode === "address" ? "so-table" : "address")}
+                            className="h-8 text-xs font-medium border-slate-200 bg-white"
+                          >
+                            {viewMode === "address" ? "Show Designs" : "Show Address"}
+                          </Button>
+                        )}
+                        {viewMode === "address" && (
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setShowAddress(!showAddress)}
+                            className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                          >
+                            {showAddress ? "Hide Address" : "Unhide Address"}
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                      <div className="overflow-hidden">
-                        <div className="flex flex-col md:flex-row gap-5 items-stretch pt-1 pb-1">
-                            <SupplierAddressCard 
-                              selectedSupplier={selectedSupplier} 
-                              supplierAddressInfo={supplierAddressInfo} 
-                            />
+                    <div className="relative">
+                      {/* Address View */}
+                      <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                        <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                          <div className="overflow-hidden">
+                            <div className="flex flex-col md:flex-row gap-5 items-stretch pt-1 pb-1">
+                                <SupplierAddressCard 
+                                  selectedSupplier={selectedSupplier} 
+                                  supplierAddressInfo={supplierAddressInfo} 
+                                />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Designs Table View */}
+                      <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
+                        <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-slate-50/50 shadow-sm max-h-[400px] p-4">
+                          {(() => {
+                            const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
+                            const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
+                            
+                            if (availableDesigns.length === 0) {
+                              return (
+                                <div className="flex items-center justify-center h-32 text-slate-500 text-sm">
+                                  No available designs found.
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                {availableDesigns.map((item: any) => {
+                                  const isAdded = trimItems.some(trimItem => trimItem.linkedLines.some(line => line.id === item.id));
+                                  const imgUrl = item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
+                                                 item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
+                                                 item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
+                                                 "/men regualr fit shirt.jpeg";
+
+                                  return (
+                                    <div 
+                                      key={item.id}
+                                      onDoubleClick={() => {
+                                        if (!isAdded) handleSoItemNext([item]);
+                                      }}
+                                      className={`relative flex flex-col p-3 rounded-xl border transition-all ${
+                                        isAdded 
+                                          ? 'border-emerald-500 bg-emerald-50/50 cursor-default' 
+                                          : 'border-slate-200 bg-white hover:border-[#0453B8] hover:shadow-md cursor-pointer'
+                                      }`}
+                                    >
+                                      {isAdded && (
+                                        <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-sm">
+                                          <Check className="w-3 h-3" />
+                                        </div>
+                                      )}
+                                      <div className="w-full aspect-[3/4] flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 mb-3">
+                                        <img src={imgUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                      </div>
+                                      <div className="flex flex-col flex-1">
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                          <span className="text-xs font-bold text-[#0453B8] truncate" title={item.soNo}>{item.soNo}</span>
+                                          <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{item.soItem.split('-')[1]}</span>
+                                        </div>
+                                        <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-auto" title={item.productId}>{item.productId}</div>
+                                        <div className="text-[10px] text-slate-600 line-clamp-1" title={item.name}>{item.name}</div>
+                                        
+                                        {!isAdded && (
+                                          <Button 
+                                            type="button"
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleSoItemNext([item]);
+                                            }}
+                                            className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50 bg-white"
+                                          >
+                                            Select
+                                          </Button>
+                                        )}
+                                        {isAdded && (
+                                          <div className="w-full mt-3 h-7 flex items-center justify-center text-[10px] font-bold text-emerald-600 bg-emerald-100/50 rounded-md">
+                                            Added
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -325,14 +448,56 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                                   />
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                  <Input
-                                    disabled={isViewMode}
-                                    type="number"
-                                    value={item.manualTotalQty !== undefined && item.manualTotalQty !== "" ? item.manualTotalQty : (totalQty > 0 ? totalQty : "")}
-                                    onChange={(e) => handleUpdateTrim(item.id, 'manualTotalQty', e.target.value)}
-                                    placeholder={totalQty > 0 ? totalQty.toString() : "-"}
-                                    className="w-24 h-9 mx-auto text-center font-bold text-slate-900 border-slate-200 focus:ring-[#0453B8] shadow-sm"
-                                  />
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Input
+                                      disabled={isViewMode || (item.sizeBreakdown && Object.values(item.sizeBreakdown).some(v => v > 0))}
+                                      type="number"
+                                      value={item.manualTotalQty !== undefined && item.manualTotalQty !== "" ? item.manualTotalQty : (totalQty > 0 ? totalQty : "")}
+                                      onChange={(e) => handleUpdateTrim(item.id, 'manualTotalQty', e.target.value)}
+                                      placeholder={totalQty > 0 ? totalQty.toString() : "-"}
+                                      className="w-20 h-9 text-center font-bold text-slate-900 border-slate-200 focus:ring-[#0453B8] shadow-sm"
+                                    />
+                                    {!isViewMode && (
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button variant="ghost" size="icon" className={`h-9 w-9 shrink-0 ${item.sizeBreakdown && Object.values(item.sizeBreakdown).some(v => v > 0) ? 'text-[#0453B8] bg-blue-50' : 'text-slate-400'}`} title="Size Breakdown">
+                                            <Settings2 className="w-4 h-4" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64 p-3 shadow-xl" align="end">
+                                          <div className="flex justify-between items-center mb-3">
+                                            <h4 className="font-bold text-sm text-slate-800">Size Breakdown</h4>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-2">
+                                            {["S", "M", "L", "XL", "XXL"].map(size => (
+                                              <div key={size} className="flex items-center gap-2">
+                                                <Label className="w-8 text-xs font-bold text-slate-600 text-right">{size}</Label>
+                                                <Input
+                                                  type="number"
+                                                  min="0"
+                                                  value={item.sizeBreakdown?.[size] || ""}
+                                                  onChange={(e) => {
+                                                    const val = parseInt(e.target.value) || 0;
+                                                    const newBreakdown = { ...(item.sizeBreakdown || {}), [size]: val };
+                                                    const newTotal = Object.values(newBreakdown).reduce((sum, v) => sum + (v || 0), 0);
+                                                    handleUpdateTrim(item.id, 'sizeBreakdown', newBreakdown);
+                                                    handleUpdateTrim(item.id, 'manualTotalQty', newTotal > 0 ? newTotal : "");
+                                                  }}
+                                                  className="h-8 text-xs focus:ring-[#0453B8] border-slate-200"
+                                                />
+                                              </div>
+                                            ))}
+                                          </div>
+                                          {item.sizeBreakdown && Object.values(item.sizeBreakdown).some(v => v > 0) && (
+                                            <div className="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center">
+                                              <span className="text-xs font-semibold text-slate-500">Total:</span>
+                                              <span className="text-sm font-bold text-[#0453B8]">{Object.values(item.sizeBreakdown).reduce((sum, v) => sum + (v || 0), 0)} Pcs</span>
+                                            </div>
+                                          )}
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <Input

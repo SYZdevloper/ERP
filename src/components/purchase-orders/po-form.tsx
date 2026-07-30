@@ -582,6 +582,7 @@ export function PurchaseOrderForm({
                           <SelectValue placeholder="Select Buyer" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="All Buyers">All Buyers</SelectItem>
                           {Array.from(new Set(MOCK_SALES_ORDERS_LIST.map(so => so.buyer))).map(buyer => (
                             <SelectItem key={buyer} value={buyer}>{buyer}</SelectItem>
                           ))}
@@ -660,7 +661,9 @@ export function PurchaseOrderForm({
                     <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
                       <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-slate-50/50 shadow-sm max-h-[400px] p-4">
                         {(() => {
-                          const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
+                          const soIdsForBuyer = selectedBuyerId === "All Buyers"
+                            ? MOCK_SALES_ORDERS_LIST.map(so => so.id)
+                            : MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
                           const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
                           
                           if (availableDesigns.length === 0) {

@@ -1,15 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database, Package, Archive, Factory, Scissors, Droplets, CheckSquare, Settings2, ClipboardCheck, Wrench, ShieldCheck, Box } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { FileText, ChevronDown, PlusSquare, ChevronLeft, ChevronRight, Users, Database, Package, Archive, Factory, Scissors, Droplets, CheckSquare, Settings2, ClipboardCheck, Wrench, ShieldCheck, Box, Shirt, Palette, PenTool } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input, textarea, or contenteditable
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        router.push("/sales-orders/create");
+      } else if (e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        router.push("/fabric-purchases/create");
+      } else if (e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        router.push("/trims-purchases/create");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [router]);
 
   const isSalesActive = pathname.startsWith("/sales-orders");
+  const isSampleMakingActive = pathname.startsWith("/sample-making");
   const isFabricActive = pathname.startsWith("/fabric-purchases");
   const isStoreActive = pathname.startsWith("/fabric-store");
   const isTrimsActive = pathname.startsWith("/trims-purchases");
@@ -27,6 +58,8 @@ export function Sidebar() {
   const isStoreDeptActive = pathname.startsWith("/production/store");
   const isStitchingActive = pathname.startsWith("/production/stitching");
   const isWashingActive = pathname.startsWith("/production/washing");
+  const isEmbroideryActive = pathname.startsWith("/production/embroidery");
+  const isPrintingActive = pathname.startsWith("/production/printing");
   const isFinishingActive = pathname.startsWith("/production/finishing");
   const isWarehouseActive = pathname.startsWith("/production/warehouse");
 
@@ -56,7 +89,7 @@ export function Sidebar() {
               }`}
             >
               <PlusSquare className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Sales</span>}
+              {isExpanded && <span className="truncate"><span className="underline decoration-2 underline-offset-2 decoration-blue-300 font-extrabold text-blue-100">S</span>ales</span>}
             </Link>
           </div>
 
@@ -74,7 +107,7 @@ export function Sidebar() {
               }`}
             >
               <FileText className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Fabric PO</span>}
+              {isExpanded && <span className="truncate"><span className="underline decoration-2 underline-offset-2 decoration-blue-300 font-extrabold text-blue-100">F</span>abric PO</span>}
             </Link>
           </div>
 
@@ -128,7 +161,7 @@ export function Sidebar() {
               }`}
             >
               <FileText className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Trims PO</span>}
+              {isExpanded && <span className="truncate"><span className="underline decoration-2 underline-offset-2 decoration-blue-300 font-extrabold text-blue-100">T</span>rims PO</span>}
             </Link>
           </div>
 
@@ -235,6 +268,26 @@ export function Sidebar() {
             </div>
 
             <div className="relative mt-1">
+              {isEmbroideryActive && (
+                <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+              )}
+              <Link href="/production/embroidery" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isEmbroideryActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
+                <PenTool className="w-4 h-4 shrink-0" />
+                {isExpanded && <span className="truncate">Embroidery Dept</span>}
+              </Link>
+            </div>
+
+            <div className="relative mt-1">
+              {isPrintingActive && (
+                <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+              )}
+              <Link href="/production/printing" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isPrintingActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
+                <Palette className="w-4 h-4 shrink-0" />
+                {isExpanded && <span className="truncate">Printing Dept</span>}
+              </Link>
+            </div>
+
+            <div className="relative mt-1">
               {isFinishingActive && (
                 <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
               )}
@@ -259,6 +312,24 @@ export function Sidebar() {
             <div className={`px-4 text-xs font-bold text-white/50 uppercase tracking-wider mb-2 ${isExpanded ? 'block' : 'hidden'}`}>
               Facilities & Admin
             </div>
+
+          {/* Sample Making Link */}
+          <div className="relative mt-1">
+            {isSampleMakingActive && (
+              <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+            )}
+            <Link
+              href="/sample-making"
+              className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
+                isSampleMakingActive
+                  ? "text-white bg-white/10"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Shirt className="w-5 h-5 shrink-0" />
+              {isExpanded && <span className="truncate">Sample Pending</span>}
+            </Link>
+          </div>
 
           {/* Maintenance Link */}
           <div className="relative mt-1">

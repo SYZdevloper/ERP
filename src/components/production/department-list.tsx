@@ -9,7 +9,7 @@ import { Filter, Download, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProduction } from "./production-context";
 
-export type Phase = "Cutting" | "Stitching" | "Washing" | "Finishing" | "Warehouse";
+export type Phase = "Cutting" | "QC" | "Store Dept" | "Stitching" | "Washing" | "Embroidery" | "Printing" | "Finishing" | "Warehouse";
 export type HandoverStatus = "None" | "Pending_Acceptance" | "Accepted";
 
 export interface JobCard {
@@ -36,10 +36,14 @@ export function DepartmentList({ department, description }: DepartmentListProps)
 
   const phaseOrder: Record<Phase, number> = {
     "Cutting": 0,
-    "Stitching": 1,
-    "Washing": 2,
-    "Finishing": 3,
-    "Warehouse": 4
+    "Store Dept": 1,
+    "Stitching": 2,
+    "Washing": 3,
+    "Embroidery": 4,
+    "Printing": 5,
+    "Finishing": 6,
+    "QC": 7,
+    "Warehouse": 8
   };
 
   const getRelativeStatus = (card: JobCard, viewDept: Phase) => {

@@ -213,11 +213,24 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     }
   }, [selectedProduct, editProduct]);
 
-  // Auto-fill new product name
+  // Auto-fill new product name and code
   useEffect(() => {
     if (viewMode === 'create') {
       const autoName = [newProduct.category, newProduct.subcategory, newProduct.type2, newProduct.type, newProduct.description].filter(Boolean).join(" ");
-      setNewProduct(prev => prev.name !== autoName ? { ...prev, name: autoName } : prev);
+      
+      const autoCodeBase = [newProduct.category, newProduct.subcategory, newProduct.type, newProduct.type2]
+        .filter(Boolean)
+        .map(val => val.charAt(0).toUpperCase())
+        .join("");
+        
+      const autoCode = autoCodeBase ? `${autoCodeBase}-001` : "";
+
+      setNewProduct(prev => {
+        let updated = { ...prev };
+        if (prev.name !== autoName) updated.name = autoName;
+        if (prev.code !== autoCode && (!prev.code || prev.code.endsWith('-001'))) updated.code = autoCode; // only auto-update if it's empty or still the default format
+        return (updated.name !== prev.name || updated.code !== prev.code) ? updated : prev;
+      });
     }
   }, [newProduct.category, newProduct.subcategory, newProduct.type, newProduct.type2, newProduct.description, viewMode]);
 

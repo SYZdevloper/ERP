@@ -276,8 +276,24 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                                 setIsQuickAddOpen(false);
                               }}
                             >
-                              <span className="font-bold text-sm text-slate-900">{p.name}</span>
-                              <span className="text-xs text-slate-500">{p.code} • {p.subcategory}</span>
+                              <span className="font-bold text-sm text-slate-900">
+                                {quickAddSearch ? (
+                                  p.name.split(new RegExp(`(${quickAddSearch})`, 'gi')).map((part, i) => 
+                                    part.toLowerCase() === quickAddSearch.toLowerCase() ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark> : <span key={i}>{part}</span>
+                                  )
+                                ) : (
+                                  p.name
+                                )}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {quickAddSearch ? (
+                                  p.code.split(new RegExp(`(${quickAddSearch})`, 'gi')).map((part, i) => 
+                                    part.toLowerCase() === quickAddSearch.toLowerCase() ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark> : <span key={i}>{part}</span>
+                                  )
+                                ) : (
+                                  p.code
+                                )} • {p.subcategory}
+                              </span>
                             </button>
                           ))}
                         {MOCK_CATALOG_PRODUCTS.filter(p => !quickAddSearch || p.name.toLowerCase().includes(quickAddSearch.toLowerCase()) || p.code.toLowerCase().includes(quickAddSearch.toLowerCase())).length === 0 && (

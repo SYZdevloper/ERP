@@ -22,6 +22,9 @@ export default function SampleFabricIssuePage() {
   const [styleName, setStyleName] = useState("");
   const [selectedRollId, setSelectedRollId] = useState("");
   const [issueQuantity, setIssueQuantity] = useState("");
+  const [issuedTo, setIssuedTo] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [returnStatus, setReturnStatus] = useState("Pending Return");
   const [remarks, setRemarks] = useState("");
 
   const selectedRoll = MOCK_ROLLS.find(r => r.id === selectedRollId);
@@ -74,11 +77,45 @@ export default function SampleFabricIssuePage() {
           <div className="space-y-2">
             <Label className="text-[13px] font-medium text-slate-700">Style / Sample Name <span className="text-red-500">*</span></Label>
             <Input 
-              placeholder="e.g. Winter Parka Prototye" 
+              placeholder="e.g. Winter Parka Prototype" 
               value={styleName} 
               onChange={(e) => setStyleName(e.target.value)} 
               className="h-9"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-[13px] font-medium text-slate-700">Issued To <span className="text-red-500">*</span></Label>
+            <Input 
+              placeholder="e.g. Ramesh (Production Manager)" 
+              value={issuedTo} 
+              onChange={(e) => setIssuedTo(e.target.value)} 
+              className="h-9"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-[13px] font-medium text-slate-700">Purpose of Issue <span className="text-red-500">*</span></Label>
+            <Input 
+              placeholder="e.g. Buyer Sample, Testing, R&D" 
+              value={purpose} 
+              onChange={(e) => setPurpose(e.target.value)} 
+              className="h-9"
+            />
+          </div>
+          
+          <div className="space-y-2 lg:col-span-2">
+            <Label className="text-[13px] font-medium text-slate-700">Return Tracking <span className="text-red-500">*</span></Label>
+            <Select value={returnStatus} onValueChange={setReturnStatus}>
+              <SelectTrigger className="h-9 w-full">
+                <SelectValue placeholder="Select tracking status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Pending Return">Pending Return (Follow Up Required)</SelectItem>
+                <SelectItem value="Received Back">Received Back</SelectItem>
+                <SelectItem value="Non-Returnable">Non-Returnable (Consumed/Dispatched)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

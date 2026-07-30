@@ -182,6 +182,13 @@ export default function GrnListPage() {
                             <DropdownMenuItem className="cursor-pointer flex items-center font-medium text-slate-700">
                               <Edit2 className="mr-2 h-4 w-4 text-slate-400" /> Edit GRN
                             </DropdownMenuItem>
+                            {grn.status === "Pending QC" && (
+                              <DropdownMenuItem className="cursor-pointer font-medium text-blue-700 focus:text-blue-700 focus:bg-blue-50 p-0">
+                                <Link href={`/fabric-store/grn/${grn.id}/qc`} className="flex items-center w-full px-2 py-1.5">
+                                  <ClipboardCheck className="mr-2 h-4 w-4 text-blue-500" /> QC / Shrinkage
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

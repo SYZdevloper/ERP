@@ -29,7 +29,7 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
   const [receiveOk, setReceiveOk] = useState(card.totalReceived.toString());
   const [rejectionNote, setRejectionNote] = useState("");
 
-  const phases: Phase[] = ["Cutting", "Stitching", "Washing", "Finishing", "Warehouse"];
+  const phases: Phase[] = ["Cutting", "QC", "Store Dept", "Stitching", "Washing", "Finishing", "Warehouse"];
 
   const handleBack = () => {
     router.push(`/production/${department.toLowerCase()}`);
@@ -101,7 +101,15 @@ export function JobCardDetail({ id, department }: JobCardDetailProps) {
   };
 
   const phaseOrder: Record<Phase, number> = {
-    "Cutting": 0, "Stitching": 1, "Washing": 2, "Finishing": 3, "Warehouse": 4
+    "Cutting": 0,
+    "Store Dept": 1,
+    "Stitching": 2,
+    "Washing": 3,
+    "Embroidery": 4,
+    "Printing": 5,
+    "Finishing": 6,
+    "QC": 7,
+    "Warehouse": 8
   };
   const isReplacementView = phaseOrder[department] === phaseOrder[card.currentPhase] - 1 && card.pendingReplacementCount > 0;
   const isAccepted = !isReplacementView && card.handoverStatus === "Accepted";

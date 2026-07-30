@@ -8,8 +8,10 @@ import { Edit2 } from "lucide-react";
 import Link from "next/link";
 import { MOCK_BUYERS } from "@/data/mock-sales-order";
 import { format, differenceInDays } from "date-fns";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MasterDialog } from "@/components/masters/master-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown, Plus } from "lucide-react";
 export function BuyerOrderDetailsCard({ 
   isReadOnly = false, 
   isEditMode = false,
@@ -22,6 +24,8 @@ export function BuyerOrderDetailsCard({
   onToggleEdit?: () => void
 }) {
   const [isBuyerDialogOpen, setIsBuyerDialogOpen] = useState(false);
+  const [buyerSearchQuery, setBuyerSearchQuery] = useState("");
+  const [isBuyerPopoverOpen, setIsBuyerPopoverOpen] = useState(false);
   const { register, watch, setValue, getValues, control } = useFormContext<SalesOrder>();
   const buyerId = useWatch({ control, name: "buyerId" });
   const poDate = watch("poDate");
@@ -76,26 +80,70 @@ export function BuyerOrderDetailsCard({
               control={control}
               name="buyerId"
               render={({ field }) => (
-                <Select value={field.value || undefined} onValueChange={(val) => {
-                  if (val === "add_new_buyer") {
-                    setIsBuyerDialogOpen(true);
-                    return;
-                  }
-                  field.onChange(val);
-                }}>
-                  <SelectTrigger id="buyerId" className="w-full h-[42px]">
-                    <SelectValue className="truncate" placeholder="Select Buyer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOCK_BUYERS.map(buyer => (
-                      <SelectItem key={buyer.id} value={buyer.id}>{buyer.name}</SelectItem>
-                    ))}
-                    <div className="h-px bg-slate-100 my-1" />
-                    <SelectItem value="add_new_buyer" className="text-blue-600 font-medium focus:text-blue-700 focus:bg-blue-50 cursor-pointer">
-                      + Add Buyer
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Popover open={isBuyerPopoverOpen} onOpenChange={setIsBuyerPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="buyerId"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isBuyerPopoverOpen}
+                      className={`w-full h-[42px] justify-between font-normal ${!field.value && "text-slate-500"}`}
+                      autoFocus={!isEditMode && !effectivelyReadOnly}
+                    >
+                      {field.value
+                        ? MOCK_BUYERS.find((b) => b.id === field.value)?.name
+                        : "Select Buyer..."}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0" align="start">
+                    <div className="flex flex-col">
+                      <div className="p-2 border-b border-slate-100">
+                        <Input
+                          placeholder="Search buyer..."
+                          value={buyerSearchQuery}
+                          onChange={(e) => setBuyerSearchQuery(e.target.value)}
+                          className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-blue-500"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-[200px] overflow-y-auto py-1">
+                        {MOCK_BUYERS.filter(b => b.name.toLowerCase().includes(buyerSearchQuery.toLowerCase())).map(buyer => (
+                          <div
+                            key={buyer.id}
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 ${field.value === buyer.id ? "bg-slate-50 font-medium" : ""}`}
+                            onClick={() => {
+                              field.onChange(buyer.id);
+                              setIsBuyerPopoverOpen(false);
+                              setBuyerSearchQuery("");
+                            }}
+                          >
+                            {buyerSearchQuery ? (
+                              buyer.name.split(new RegExp(`(${buyerSearchQuery})`, 'gi')).map((part, i) => 
+                                part.toLowerCase() === buyerSearchQuery.toLowerCase() ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark> : <span key={i}>{part}</span>
+                              )
+                            ) : (
+                              buyer.name
+                            )}
+                          </div>
+                        ))}
+                        {MOCK_BUYERS.filter(b => b.name.toLowerCase().includes(buyerSearchQuery.toLowerCase())).length === 0 && (
+                          <div className="px-3 py-3 text-sm text-slate-500 text-center">No buyers found</div>
+                        )}
+                        <div className="h-px bg-slate-100 my-1" />
+                        <div
+                          className="px-3 py-2 text-sm cursor-pointer text-blue-600 font-medium hover:bg-blue-50 flex items-center gap-1.5"
+                          onClick={() => {
+                            setIsBuyerDialogOpen(true);
+                            setIsBuyerPopoverOpen(false);
+                          }}
+                        >
+                          <Plus className="w-4 h-4" /> Add Buyer
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
             />
           )}

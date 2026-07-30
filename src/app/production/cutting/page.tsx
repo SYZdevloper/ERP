@@ -157,7 +157,7 @@ export default function CuttingPage() {
       id: newId,
       soId: orderData.id,
       style: productData.style,
-      currentPhase: "Stitching",
+      currentPhase: "QC",
       totalReceived: productData.targetQty,
       goodQty: productData.targetQty, 
       badQty: 0,
@@ -166,7 +166,7 @@ export default function CuttingPage() {
     });
 
     setTimeout(() => {
-      router.push("/production/stitching");
+      router.push("/production/qc");
     }, 1200);
   };
 
@@ -377,7 +377,7 @@ export default function CuttingPage() {
             {isIssued ? (
               <><CheckCircle2 className="w-4 h-4 mr-2" /> Job Card Issued</>
             ) : (
-              <>Issue to Stitching <ArrowRight className="w-4 h-4 ml-2" /></>
+              <>Issue to QC <ArrowRight className="w-4 h-4 ml-2" /></>
             )}
           </Button>
         </div>
@@ -389,24 +389,27 @@ export default function CuttingPage() {
           <TechpackDetails productData={productData} orderData={orderData} />
         </div>
 
-        {/* Right Column: Roll Allocation Table */}
-        <div className="w-full lg:w-2/3 flex flex-col min-h-0 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
-              <Package className="w-5 h-5 text-[#0453B8]" />
-              2. Fabric Roll Allocation
-            </h3>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="border-[#0453B8] text-[#0453B8] hover:bg-blue-50 font-bold px-6">
-                START
-              </Button>
-              <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6">
-                Completed
-              </Button>
-            </div>
-          </div>
+        {/* Right Column: Content Sections */}
+        <div className="w-full lg:w-2/3 flex flex-col min-h-0 gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
           
-          <div className="flex-1 overflow-auto p-2">
+          {/* 2. Fabric Roll Allocation Table */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm shrink-0">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4 rounded-t-xl">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Package className="w-5 h-5 text-[#0453B8]" />
+                2. Fabric Roll Allocation
+              </h3>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" className="border-[#0453B8] text-[#0453B8] hover:bg-blue-50 font-bold px-6 h-9">
+                  START
+                </Button>
+                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 h-9">
+                  Completed
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto p-2">
             <Table>
               <TableHeader>
                 <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
@@ -523,11 +526,12 @@ export default function CuttingPage() {
                 </TableRow>
               </TableBody>
             </Table>
+            </div>
           </div>
 
-          {/* Size Breakdown */}
-          <div className="border-t border-slate-200 bg-white shrink-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] relative">
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+          {/* 3. Size Breakdown */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm shrink-0">
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-2 rounded-t-xl">
               <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">3. Size Breakdown</h3>
               <span className="font-bold text-[#0453B8] text-sm">(Sizewise & Colourwise)</span>
             </div>
@@ -579,9 +583,9 @@ export default function CuttingPage() {
             </div>
           </div>
 
-          {/* Bundle Generation */}
-          <div className="border-t border-slate-200 bg-white shrink-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] relative mt-4">
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+          {/* 4. Bundle Generation */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm shrink-0">
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between rounded-t-xl">
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">4. Bundle Sorting</h3>
                 <span className="font-bold text-[#0453B8] text-sm">(Auto Generated)</span>
@@ -596,7 +600,7 @@ export default function CuttingPage() {
                 />
               </div>
             </div>
-            <div className="p-4 overflow-x-auto max-h-[400px] overflow-y-auto">
+            <div className="p-4 overflow-x-auto">
               <table className="w-full border-collapse border border-slate-300 text-sm text-center">
                 <thead className="sticky top-0 bg-white shadow-sm z-10">
                   <tr>

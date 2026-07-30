@@ -57,7 +57,7 @@ export function FabricGrnForm() {
     }
   });
 
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useState("All Suppliers");
   const [po, setPo] = useState("");
   const [poLoaded, setPoLoaded] = useState(false);
   
@@ -400,6 +400,7 @@ export function FabricGrnForm() {
                       <SelectValue placeholder="Select Supplier" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="All Suppliers">All Suppliers</SelectItem>
                       {INITIAL_SUPPLIERS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -541,7 +542,7 @@ export function FabricGrnForm() {
                                     <button 
                                       type="button"
                                       onClick={() => setViewingDesign(item)}
-                                      className="w-10 h-12 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50 hover:ring-2 hover:ring-[#0453B8] transition-all cursor-pointer"
+                                      className="w-16 h-20 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50 hover:ring-2 hover:ring-[#0453B8] transition-all cursor-pointer"
                                     >
                                       <img src={item.image || "/men regualr fit shirt.jpeg"} alt={item.material} className="w-full h-full object-contain mix-blend-multiply" />
                                     </button>
@@ -645,16 +646,16 @@ export function FabricGrnForm() {
                         <TableCell className="text-center text-slate-600 py-3 px-2 text-xs font-semibold">{entry.srNo}</TableCell>
                         <TableCell className="py-3 px-2 text-center">
                           {entry.image ? (
-                            <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
+                            <div className="w-16 h-20 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
                               {entry.image.startsWith('http') || entry.image.startsWith('/') ? (
                                 <img src={entry.image} alt={entry.description} className="w-full h-full object-cover" />
                               ) : (
-                                <ImageIcon className="w-5 h-5 text-slate-400" />
+                                <ImageIcon className="w-6 h-6 text-slate-400" />
                               )}
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto cursor-pointer hover:bg-slate-100 transition-colors">
-                              <Plus className="w-4 h-4 text-slate-300" />
+                            <div className="w-16 h-20 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto cursor-pointer hover:bg-slate-100 transition-colors">
+                              <Plus className="w-5 h-5 text-slate-300" />
                             </div>
                           )}
                         </TableCell>
@@ -895,16 +896,16 @@ export function FabricGrnForm() {
                       </TableCell>
                       <TableCell className="py-2 text-center">
                         {item.image ? (
-                          <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
+                          <div className="w-16 h-20 rounded bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto overflow-hidden">
                             {item.image.startsWith('http') || item.image.startsWith('/') ? (
                               <img src={item.image} alt={item.material} className="w-full h-full object-cover" />
                             ) : (
-                              <ImageIcon className="w-5 h-5 text-slate-400" />
+                              <ImageIcon className="w-6 h-6 text-slate-400" />
                             )}
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
-                            <ImageIcon className="w-4 h-4 text-slate-300" />
+                          <div className="w-16 h-20 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
+                            <ImageIcon className="w-5 h-5 text-slate-300" />
                           </div>
                         )}
                       </TableCell>

@@ -213,12 +213,18 @@ export default function TechpackPage() {
             <div className="overflow-auto p-2">
               <Table>
                 <TableHeader>
+                  <TableRow className="bg-transparent hover:bg-transparent border-b-0">
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Roll No</TableHead>
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Material</TableHead>
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3 text-center">Width</TableHead>
+                    <TableHead colSpan={2} className="text-xs font-bold text-red-500 text-center uppercase tracking-wider border-b border-slate-200 pb-1">Shrinkage</TableHead>
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Available Qty</TableHead>
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px] align-bottom pb-3">Allocate Qty</TableHead>
+                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Remaining</TableHead>
+                  </TableRow>
                   <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Roll No</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Material</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Available Qty</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px]">Allocate Qty</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Remaining</TableHead>
+                    <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Width</TableHead>
+                    <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Length</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -230,6 +236,9 @@ export default function TechpackPage() {
                       <TableRow key={roll.id} className="border-b-slate-50 hover:bg-slate-50/50">
                         <TableCell className="font-bold text-slate-800">{roll.id}</TableCell>
                         <TableCell className="font-semibold text-slate-600">{roll.material}</TableCell>
+                        <TableCell className="font-bold text-slate-700 text-center">{roll.width || "-"}"</TableCell>
+                        <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageW || 2}%</TableCell>
+                        <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageL || 3}%</TableCell>
                         <TableCell className="text-right font-bold text-slate-700">
                           {roll.availableQty} <span className="text-xs font-semibold text-slate-400">{roll.unit}</span>
                         </TableCell>
@@ -252,7 +261,7 @@ export default function TechpackPage() {
                   })}
                   {productData.fabricRolls.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center text-slate-500 font-medium">
+                      <TableCell colSpan={8} className="h-32 text-center text-slate-500 font-medium">
                         No fabric rolls available for this product.
                       </TableCell>
                     </TableRow>
@@ -262,60 +271,6 @@ export default function TechpackPage() {
             </div>
           </div>
 
-          {/* Accessories Allocation Details Table */}
-          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm flex-shrink-0">
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4 rounded-t-xl">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-[#0453B8]" />
-                3. Accessories Allocation Details
-              </h3>
-            </div>
-
-            <div className="overflow-auto p-2">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Item Type</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Required Qty</TableHead>
-                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px]">Allocate Qty</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {productData.trims && productData.trims.map(trim => {
-                    const allocated = allocations[trim.id] ?? trim.allocatedQty;
-
-                    return (
-                      <TableRow key={trim.id} className="border-b-slate-50 hover:bg-slate-50/50">
-                        <TableCell className="font-bold text-slate-800">{trim.itemType}</TableCell>
-                        <TableCell className="font-semibold text-slate-600">{trim.description}</TableCell>
-                        <TableCell className="text-right font-bold text-slate-700">
-                          {trim.requiredQty} <span className="text-xs font-semibold text-slate-400">{trim.unit}</span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            min={0}
-                            value={allocations[trim.id] !== undefined ? allocations[trim.id] : trim.allocatedQty}
-                            onChange={(e) => handleAllocationChange(trim.id, e.target.value, trim.requiredQty)}
-                            className="h-8 text-right font-bold focus:ring-[#0453B8]"
-                            placeholder="0"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {(!productData.trims || productData.trims.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center text-slate-500 font-medium">
-                        No accessories available for this product.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
         </div>
       </div>
     </div>

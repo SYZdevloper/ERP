@@ -17,6 +17,8 @@ const initialMockCards: JobCard[] = [
   { id: "JC-004", soId: "SO-2026-004", style: "Polo Shirt", currentPhase: "Washing", totalReceived: 400, goodQty: 400, badQty: 0, handoverStatus: "Accepted", pendingReplacementCount: 0 },
   { id: "JC-005", soId: "SO-2026-005", style: "Denim Jeans", currentPhase: "Warehouse", totalReceived: 250, goodQty: 250, badQty: 0, handoverStatus: "Pending_Acceptance", pendingReplacementCount: 0 },
   { id: "JC-007", soId: "SO-2026-007", style: "Windbreaker Jacket", currentPhase: "Stitching", totalReceived: 250, goodQty: 247, badQty: 0, handoverStatus: "Accepted", pendingReplacementCount: 3 },
+  { id: "JC-008", soId: "SO-2026-008", style: "Logo Hoodie", currentPhase: "Embroidery", totalReceived: 100, goodQty: 100, badQty: 0, handoverStatus: "Pending_Acceptance", pendingReplacementCount: 0 },
+  { id: "JC-009", soId: "SO-2026-009", style: "Graphic Tee", currentPhase: "Printing", totalReceived: 300, goodQty: 300, badQty: 0, handoverStatus: "Accepted", pendingReplacementCount: 0 },
 ];
 
 const ProductionContext = createContext<ProductionContextType | undefined>(undefined);
