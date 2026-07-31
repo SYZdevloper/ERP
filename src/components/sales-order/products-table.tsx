@@ -28,6 +28,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
   const [initialSearchQuery, setInitialSearchQuery] = useState("");
   const [quickAddSearch, setQuickAddSearch] = useState("");
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [highlightedProductIndex, setHighlightedProductIndex] = useState(0);
 
   const products = watch("products");
   const salesOrderNo = watch("salesOrderNo") || "Draft SO";
@@ -243,18 +244,36 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                         onChange={(e) => {
                           setQuickAddSearch(e.target.value);
                           setIsQuickAddOpen(true);
+                          setHighlightedProductIndex(0);
                         }}
                         onFocus={() => setIsQuickAddOpen(true)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                          const filtered = MOCK_CATALOG_PRODUCTS.filter(p => !quickAddSearch || p.name.toLowerCase().includes(quickAddSearch.toLowerCase()) || p.code.toLowerCase().includes(quickAddSearch.toLowerCase()));
+                          
+                          if (e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const val = e.currentTarget.value.trim();
-                            if (val) {
-                              setInitialSearchQuery(val);
+                            setHighlightedProductIndex(prev => (prev < filtered.length - 1 ? prev + 1 : prev));
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            setHighlightedProductIndex(prev => (prev > 0 ? prev - 1 : 0));
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (filtered.length > 0) {
+                              const selected = filtered[highlightedProductIndex];
+                              setInitialSearchQuery(selected.name);
                               setDialogMode('search');
                               setIsAddProductOpen(true);
                               setQuickAddSearch("");
                               setIsQuickAddOpen(false);
+                            } else {
+                              const val = e.currentTarget.value.trim();
+                              if (val) {
+                                setInitialSearchQuery(val);
+                                setDialogMode('search');
+                                setIsAddProductOpen(true);
+                                setQuickAddSearch("");
+                                setIsQuickAddOpen(false);
+                              }
                             }
                           }
                         }}
@@ -264,10 +283,10 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                       <div className="max-h-[300px] overflow-y-auto py-2">
                         {MOCK_CATALOG_PRODUCTS
                           .filter(p => !quickAddSearch || p.name.toLowerCase().includes(quickAddSearch.toLowerCase()) || p.code.toLowerCase().includes(quickAddSearch.toLowerCase()))
-                          .map(p => (
+                          .map((p, idx) => (
                             <button
                               key={p.id}
-                              className="w-full text-left px-4 py-2 hover:bg-slate-50 focus:bg-slate-50 outline-none flex flex-col transition-colors border-l-2 border-transparent hover:border-[#0453B8]"
+                              className={`w-full text-left px-4 py-2 outline-none flex flex-col transition-colors border-l-2 ${highlightedProductIndex === idx ? 'bg-slate-100 border-[#0453B8]' : 'border-transparent hover:bg-slate-50 hover:border-[#0453B8]'}`}
                               onClick={() => {
                                 setInitialSearchQuery(p.name);
                                 setDialogMode('search');

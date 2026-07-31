@@ -127,7 +127,8 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     code: "", rate: "", category: "", subcategory: "", name: "", type: "", type2: "", buttons: "", description: ""
   });
 
-  const rateInputRef = useRef<HTMLInputElement>(null);
+  const sqNumberInputRef = useRef<HTMLInputElement>(null);
+  const patternInputRef = useRef<HTMLButtonElement>(null);
 
   const currentTotalQty = useMemo(() => {
     return Object.values(quantities).reduce((acc, qty) => acc + (qty || 0), 0);
@@ -162,7 +163,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setSelectedFit("Regular");
       setCustomRate("");
       setSqNumber("");
-      setBrandName("");
+      setBrandName("Zara"); // Auto-select single brand as requested
       setShowMoreSizes(false);
       setViewMode(initialViewMode);
       setShowSearch(true);
@@ -201,14 +202,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     return catalogItems.find(p => p.id === selectedProductId) || null;
   }, [selectedProductId, catalogItems]);
 
-  // Sync custom rate and name when product changes
+  // Sync custom name when product changes
   useEffect(() => {
     if (selectedProduct && !editProduct) {
       setCustomProductName(selectedProduct.name);
-      setCustomRate(selectedProduct.rate.toString());
+      // Remove Default Rate as requested: setCustomRate("") instead of selectedProduct.rate
+      setCustomRate("");
       setTimeout(() => {
-        rateInputRef.current?.focus();
-        rateInputRef.current?.select();
+        sqNumberInputRef.current?.focus();
+        sqNumberInputRef.current?.select();
       }, 50);
     }
   }, [selectedProduct, editProduct]);
@@ -531,8 +533,15 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       <div className="flex flex-col gap-2">
                         <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Buyer Design No</Label>
                         <Input
+                          ref={sqNumberInputRef}
                           value={sqNumber}
                           onChange={(e) => setSqNumber(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              patternInputRef.current?.focus();
+                            }
+                          }}
                           placeholder="Enter Sort No"
                           className="h-[40px] bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold px-3 focus-visible:ring-[#0453B8]"
                         />
@@ -542,7 +551,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       <div className="flex flex-col gap-2">
                         <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rate (₹) <span className="text-red-500">*</span></Label>
                         <Input
-                          ref={rateInputRef}
                           type="number"
                           min="0"
                           value={customRate}
@@ -581,7 +589,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         <div className="flex items-center gap-2">
                           <Popover open={isPatternOpen} onOpenChange={setIsPatternOpen}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-[40px] flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
+                              <Button ref={patternInputRef} variant="outline" role="combobox" aria-expanded={isPatternOpen} className="h-[40px] flex-1 justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-700 px-3">
                                 {selectedPattern ? selectedPattern : "Select Pattern"}
                                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                               </Button>

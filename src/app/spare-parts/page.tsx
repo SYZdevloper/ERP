@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Plus, Archive, Settings, CalendarClock, Trash2, CheckCircle2, Camera, Package } from "lucide-react";
 
 export default function SparePartsPage() {
-  const { issues, addIssue, deleteIssue, updateIssue } = useSpareParts();
+  const { issues, inventory, addIssue, deleteIssue, updateIssue, addInventory, updateInventory } = useSpareParts();
   const { machines } = useMaintenance();
   
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +21,11 @@ export default function SparePartsPage() {
   const [receivingIssue, setReceivingIssue] = useState<SparePartIssue | null>(null);
   const [receiveData, setReceiveData] = useState({ received_date: new Date().toISOString().split('T')[0], received_quantity: 1 });
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<'inventory' | 'issues'>('issues');
+  const [showAddInventoryForm, setShowAddInventoryForm] = useState(false);
+  const [inventoryForm, setInventoryForm] = useState({
+    name: "", category: "Mechanical", quantity: 1, min_quantity: 2
+  });
   
   const [formData, setFormData] = useState({
     product_name: "",
@@ -66,6 +71,19 @@ export default function SparePartsPage() {
     setShowForm(false);
   }
 
+  function handleAddInventorySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    addInventory({
+      id: `INV-${Math.floor(Math.random() * 10000)}`,
+      name: inventoryForm.name,
+      category: inventoryForm.category,
+      quantity: inventoryForm.quantity,
+      min_quantity: inventoryForm.min_quantity
+    });
+    setShowAddInventoryForm(false);
+    setInventoryForm({ name: "", category: "Mechanical", quantity: 1, min_quantity: 2 });
+  }
+
   function handleDelete(id: string) {
     if (confirm("Delete this spare part issue record?")) {
       deleteIssue(id);
@@ -95,8 +113,13 @@ export default function SparePartsPage() {
   });
 
   const today = new Date().toISOString().split('T')[0];
-  const totalIssued = issues.reduce((sum, i) => sum + i.quantity, 0);
   const pendingReceive = issues.filter(i => i.status !== 'received').length;
+
+  const filteredInventory = inventory.filter((i) => {
+    return !search || i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const totalIssued = issues.length;
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50 p-6 overflow-y-auto custom-scrollbar">
@@ -159,11 +182,34 @@ export default function SparePartsPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button onClick={() => { resetForm(); setShowForm(true); }} className="h-9 px-4 font-semibold shadow-md text-[13px] bg-[#0453B8] hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Issue Spare Part
-            </Button>
+            {activeTab === 'inventory' ? (
+              <Button onClick={() => setShowAddInventoryForm(true)} className="h-9 px-4 font-semibold shadow-md text-[13px] bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Add to Stock
+              </Button>
+            ) : (
+              <Button onClick={() => { resetForm(); setShowForm(true); }} className="h-9 px-4 font-semibold shadow-md text-[13px] bg-[#0453B8] hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Issue Spare Part
+              </Button>
+            )}
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 px-6 border-b border-slate-100 bg-slate-50">
+          <button
+            onClick={() => setActiveTab('inventory')}
+            className={`px-4 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'inventory' ? 'border-[#0453B8] text-[#0453B8]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            Spare Parts Inventory
+          </button>
+          <button
+            onClick={() => setActiveTab('issues')}
+            className={`px-4 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'issues' ? 'border-[#0453B8] text-[#0453B8]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            Issued Parts
+          </button>
         </div>
 
       {/* Form Dialog */}
@@ -200,7 +246,16 @@ export default function SparePartsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 space-y-2">
                 <Label>Product Name / Part Name <span className="text-red-500">*</span></Label>
-                <Input required placeholder="E.g. Juki Hook Assembly" value={formData.product_name} onChange={e => setFormData({ ...formData, product_name: e.target.value })} />
+                <Select required value={formData.product_name} onValueChange={v => setFormData({ ...formData, product_name: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select from Inventory..." /></SelectTrigger>
+                  <SelectContent>
+                    {inventory.map(inv => (
+                      <SelectItem key={inv.id} value={inv.name}>
+                        {inv.name} (Stock: {inv.quantity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Issue To (Technician) <span className="text-red-500">*</span></Label>
@@ -264,7 +319,46 @@ export default function SparePartsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Add Inventory Form Dialog */}
+      <Dialog open={showAddInventoryForm} onOpenChange={setShowAddInventoryForm}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add Spare Part to Stock</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddInventorySubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Part Name <span className="text-red-500">*</span></Label>
+              <Input required placeholder="E.g. Juki Hook Assembly" value={inventoryForm.name} onChange={e => setInventoryForm({ ...inventoryForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={inventoryForm.category} onValueChange={v => setInventoryForm({ ...inventoryForm, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mechanical">Mechanical</SelectItem>
+                  <SelectItem value="Electrical">Electrical</SelectItem>
+                  <SelectItem value="Consumable">Consumable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Initial Quantity <span className="text-red-500">*</span></Label>
+              <Input type="number" min="1" required value={inventoryForm.quantity} onChange={e => setInventoryForm({ ...inventoryForm, quantity: parseInt(e.target.value) || 1 })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Minimum Alert Quantity <span className="text-red-500">*</span></Label>
+              <Input type="number" min="0" required value={inventoryForm.min_quantity} onChange={e => setInventoryForm({ ...inventoryForm, min_quantity: parseInt(e.target.value) || 0 })} />
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+              <Button type="button" variant="outline" onClick={() => setShowAddInventoryForm(false)}>Cancel</Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Add to Stock</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
         <div className="overflow-y-auto flex-1 min-h-0">
+          {activeTab === 'issues' ? (
           <Table>
             <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
               <TableRow>
@@ -352,6 +446,51 @@ export default function SparePartsPage() {
               )}
             </TableBody>
           </Table>
+          ) : (
+          <Table>
+            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Part Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Available Stock</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredInventory.map((i) => (
+                <TableRow key={i.id}>
+                  <TableCell className="font-semibold text-slate-500">{i.id}</TableCell>
+                  <TableCell className="font-bold text-slate-900">{i.name}</TableCell>
+                  <TableCell>
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 inline-block">
+                      {i.category}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="font-black text-lg text-slate-700">{i.quantity}</span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {i.quantity <= i.min_quantity ? (
+                      <span className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded inline-block">Low Stock</span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded inline-block">In Stock</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              
+              {filteredInventory.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-16 text-slate-400">
+                    <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p className="font-semibold">No inventory found.</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          )}
         </div>
       </div>
     </div>

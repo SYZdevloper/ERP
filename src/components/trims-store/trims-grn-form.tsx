@@ -59,10 +59,13 @@ export function TrimsGrnForm() {
   const handleLoadPo = (selectedPo: string) => {
     if (selectedPo) {
       setPoLoaded(true);
+      setViewMode("po-table");
     }
   };
   
   const [showAddress, setShowAddress] = useState(true);
+  const [viewMode, setViewMode] = useState<"address" | "po-table">("address");
+  const [poFilter, setPoFilter] = useState("");
   const [entries, setEntries] = useState<TrimEntry[]>([]);
 
   // Popup States
@@ -302,29 +305,173 @@ export function TrimsGrnForm() {
                 </div>
               </div>
 
-              {/* Address Block */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#F8FAFC]">
-                <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setShowAddress(!showAddress)}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#0453B8]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              {/* Address Block & Designs View */}
+              <div className="mt-4 overflow-hidden relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {viewMode === "address" ? "Supplier Address" : `Available Designs for TPO-8006`}
+                  </h3>
+                  {!poLoaded === false && viewMode === "po-table" && (
+                    <div className="flex-1 max-w-sm ml-4">
+                      <Input 
+                        placeholder="Filter by PO..." 
+                        value={poFilter}
+                        onChange={(e) => setPoFilter(e.target.value)}
+                        className="h-8 text-xs bg-white"
+                      />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-700 uppercase">Address</h3>
-                      <p className="text-sm font-semibold text-slate-900 mt-0.5">{supplier || "Select Supplier"}</p>
-                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    {poLoaded && (
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setViewMode(viewMode === "address" ? "po-table" : "address")}
+                        className="h-8 text-xs font-medium border-slate-200"
+                      >
+                        {viewMode === "address" ? "Show Designs" : "Show Address"}
+                      </Button>
+                    )}
+                    {viewMode === "address" && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowAddress(!showAddress)}
+                        className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                      >
+                        {showAddress ? "Hide Address" : "Unhide Address"}
+                      </Button>
+                    )}
                   </div>
-                  <button type="button" className="text-sm font-bold text-[#0453B8] hover:text-blue-700 flex items-center gap-1">
-                    {showAddress ? "Hide Address" : "Show Address"}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${showAddress ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6"/></svg>
-                  </button>
                 </div>
-                
-                {showAddress && supplier && (
-                  <div className="px-4 pb-4 pl-[3.25rem] text-sm text-slate-600">
-                    <p>15, Mangaldas Road, Lohar Chawl, Mumbai - 400002, Maharashtra, India</p>
+
+                <div className="relative">
+                  {/* Address View */}
+                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                    <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                      <div className="overflow-hidden">
+                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#F8FAFC]">
+                          <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setShowAddress(!showAddress)}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#0453B8]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                              </div>
+                              <div>
+                                <h3 className="text-xs font-bold text-slate-700 uppercase">Address</h3>
+                                <p className="text-sm font-semibold text-slate-900 mt-0.5">{supplier || "Select Supplier"}</p>
+                              </div>
+                            </div>
+                          </div>
+                          {supplier && (
+                            <div className="px-4 pb-4 pl-[3.25rem] text-sm text-slate-600">
+                              <p>15, Mangaldas Road, Lohar Chawl, Mumbai - 400002, Maharashtra, India</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  {/* Designs Table View */}
+                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'po-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
+                    <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
+                        {poItems.filter(i => i.description.toLowerCase().includes(poFilter.toLowerCase())).map((item: any, idx: number) => {
+                          const isAdded = new Set(entries.flatMap(e => e.poItemIds || [])).has(item.id);
+                          return (
+                            <div 
+                              key={item.id}
+                              onDoubleClick={() => {
+                                if (!isAdded) {
+                                  const newEntry: TrimEntry = {
+                                    id: Math.random().toString(),
+                                    srNo: entries.length + 1,
+                                    itemType: item.itemType,
+                                    description: item.description,
+                                    qty: item.balanceQty, 
+                                    rate: item.rate,
+                                    gst: item.gst,
+                                    amount: item.balanceQty * item.rate,
+                                    image: item.image,
+                                    poItemIds: [item.id],
+                                  };
+                                  const updatedEntries = [...entries, newEntry];
+                                  setEntries(updatedEntries);
+                                }
+                              }}
+                              className={`relative flex flex-col p-3 rounded-xl border transition-all ${
+                                isAdded 
+                                  ? 'border-emerald-500 bg-emerald-50/50 cursor-default' 
+                                  : 'border-slate-200 bg-white hover:border-[#0453B8] hover:shadow-md cursor-pointer'
+                              }`}
+                            >
+                              {isAdded && (
+                                <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-sm">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                </div>
+                              )}
+                              <div className="w-full aspect-[3/4] flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 mb-3">
+                                <img src={item.image || "/buttons .jpeg"} alt={item.description} className="w-full h-full object-contain mix-blend-multiply" />
+                              </div>
+                              <div className="flex flex-col flex-1">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="text-xs font-bold text-[#0453B8] truncate">TPO-8006</span>
+                                  <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{String(idx + 1).padStart(2, '0')}</span>
+                                </div>
+                                <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-1" title={item.itemType}>{item.itemType}</div>
+                                <div className="text-[10px] text-slate-600 line-clamp-2">{item.description}</div>
+                                
+                                <div className="flex items-center justify-between mt-auto pt-2">
+                                  <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.brandName || "Zara"}</span>
+                                  <span className="text-[10px] font-bold text-slate-700">Qty: {item.orderedQty}</span>
+                                </div>
+                                
+                                {!isAdded && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newEntry: TrimEntry = {
+                                        id: Math.random().toString(),
+                                        srNo: entries.length + 1,
+                                        itemType: item.itemType,
+                                        description: item.description,
+                                        qty: item.balanceQty, 
+                                        rate: item.rate,
+                                        gst: item.gst,
+                                        amount: item.balanceQty * item.rate,
+                                        image: item.image,
+                                        poItemIds: [item.id],
+                                      };
+                                      const updatedEntries = [...entries, newEntry];
+                                      setEntries(updatedEntries);
+                                    }}
+                                    className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
+                                  >
+                                    Select
+                                  </Button>
+                                )}
+                                {isAdded && (
+                                  <div className="w-full mt-3 h-7 flex items-center justify-center text-[10px] font-bold text-emerald-600 bg-emerald-100/50 rounded-md">
+                                    Added
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {poItems.filter(i => i.description.toLowerCase().includes(poFilter.toLowerCase())).length === 0 && (
+                          <div className="col-span-full py-8 text-center text-slate-500">
+                            No available designs found.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

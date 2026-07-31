@@ -197,7 +197,7 @@ export function Sidebar() {
               }`}
             >
               <Archive className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Inventory</span>}
+              {isExpanded && <span className="truncate">Stock</span>}
             </Link>
           </div>
 
@@ -213,8 +213,12 @@ export function Sidebar() {
               )}
               <Link href="/production" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isProductionActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
                 <Factory className="w-4 h-4 shrink-0" />
-                {isExpanded && <span className="truncate">TeckPack</span>}
+                {isExpanded && <span className="truncate">Tech Pack</span>}
               </Link>
+            </div>
+            
+            <div className={`px-4 text-xs font-bold text-white/50 uppercase tracking-wider mb-2 mt-4 ${isExpanded ? 'block' : 'hidden'}`}>
+              Production Department
             </div>
             
             <div className="relative mt-1">

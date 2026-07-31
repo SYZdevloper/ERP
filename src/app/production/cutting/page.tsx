@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ListPageHeader } from "@/components/ui/list-page-header";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, ArrowRight, Package, Info, FileText, Tag, Hash, Ruler, Sparkles, Image as ImageIcon, History, Save, Clock, Filter, Download, Scissors } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, Package, Info, FileText, Tag, Hash, Ruler, Sparkles, Image as ImageIcon, History, Save, Clock, Filter, Download, Scissors, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -413,17 +413,22 @@ export default function CuttingPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
-                  <TableHead className="w-10 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Sr</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Roll No</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider">Color</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Meter</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Width</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">Layer Length</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">No. of Layer</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Total</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Balance</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20">Damage</TableHead>
-                  <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20">Short</TableHead>
+                  <TableHead rowSpan={2} className="w-10 text-center text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Sr</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Roll No</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Color</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Meter</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Width</TableHead>
+                  <TableHead colSpan={2} className="text-xs font-bold text-red-500 text-center uppercase tracking-wider border-b border-slate-200 pb-1">Shrinkage</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24 align-bottom pb-3">Layer Length</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24 align-bottom pb-3">No. of Layer</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Total</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Balance</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20 align-bottom pb-3">Damage</TableHead>
+                  <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-20 align-bottom pb-3">Short</TableHead>
+                </TableRow>
+                <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
+                  <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Width</TableHead>
+                  <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Length</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -443,6 +448,8 @@ export default function CuttingPage() {
                       <TableCell className="font-semibold text-slate-600">{roll.color}</TableCell>
                       <TableCell className="text-right font-bold text-slate-700">{roll.meter}</TableCell>
                       <TableCell className="text-right font-semibold text-slate-600">{roll.width}</TableCell>
+                      <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageW || 2}%</TableCell>
+                      <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageL || 3}%</TableCell>
                       <TableCell className="text-right">
                         <Input
                           type="number"
@@ -482,7 +489,7 @@ export default function CuttingPage() {
                 })}
                 {productData.fabricRolls.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="h-32 text-center text-slate-500 font-medium">
+                    <TableCell colSpan={13} className="h-32 text-center text-slate-500 font-medium">
                       No fabric rolls available for this product.
                     </TableCell>
                   </TableRow>
@@ -492,7 +499,7 @@ export default function CuttingPage() {
                   <TableCell className="text-right font-bold text-slate-800">
                     {productData.fabricRolls.reduce((sum, r) => sum + r.meter, 0).toFixed(2)}
                   </TableCell>
-                  <TableCell colSpan={3}></TableCell>
+                  <TableCell colSpan={5}></TableCell>
                   <TableCell className="text-right font-bold text-slate-800">
                     {productData.fabricRolls.reduce((sum, r) => {
                       const entry = rollEntries[r.id] || {};
@@ -526,6 +533,59 @@ export default function CuttingPage() {
                 </TableRow>
               </TableBody>
             </Table>
+            </div>
+          </div>
+
+          {/* 2.5 Other Fabric Cut by Master */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm shrink-0 mt-6">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4 rounded-t-xl">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Scissors className="w-5 h-5 text-[#0453B8]" />
+                Other Fabric Cut by Master
+              </h3>
+              <div className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-md border border-slate-200 shadow-sm">
+                (Fusing, Pocketing, Canvas, etc.)
+              </div>
+            </div>
+            <div className="p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
+                    <TableHead className="w-10 text-center text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Sr</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Material Name</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Roll/Lot No</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right pb-3">Available Qty</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px] pb-3">Cut Qty</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Mock data for other fabrics */}
+                  {[
+                    { id: '1', name: 'Pocketing Fabric', roll: 'PKT-001', qty: '150 Mtr' },
+                    { id: '2', name: 'Fusing', roll: 'FS-092', qty: '40 Mtr' }
+                  ].map((item, idx) => (
+                    <TableRow key={item.id} className="border-b-slate-50 hover:bg-slate-50/50">
+                      <TableCell className="text-center font-bold text-red-600">{idx + 1}</TableCell>
+                      <TableCell className="font-bold text-slate-800">{item.name}</TableCell>
+                      <TableCell className="font-semibold text-slate-600">{item.roll}</TableCell>
+                      <TableCell className="text-right font-bold text-slate-700">{item.qty}</TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          className="h-8 text-right font-bold focus:ring-[#0453B8]"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="hover:bg-slate-50/30">
+                    <TableCell className="text-center font-medium text-slate-400"><Plus className="w-4 h-4 mx-auto" /></TableCell>
+                    <TableCell colSpan={4}>
+                      <Input placeholder="Type material name and press enter to add..." className="h-8 bg-slate-50 border-dashed" />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </div>
 

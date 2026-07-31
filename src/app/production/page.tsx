@@ -98,7 +98,7 @@ export default function TechpackPage() {
     <div className="flex flex-col h-full bg-slate-50/50 p-6">
       <div className="flex items-center justify-between mb-6">
         <ListPageHeader
-          title="TeckPack"
+          title="Tech Pack"
           description="View Techpack details and allocate fabric rolls for production."
         />
       </div>
@@ -111,7 +111,7 @@ export default function TechpackPage() {
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Product</label>
           
           <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-            {orderData.products.filter(p => p.fabricRolls.length > 0).map(product => (
+            {orderData.products.map(product => (
               <button
                 key={product.id}
                 onClick={() => handleProductChange(product.id)}
@@ -141,42 +141,31 @@ export default function TechpackPage() {
               </button>
             ))}
             
-            {orderData.products.filter(p => p.fabricRolls.length > 0).length === 0 && (
+            {orderData.products.length === 0 && (
               <div className="text-xs font-semibold text-red-500 py-4 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> No products with fabric inwarded.
+                <AlertCircle className="w-4 h-4" /> No products in this order.
               </div>
             )}
           </div>
+          {productData && (
+            <div className="text-[13px] font-bold text-slate-700 mt-2">
+              {productData.style} - {productData.brand}
+            </div>
+          )}
         </div>
 
-        <div className="flex-1 max-w-[240px]">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Sales Order</label>
-          <Select value={selectedSO} onValueChange={handleSOChange}>
-            <SelectTrigger className="h-12 border-slate-200 focus:ring-[#0453B8] font-bold text-slate-800 text-base shadow-sm">
-              <SelectValue placeholder="Select an order" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(MOCK_ORDERS).map(order => (
-                <SelectItem key={order.id} value={order.id} className="font-semibold">
-                  {order.id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Quick Summary Box */}
-        <div className="hidden md:flex flex-col justify-center px-6 py-2 bg-slate-50 border border-slate-200 rounded-lg h-12">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Target Quantity</span>
-          <span className="text-sm font-black text-slate-800">{productData.targetQty} Units</span>
-        </div>
-
-        <div className="ml-auto flex gap-4 items-end h-12">
-          <div className={`px-4 h-full rounded-lg border flex items-center gap-2 shadow-sm ${hasAllocations ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-            <span className="font-bold text-sm">
-              Allocated: {totalAllocated.toFixed(2)} Mtr
-            </span>
+        <div className="flex flex-col gap-2 min-w-[200px]">
+          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md shadow-sm h-10">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Order Qty</span>
+            <span className="text-sm font-black text-slate-800">{productData.targetQty} Pcs</span>
           </div>
+          <div className={`flex items-center justify-between px-3 py-1.5 border rounded-md shadow-sm h-10 ${hasAllocations ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+            <span className="text-[11px] font-bold uppercase tracking-wider opacity-80">Allocated Mtr</span>
+            <span className="text-sm font-black">{totalAllocated.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div className="ml-auto flex gap-4 items-end h-full">
 
           <Button
             onClick={handleIssueToProduction}
@@ -186,7 +175,7 @@ export default function TechpackPage() {
             {isIssued ? (
               <><CheckCircle2 className="w-4 h-4 mr-2" /> Job Card Issued</>
             ) : (
-              <>Issue to Cutting <ArrowRight className="w-4 h-4 ml-2" /></>
+              <>Issue to Production for Cutting <ArrowRight className="w-4 h-4 ml-2" /></>
             )}
           </Button>
         </div>
@@ -214,17 +203,12 @@ export default function TechpackPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-transparent hover:bg-transparent border-b-0">
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Roll No</TableHead>
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3">Material</TableHead>
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider align-bottom pb-3 text-center">Width</TableHead>
-                    <TableHead colSpan={2} className="text-xs font-bold text-red-500 text-center uppercase tracking-wider border-b border-slate-200 pb-1">Shrinkage</TableHead>
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Available Qty</TableHead>
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px] align-bottom pb-3">Allocate Qty</TableHead>
-                    <TableHead rowSpan={2} className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right align-bottom pb-3">Remaining</TableHead>
-                  </TableRow>
-                  <TableRow className="bg-transparent hover:bg-transparent border-b-slate-100">
-                    <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Width</TableHead>
-                    <TableHead className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center h-8">Length</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Roll No</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Material</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center pb-3">Width</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right pb-3">Available Qty</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px] pb-3">Allocate Qty</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right pb-3">Remaining</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -237,8 +221,6 @@ export default function TechpackPage() {
                         <TableCell className="font-bold text-slate-800">{roll.id}</TableCell>
                         <TableCell className="font-semibold text-slate-600">{roll.material}</TableCell>
                         <TableCell className="font-bold text-slate-700 text-center">{roll.width || "-"}"</TableCell>
-                        <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageW || 2}%</TableCell>
-                        <TableCell className="font-semibold text-red-500 text-center text-xs">{(roll as any).shrinkageL || 3}%</TableCell>
                         <TableCell className="text-right font-bold text-slate-700">
                           {roll.availableQty} <span className="text-xs font-semibold text-slate-400">{roll.unit}</span>
                         </TableCell>
@@ -263,6 +245,61 @@ export default function TechpackPage() {
                     <TableRow>
                       <TableCell colSpan={8} className="h-32 text-center text-slate-500 font-medium">
                         No fabric rolls available for this product.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* 3. Trims Allocation Table */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm flex-shrink-0 mt-6">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-4 rounded-t-xl">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-[#0453B8]" />
+                3. Trims Allocation
+              </h3>
+            </div>
+
+            <div className="overflow-auto p-2">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-transparent hover:bg-transparent border-b-0">
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Item Type</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3">Description</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right pb-3">Required Qty</TableHead>
+                    <TableHead className="text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-[160px] pb-3">Allocate Qty</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productData.trims && productData.trims.map(trim => {
+                    const allocated = allocations[trim.id] ?? trim.allocatedQty; 
+                    return (
+                      <TableRow key={trim.id} className="border-b-slate-50 hover:bg-slate-50/50">
+                        <TableCell className="font-bold text-slate-800">{trim.itemType}</TableCell>
+                        <TableCell className="font-semibold text-slate-600">{trim.description}</TableCell>
+                        <TableCell className="text-right font-bold text-slate-700">
+                          {trim.requiredQty} <span className="text-xs font-semibold text-slate-400">{trim.unit}</span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={trim.requiredQty}
+                            value={allocations[trim.id] !== undefined ? allocations[trim.id] : ''}
+                            onChange={(e) => handleAllocationChange(trim.id, e.target.value, trim.requiredQty)}
+                            className="h-8 text-right font-bold focus:ring-[#0453B8]"
+                            placeholder="0"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {(!productData.trims || productData.trims.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-32 text-center text-slate-500 font-medium">
+                        No trims available for this product.
                       </TableCell>
                     </TableRow>
                   )}

@@ -515,82 +515,112 @@ export function FabricGrnForm() {
                   {/* Designs Table View */}
                   <div className={`transition-all duration-500 ease-in-out ${viewMode === 'po-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
                     <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
-                      <table className="w-full text-sm text-left">
-                        <thead className="bg-[#F8FAFC] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                          <tr>
-                            <th className="px-4 py-3 font-bold text-slate-700">SO No.</th>
-                            <th className="px-4 py-3 font-bold text-slate-700">Image</th>
-                            <th className="px-4 py-3 font-bold text-slate-700">Style / Design</th>
-                            <th className="px-4 py-3 font-bold text-slate-700 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).length === 0 ? (
-                            <tr>
-                              <td colSpan={4} className="px-4 py-6 text-center text-slate-500">No available designs found.</td>
-                            </tr>
-                          ) : (
-                            poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).map((item: any, idx) => {
-                              const isAdded = entries.some(e => e.poItemIds?.includes(item.id));
-                              return (
-                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-4 py-3">
-                                    <div className="font-bold text-[#0453B8]">SO-2026-001</div>
-                                    <div className="text-xs text-slate-500 font-medium">Line {String(idx + 1).padStart(2, '0')}</div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <button 
-                                      type="button"
-                                      onClick={() => setViewingDesign(item)}
-                                      className="w-16 h-20 flex items-center justify-center overflow-hidden border border-slate-200 rounded bg-slate-50 hover:ring-2 hover:ring-[#0453B8] transition-all cursor-pointer"
-                                    >
-                                      <img src={item.image || "/men regualr fit shirt.jpeg"} alt={item.material} className="w-full h-full object-contain mix-blend-multiply" />
-                                    </button>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="font-bold text-slate-800">{item.material}</div>
-                                    <div className="text-xs text-slate-600 font-medium">{item.color} • {item.gsm}GSM</div>
-                                  </td>
-                                  <td className="px-4 py-3 text-center">
-                                    <Button 
-                                      variant={isAdded ? "ghost" : "outline"}
-                                      size="sm" 
-                                      disabled={isAdded}
-                                      onClick={() => {
-                                        const newEntry: RollEntry = {
-                                          id: Math.random().toString(),
-                                          srNo: entries.length + 1,
-                                          description: item.material,
-                                          rollNo: "", 
-                                          width: item.width,
-                                          gsm: item.gsm,
-                                          color: item.color,
-                                          fabricType: item.type,
-                                          mtrQty: 0, 
-                                          hsn: item.hsn,
-                                          rate: item.rate,
-                                          gst: item.gst,
-                                          amount: 0,
-                                          image: item.image,
-                                          poItemIds: [item.id],
-                                          orderedQty: item.orderedQty
-                                        };
-                                        const updatedEntries = [...entries, newEntry];
-                                        setEntries(updatedEntries);
-                                        // Open roll details immediately after selecting
-                                        setTimeout(() => handleOpenRollDetails(newEntry), 0);
-                                      }}
-                                      className={`h-7 text-xs font-semibold ${isAdded ? 'text-emerald-600 bg-emerald-50' : 'border-[#0453B8] text-[#0453B8] hover:bg-blue-50'}`}
-                                    >
-                                      {isAdded ? "Added" : "Select"}
-                                    </Button>
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          )}
-                        </tbody>
-                      </table>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
+                        {poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).map((item: any, idx: number) => {
+                          const isAdded = entries.some(e => e.poItemIds?.includes(item.id));
+                          return (
+                            <div 
+                              key={item.id}
+                              onDoubleClick={() => {
+                                if (!isAdded) {
+                                  const newEntry: RollEntry = {
+                                    id: Math.random().toString(),
+                                    srNo: entries.length + 1,
+                                    description: item.material,
+                                    rollNo: "", 
+                                    width: item.width,
+                                    gsm: item.gsm,
+                                    color: item.color,
+                                    fabricType: item.type,
+                                    mtrQty: 0, 
+                                    hsn: item.hsn,
+                                    rate: item.rate,
+                                    gst: item.gst,
+                                    amount: 0,
+                                    image: item.image,
+                                    poItemIds: [item.id],
+                                    orderedQty: item.orderedQty
+                                  };
+                                  const updatedEntries = [...entries, newEntry];
+                                  setEntries(updatedEntries);
+                                  setTimeout(() => handleOpenRollDetails(newEntry), 0);
+                                }
+                              }}
+                              className={`relative flex flex-col p-3 rounded-xl border transition-all ${
+                                isAdded 
+                                  ? 'border-emerald-500 bg-emerald-50/50 cursor-default' 
+                                  : 'border-slate-200 bg-white hover:border-[#0453B8] hover:shadow-md cursor-pointer'
+                              }`}
+                            >
+                              {isAdded && (
+                                <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-sm">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                </div>
+                              )}
+                              <div className="w-full aspect-[3/4] flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 mb-3">
+                                <img src={item.image || "/men regualr fit shirt.jpeg"} alt={item.material} className="w-full h-full object-contain mix-blend-multiply" />
+                              </div>
+                              <div className="flex flex-col flex-1">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="text-xs font-bold text-[#0453B8] truncate">SO-2026-001</span>
+                                  <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{String(idx + 1).padStart(2, '0')}</span>
+                                </div>
+                                <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-1" title={item.material}>{item.material}</div>
+                                <div className="text-[10px] text-slate-600 line-clamp-1">{item.color} • {item.gsm}GSM</div>
+                                
+                                <div className="flex items-center justify-between mt-auto pt-2">
+                                  <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.brandName || "Zara"}</span>
+                                  <span className="text-[10px] font-bold text-slate-700">Qty: {item.orderedQty}</span>
+                                </div>
+                                
+                                {!isAdded && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newEntry: RollEntry = {
+                                        id: Math.random().toString(),
+                                        srNo: entries.length + 1,
+                                        description: item.material,
+                                        rollNo: "", 
+                                        width: item.width,
+                                        gsm: item.gsm,
+                                        color: item.color,
+                                        fabricType: item.type,
+                                        mtrQty: 0, 
+                                        hsn: item.hsn,
+                                        rate: item.rate,
+                                        gst: item.gst,
+                                        amount: 0,
+                                        image: item.image,
+                                        poItemIds: [item.id],
+                                        orderedQty: item.orderedQty
+                                      };
+                                      const updatedEntries = [...entries, newEntry];
+                                      setEntries(updatedEntries);
+                                      setTimeout(() => handleOpenRollDetails(newEntry), 0);
+                                    }}
+                                    className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
+                                  >
+                                    Select
+                                  </Button>
+                                )}
+                                {isAdded && (
+                                  <div className="w-full mt-3 h-7 flex items-center justify-center text-[10px] font-bold text-emerald-600 bg-emerald-100/50 rounded-md">
+                                    Added
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {poItems.filter(i => i.material.toLowerCase().includes(poFilter.toLowerCase())).length === 0 && (
+                          <div className="col-span-full py-8 text-center text-slate-500">
+                            No available designs found.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

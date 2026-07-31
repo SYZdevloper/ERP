@@ -49,6 +49,38 @@ export const MOCK_ORDERS = {
         trims: [
           { id: "T-103", itemType: "Button", description: "Metal Snap Button - 15mm (Black)", requiredQty: 400, allocatedQty: 400, unit: "Pcs" },
         ]
+      },
+      {
+        id: "P-103",
+        style: "Winter Parka - Navy",
+        image: null,
+        techpackDate: "Pending",
+        brand: "NorthTrail",
+        size: "XL",
+        fit: "Regular Fit",
+        fabricDetail: "100% Nylon Taslan with Poly Lining",
+        buyerDesignNumber: "NT-WP-2026-N",
+        patternNo: "PTRN-2026-X10",
+        sizeRatio: "1:2:2:1",
+        targetQty: 300,
+        fabricRolls: [],
+        trims: []
+      },
+      {
+        id: "P-104",
+        style: "Winter Parka - Red",
+        image: null,
+        techpackDate: "Pending",
+        brand: "NorthTrail",
+        size: "S",
+        fit: "Regular Fit",
+        fabricDetail: "100% Nylon Taslan with Poly Lining",
+        buyerDesignNumber: "NT-WP-2026-R",
+        patternNo: "PTRN-2026-X11",
+        sizeRatio: "1:2:2:1",
+        targetQty: 150,
+        fabricRolls: [],
+        trims: []
       }
     ]
   },

@@ -26,6 +26,7 @@ export function BuyerOrderDetailsCard({
   const [isBuyerDialogOpen, setIsBuyerDialogOpen] = useState(false);
   const [buyerSearchQuery, setBuyerSearchQuery] = useState("");
   const [isBuyerPopoverOpen, setIsBuyerPopoverOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const { register, watch, setValue, getValues, control } = useFormContext<SalesOrder>();
   const buyerId = useWatch({ control, name: "buyerId" });
   const poDate = watch("poDate");
@@ -79,72 +80,99 @@ export function BuyerOrderDetailsCard({
             <Controller
               control={control}
               name="buyerId"
-              render={({ field }) => (
-                <Popover open={isBuyerPopoverOpen} onOpenChange={setIsBuyerPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
+              render={({ field }) => {
+                const filteredBuyers = MOCK_BUYERS.filter(b => b.name.toLowerCase().includes(buyerSearchQuery.toLowerCase()));
+                return (
+                  <div className="relative">
+                    <Input
                       id="buyerId"
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={isBuyerPopoverOpen}
-                      className={`w-full h-[42px] justify-between font-normal ${!field.value && "text-slate-500"}`}
+                      value={isBuyerPopoverOpen ? buyerSearchQuery : (selectedBuyer?.name || "")}
+                      onChange={(e) => {
+                        setBuyerSearchQuery(e.target.value);
+                        setIsBuyerPopoverOpen(true);
+                        setHighlightedIndex(0);
+                      }}
+                      onFocus={() => {
+                        setBuyerSearchQuery(selectedBuyer?.name || "");
+                        setIsBuyerPopoverOpen(true);
+                        setHighlightedIndex(0);
+                      }}
+                      onBlur={() => {
+                        // small delay to allow click on dropdown items before closing
+                        setTimeout(() => setIsBuyerPopoverOpen(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          if (!isBuyerPopoverOpen) setIsBuyerPopoverOpen(true);
+                          setHighlightedIndex(prev => Math.min(prev + 1, filteredBuyers.length - 1));
+                        } else if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          setHighlightedIndex(prev => Math.max(prev - 1, 0));
+                        } else if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (isBuyerPopoverOpen && filteredBuyers[highlightedIndex]) {
+                            field.onChange(filteredBuyers[highlightedIndex].id);
+                            setIsBuyerPopoverOpen(false);
+                            document.getElementById("buyerPoNo")?.focus();
+                          } else if (!isBuyerPopoverOpen) {
+                            document.getElementById("buyerPoNo")?.focus();
+                          }
+                        } else if (e.key === "Escape") {
+                          setIsBuyerPopoverOpen(false);
+                        }
+                      }}
+                      placeholder="Select Buyer..."
+                      className={`h-[42px] pr-8 ${!field.value && "text-slate-500"}`}
+                      autoComplete="off"
                       autoFocus={!isEditMode && !effectivelyReadOnly}
-                    >
-                      {field.value
-                        ? MOCK_BUYERS.find((b) => b.id === field.value)?.name
-                        : "Select Buyer..."}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0" align="start">
-                    <div className="flex flex-col">
-                      <div className="p-2 border-b border-slate-100">
-                        <Input
-                          placeholder="Search buyer..."
-                          value={buyerSearchQuery}
-                          onChange={(e) => setBuyerSearchQuery(e.target.value)}
-                          className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-blue-500"
-                          autoFocus
-                        />
-                      </div>
-                      <div className="max-h-[200px] overflow-y-auto py-1">
-                        {MOCK_BUYERS.filter(b => b.name.toLowerCase().includes(buyerSearchQuery.toLowerCase())).map(buyer => (
+                    />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+
+                    {isBuyerPopoverOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-[300px] flex flex-col overflow-hidden">
+                        <div className="overflow-y-auto py-1 max-h-[200px]">
+                          {filteredBuyers.map((buyer, idx) => (
+                            <div
+                              key={buyer.id}
+                              className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 ${highlightedIndex === idx ? "bg-slate-100 font-medium" : ""} ${field.value === buyer.id ? "text-blue-600 font-medium" : ""}`}
+                              onMouseDown={(e) => {
+                                // use onMouseDown to prevent input blur before this fires
+                                e.preventDefault();
+                                field.onChange(buyer.id);
+                                setIsBuyerPopoverOpen(false);
+                                document.getElementById("buyerPoNo")?.focus();
+                              }}
+                            >
+                              {buyerSearchQuery ? (
+                                buyer.name.split(new RegExp(`(${buyerSearchQuery})`, 'gi')).map((part, i) =>
+                                  part.toLowerCase() === buyerSearchQuery.toLowerCase() ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark> : <span key={i}>{part}</span>
+                                )
+                              ) : (
+                                buyer.name
+                              )}
+                            </div>
+                          ))}
+                          {filteredBuyers.length === 0 && (
+                            <div className="px-3 py-3 text-sm text-slate-500 text-center">No buyers found</div>
+                          )}
+                          <div className="h-px bg-slate-100 my-1" />
                           <div
-                            key={buyer.id}
-                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 ${field.value === buyer.id ? "bg-slate-50 font-medium" : ""}`}
-                            onClick={() => {
-                              field.onChange(buyer.id);
+                            className="px-3 py-2 text-sm cursor-pointer text-blue-600 font-medium hover:bg-blue-50 flex items-center gap-1.5"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setIsBuyerDialogOpen(true);
                               setIsBuyerPopoverOpen(false);
-                              setBuyerSearchQuery("");
                             }}
                           >
-                            {buyerSearchQuery ? (
-                              buyer.name.split(new RegExp(`(${buyerSearchQuery})`, 'gi')).map((part, i) => 
-                                part.toLowerCase() === buyerSearchQuery.toLowerCase() ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark> : <span key={i}>{part}</span>
-                              )
-                            ) : (
-                              buyer.name
-                            )}
+                            <Plus className="w-4 h-4" /> Add Buyer
                           </div>
-                        ))}
-                        {MOCK_BUYERS.filter(b => b.name.toLowerCase().includes(buyerSearchQuery.toLowerCase())).length === 0 && (
-                          <div className="px-3 py-3 text-sm text-slate-500 text-center">No buyers found</div>
-                        )}
-                        <div className="h-px bg-slate-100 my-1" />
-                        <div
-                          className="px-3 py-2 text-sm cursor-pointer text-blue-600 font-medium hover:bg-blue-50 flex items-center gap-1.5"
-                          onClick={() => {
-                            setIsBuyerDialogOpen(true);
-                            setIsBuyerPopoverOpen(false);
-                          }}
-                        >
-                          <Plus className="w-4 h-4" /> Add Buyer
                         </div>
                       </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
+                    )}
+                  </div>
+                );
+              }}
             />
           )}
           {selectedBuyer && !effectivelyReadOnly && (
@@ -160,7 +188,7 @@ export function BuyerOrderDetailsCard({
           {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{watch("buyerPoNo") || "-"}</div>
           ) : (
-            <Input id="buyerPoNo" {...register("buyerPoNo")} className="h-[42px] w-full" />
+            <Input id="buyerPoNo" {...register("buyerPoNo")} className="h-[42px] w-full" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("poDate")?.focus(); } }} />
           )}
         </div>
 
@@ -171,7 +199,7 @@ export function BuyerOrderDetailsCard({
               {poDate ? format(new Date(poDate), "dd MMM yyyy") : "-"}
             </div>
           ) : (
-            <Input id="poDate" type="date" className="h-[42px] text-sm w-full" value={poDate ? format(new Date(poDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("poDate", new Date(e.target.value))} />
+            <Input id="poDate" type="date" className="h-[42px] text-sm w-full" value={poDate ? format(new Date(poDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("poDate", new Date(e.target.value))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("deliveryDate")?.focus(); } }} />
           )}
         </div>
 
@@ -203,7 +231,7 @@ export function BuyerOrderDetailsCard({
                   <SelectItem value="90">90 Days</SelectItem>
                 </SelectContent>
               </Select>
-              <Input id="deliveryDate" type="date" className="h-[42px] text-sm flex-1" value={deliveryDate ? format(new Date(deliveryDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("deliveryDate", new Date(e.target.value))} />
+              <Input id="deliveryDate" type="date" className="h-[42px] text-sm flex-1" value={deliveryDate ? format(new Date(deliveryDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("deliveryDate", new Date(e.target.value))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("fob")?.focus(); } }} />
             </div>
           )}
         </div>

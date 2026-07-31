@@ -706,10 +706,15 @@ export function PurchaseOrderForm({
                                     <div className="flex flex-col flex-1">
                                       <div className="flex items-center justify-between gap-2 mb-1">
                                         <span className="text-xs font-bold text-[#0453B8] truncate" title={item.soNo}>{item.soNo}</span>
-                                        <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{item.soItem.split('-')[1]}</span>
+                                        <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{item.soItem?.split('-')[1] || "1"}</span>
                                       </div>
-                                      <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-auto" title={item.productId}>{item.productId}</div>
+                                      <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-1" title={item.productId}>{item.productId}</div>
                                       <div className="text-[10px] text-slate-600 line-clamp-1" title={item.name}>{item.name}</div>
+                                      
+                                      <div className="flex items-center justify-between mt-auto pt-2">
+                                        <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.brandName || "Unknown Brand"}</span>
+                                        <span className="text-[10px] font-bold text-slate-700">Qty: {item.sizeBreakdown ? String(Object.values(item.sizeBreakdown).reduce((a: any, b: any) => a + Number(b), 0)) : 0}</span>
+                                      </div>
                                       
                                       {!isAdded && (
                                         <Button 
