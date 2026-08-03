@@ -27,7 +27,8 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
     paymentTerms: "Credit",
     creditDays: "30",
     advancePercentage: "",
-    billingAddress: ""
+    billingAddress: "",
+    agent: ""
   });
 
   useEffect(() => {
@@ -44,7 +45,8 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
         paymentTerms: editSupplier.paymentTerms || "Credit",
         creditDays: editSupplier.creditDays?.toString() || "30",
         advancePercentage: editSupplier.advancePercentage?.toString() || "",
-        billingAddress: editSupplier.billingAddress || ""
+        billingAddress: editSupplier.billingAddress || "",
+        agent: editSupplier.agent || ""
       });
     } else if (open) {
       // eslint-disable-next-line
@@ -59,7 +61,8 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
         paymentTerms: "Credit",
         creditDays: "30",
         advancePercentage: "",
-        billingAddress: ""
+        billingAddress: "",
+        agent: ""
       });
     }
   }, [open, editSupplier]);
@@ -204,14 +207,25 @@ export function AddSupplierDialog({ open, onOpenChange, onSave, editSupplier }: 
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs font-bold text-slate-600">Billing Address</Label>
-              <textarea 
-                placeholder="Street, City, State PIN"
-                value={formData.billingAddress}
-                onChange={(e) => handleChange("billingAddress", e.target.value)}
-                className="w-full h-24 p-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900 resize-y"
-              />
+            <div className="grid grid-cols-2 gap-5">
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-600">Billing Address</Label>
+                <textarea 
+                  placeholder="Street, City, State PIN"
+                  value={formData.billingAddress}
+                  onChange={(e) => handleChange("billingAddress", e.target.value)}
+                  className="w-full h-24 p-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#0453B8] bg-white text-slate-900 resize-y"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-bold text-slate-600">Agent / Broker</Label>
+                <Input 
+                  placeholder="e.g. Nitin Bhai"
+                  value={formData.agent}
+                  onChange={(e) => handleChange("agent", e.target.value)}
+                  className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-white" 
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -54,7 +54,8 @@ export function Sidebar() {
   
   const isProductionActive = pathname === "/production";
   const isCuttingActive = pathname.startsWith("/production/cutting");
-  const isQcActive = pathname.startsWith("/production/qc");
+  const isShrinkageActive = pathname.startsWith("/production/qc/shrinkage");
+  const isQcActive = pathname.startsWith("/production/qc") && !isShrinkageActive;
   const isStoreDeptActive = pathname.startsWith("/production/store");
   const isStitchingActive = pathname.startsWith("/production/stitching");
   const isWashingActive = pathname.startsWith("/production/washing");
@@ -238,6 +239,16 @@ export function Sidebar() {
               <Link href="/production/qc" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isQcActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
                 <ClipboardCheck className="w-4 h-4 shrink-0" />
                 {isExpanded && <span className="truncate">QC</span>}
+              </Link>
+            </div>
+
+            <div className="relative mt-1">
+              {isShrinkageActive && (
+                <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
+              )}
+              <Link href="/production/qc/shrinkage" className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 text-sm font-medium rounded-md transition-colors ${isShrinkageActive ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
+                <FileText className="w-4 h-4 shrink-0" />
+                {isExpanded && <span className="truncate">Fabric Shrinkage</span>}
               </Link>
             </div>
 

@@ -48,16 +48,6 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
         </div>
         {!isReadOnly && (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm"
-              onClick={() => {
-                setDialogMode('create');
-                setIsAddProductOpen(true);
-              }}
-            >
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> New Product
-            </Button>
             <Button variant="outline" className="h-8 text-xs font-semibold bg-white border-slate-200 text-[#0453B8] hover:bg-blue-50 shadow-sm" onClick={() => document.getElementById('bulk-upload-input')?.click()}>
               <Plus className="w-3.5 h-3.5 mr-1.5" /> Bulk Add
             </Button>
@@ -238,6 +228,7 @@ export function ProductsTable({ isReadOnly = false, hideEditDetails = false }: {
                   <Popover open={isQuickAddOpen} onOpenChange={setIsQuickAddOpen}>
                     <PopoverTrigger asChild>
                       <Input 
+                        id="product-quick-add"
                         placeholder="Type product name (e.g. Mens Cuban collar) and press Enter to add..."
                         className="h-8 text-sm bg-white border-dashed border-slate-300 focus-visible:ring-1 focus-visible:ring-blue-500 w-full max-w-md shadow-sm"
                         value={quickAddSearch}

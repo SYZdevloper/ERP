@@ -207,9 +207,13 @@ export function SelectSalesOrderItemsDialog({
                   <SelectValue placeholder="Select Trim Item (e.g. Button, Label)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Main Label">Main Label</SelectItem>
+                  <SelectItem value="Placket Label">Placket Label</SelectItem>
+                  <SelectItem value="Care Label">Care Label</SelectItem>
+                  <SelectItem value="Size Label">Size Label</SelectItem>
                   <SelectItem value="Button">Button</SelectItem>
-                  <SelectItem value="Label">Label</SelectItem>
-                  <SelectItem value="Hangtag">Hangtag</SelectItem>
+                  <SelectItem value="Thread">Thread</SelectItem>
+                  <SelectItem value="Hang Tag">Hang Tag</SelectItem>
                 </SelectContent>
               </Select>
               {!trimItem && (

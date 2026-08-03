@@ -49,7 +49,8 @@ export default function SuppliersPage() {
       gstin: data.gstin,
       paymentTerms: data.paymentTerms,
       creditDays: parseInt(data.creditDays),
-      billingAddress: data.billingAddress
+      billingAddress: data.billingAddress,
+      agent: data.agent
     };
     setSuppliers([...suppliers, newSupplier]);
   };

@@ -90,32 +90,104 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
   };
 
   const handleSoItemNext = (selectedSoItems: any[], trimItem?: string) => {
-    const linkedLines = selectedSoItems.map(item => {
-       const pcs = Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number;
-       return {
-          id: item.id,
-          soNo: item.soNo,
-          soItemCode: item.soItem,
-          style: item.name,
-          color: item.color,
-          requiredQty: pcs,
-          alreadyOrdered: 0
-       };
-    });
+    const type = trimItem || "Main Label";
+    
+    // Rule definitions
+    const combineTypes = ["Main Label", "Placket Label", "Care Label", "Hang Tag"];
+    const sizeTypes = ["Size Label"];
+    
+    setTrimItems(prev => {
+      let nextState = [...prev];
+      
+      const newLinkedLines = selectedSoItems.map(item => ({
+         id: item.id,
+         soNo: item.soNo,
+         soItemCode: item.soItem,
+         style: item.name,
+         color: item.color,
+         requiredQty: Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number,
+         alreadyOrdered: 0
+      }));
 
-    setTrimItems(prev => [
-      ...prev,
-      {
-        id: `trim-${Date.now()}`,
-        itemType: trimItem || "Main Label",
-        description: "",
-        linkedLines: linkedLines,
-        manualTotalQty: "",
-        rate: "",
-        gst: "5",
-        deliveryDate: ""
+      if (combineTypes.includes(type) || sizeTypes.includes(type)) {
+        // Find existing row of this type to merge into
+        const existingIdx = nextState.findIndex(t => t.itemType === type);
+
+        if (existingIdx >= 0) {
+          const existingRow = nextState[existingIdx];
+          const mergedLines = [...existingRow.linkedLines];
+          
+          newLinkedLines.forEach(nl => {
+            if (!mergedLines.find(l => l.id === nl.id)) mergedLines.push(nl);
+          });
+          
+          let newSizeBreakdown = existingRow.sizeBreakdown ? { ...existingRow.sizeBreakdown } : undefined;
+          if (sizeTypes.includes(type)) {
+             if (!newSizeBreakdown) newSizeBreakdown = {};
+             selectedSoItems.forEach(item => {
+               Object.entries(item.sizeBreakdown || {}).forEach(([size, qty]) => {
+                 newSizeBreakdown![size] = (newSizeBreakdown![size] || 0) + (qty as number);
+               });
+             });
+          }
+
+          nextState[existingIdx] = {
+            ...existingRow,
+            linkedLines: mergedLines,
+            sizeBreakdown: newSizeBreakdown,
+          };
+        } else {
+          // Create new grouped row
+          let sizeBreakdown: any = undefined;
+          if (sizeTypes.includes(type)) {
+             sizeBreakdown = {};
+             selectedSoItems.forEach(item => {
+               Object.entries(item.sizeBreakdown || {}).forEach(([size, qty]) => {
+                 sizeBreakdown[size] = (sizeBreakdown[size] || 0) + (qty as number);
+               });
+             });
+          }
+          
+          nextState.push({
+            id: `trim-${Date.now()}`,
+            itemType: type,
+            description: "",
+            linkedLines: newLinkedLines,
+            manualTotalQty: "",
+            sizeBreakdown,
+            rate: "",
+            gst: "5",
+            deliveryDate: ""
+          });
+        }
+      } else {
+        // For Button, Thread (Separate Types), create INDIVIDUAL rows
+        selectedSoItems.forEach((item, index) => {
+          const reqQty = Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number;
+          
+          nextState.push({
+            id: `trim-${Date.now()}-${index}`,
+            itemType: type,
+            description: `For ${item.color} ${item.name}`,
+            linkedLines: [{
+               id: item.id,
+               soNo: item.soNo,
+               soItemCode: item.soItem,
+               style: item.name,
+               color: item.color,
+               requiredQty: reqQty,
+               alreadyOrdered: 0
+            }],
+            manualTotalQty: "",
+            rate: "",
+            gst: "5",
+            deliveryDate: ""
+          });
+        });
       }
-    ]);
+      
+      return nextState;
+    });
   };
 
   const handleSaveLinkedLines = (linkedLines: LinkedLine[]) => {
@@ -152,6 +224,9 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
 
   const grandTotal = subTotal + totalGst;
 
+  const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
+  const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
+
   return (
     <FormProvider {...methods}>
       <div className="flex flex-col h-full overflow-hidden bg-slate-50/50">
@@ -175,7 +250,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                   <h3 className="font-bold text-[#0453B8] text-[15px]">Select Supplier, Buyer & Agent</h3>
                 </div>
                 <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
                       <Label className="text-xs font-bold text-slate-700">Supplier <span className="text-red-500">*</span></Label>
                       <Select value={selectedSupplier} onValueChange={setSelectedSupplier} disabled={isViewMode}>
@@ -203,18 +278,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                             <SelectItem key={buyer} value={buyer}>{buyer}</SelectItem>
                           ))}
                         </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
-                      <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" disabled={isViewMode} />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-700">PO Date</Label>
-                      <Input type="date" defaultValue="2026-06-13" className="h-10 text-sm bg-white border-slate-200 shadow-sm font-medium" disabled={isViewMode} />
-                    </div>
+                      </Select>                    </div>
                   </div>
 
                   <div className="mt-4 overflow-hidden relative">
@@ -233,6 +297,17 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                         </div>
                       )}
                       <div className="flex gap-2">
+                        {selectedBuyerId && !isViewMode && availableDesigns.length > 0 && viewMode === "so-table" && (
+                          <Button 
+                            type="button"
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => handleSoItemNext(availableDesigns)}
+                            className="h-8 text-xs font-bold bg-[#0453B8] hover:bg-blue-700 text-white shadow-sm px-4"
+                          >
+                            Select All
+                          </Button>
+                        )}
                         {selectedBuyerId && !isViewMode && (
                           <Button 
                             type="button"
@@ -277,9 +352,6 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                       <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
                         <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-slate-50/50 shadow-sm max-h-[400px] p-4">
                           {(() => {
-                            const soIdsForBuyer = MOCK_SALES_ORDERS_LIST.filter(so => so.buyer === selectedBuyerId).map(so => so.id);
-                            const availableDesigns = ALL_SO_ITEMS.filter(item => soIdsForBuyer.includes(item.soId) && item.soNo.toLowerCase().includes(soFilter.toLowerCase()));
-                            
                             if (availableDesigns.length === 0) {
                               return (
                                 <div className="flex items-center justify-center h-32 text-slate-500 text-sm">
@@ -379,10 +451,6 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                       <Button onClick={handleAddTrim} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Trim Item
-                      </Button>
-                      <Button onClick={() => setActiveSoForLines(true)} variant="outline" className="text-[#0453B8] border-blue-200 hover:bg-blue-50 font-bold bg-white">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Select Sales Order Items
                       </Button>
                     </div>
                   )}

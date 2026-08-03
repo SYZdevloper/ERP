@@ -53,6 +53,7 @@ const ProductLineItemSchema = z.object({
     label: z.any().optional(),
     hangTag: z.any().optional(),
   }).optional(),
+  gst: z.number().optional(),
 });
 export type ProductLineItem = z.infer<typeof ProductLineItemSchema>;
 
@@ -69,6 +70,7 @@ const CatalogProductSchema = z.object({
   image: z.string().optional(),
   buttons: z.string().optional(),
   description: z.string().optional(),
+  gst: z.number().optional(),
 });
 
 export type CatalogProduct = z.infer<typeof CatalogProductSchema>;

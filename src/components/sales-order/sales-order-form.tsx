@@ -117,24 +117,28 @@ export function SalesOrderForm({ initialValues, isReadOnly = false, isEditMode =
                   onToggleEdit={isReadOnly && !hideEditDetails ? () => setIsTopSectionEditable(!isTopSectionEditable) : undefined}
                 />
 
-                <div className="flex items-center justify-between mt-4">
-                  <h3 className="text-sm font-bold text-slate-800">Address Details</h3>
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowAddress(!showAddress)}
-                    className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
-                  >
-                    {showAddress ? "Hide Addresses" : "Unhide Addresses"}
-                  </Button>
-                </div>
-                
-                {showAddress && (
-                  <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch animate-in fade-in duration-300">
-                    <AddressCard type="billing" title="Billing Address" icon={MapPin} isReadOnly={topSectionReadOnly} />
-                    <AddressCard type="shipping" title="Shipping Address" icon={Truck} isReadOnly={topSectionReadOnly} />
-                  </div>
+                {!(products && products.length > 0) && (
+                  <>
+                    <div className="flex items-center justify-between mt-4">
+                      <h3 className="text-sm font-bold text-slate-800">Address Details</h3>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowAddress(!showAddress)}
+                        className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                      >
+                        {showAddress ? "Hide Addresses" : "Unhide Addresses"}
+                      </Button>
+                    </div>
+                    
+                    {showAddress && (
+                      <div className="flex flex-col md:flex-row gap-5 mt-2 items-stretch animate-in fade-in duration-300">
+                        <AddressCard type="billing" title="Billing Address" icon={MapPin} isReadOnly={topSectionReadOnly} />
+                        <AddressCard type="shipping" title="Shipping Address" icon={Truck} isReadOnly={topSectionReadOnly} />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

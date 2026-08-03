@@ -92,7 +92,7 @@ export function MasterDialog<T extends { [key: string]: any }>({
           <form id={`form-${title}`} onSubmit={handleSave} className="flex flex-col gap-5 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {fields.map(field => {
-                const colSpan = field.gridCols === 2 || field.type === "textarea" ? "col-span-1 md:col-span-2" : "col-span-1";
+                const colSpan = field.gridCols === 2 || (field.type === "textarea" && field.gridCols !== 1) ? "col-span-1 md:col-span-2" : "col-span-1";
                 
                 return (
                   <div key={field.name} className={`flex flex-col gap-2 ${colSpan}`}>

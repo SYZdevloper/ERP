@@ -33,6 +33,7 @@ interface TrimEntry {
   gst: number;
   amount: number;
   poItemIds?: string[];
+  orderedQty?: number;
 }
 
 const INITIAL_SUPPLIERS = ["ABC Buttons Ltd.", "YKK Zippers", "Super Labels", "Vardhman Threads"];
@@ -190,6 +191,7 @@ export function TrimsGrnForm() {
         amount: qty * item.rate,
         poItemIds: [item.id],
         image: item.image,
+        orderedQty: item.orderedQty,
       };
     });
     setEntries([...entries, ...newRows]);
@@ -236,8 +238,8 @@ export function TrimsGrnForm() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GRN Number</Label>
-                <div className="flex items-center border border-slate-200 rounded-md bg-slate-50 px-3 h-9 text-sm font-medium text-slate-400 italic min-w-[140px]">
-                  Auto-Generated
+                <div className="flex items-center border border-slate-200 rounded-md bg-white px-3 h-9 text-sm font-bold text-slate-800 min-w-[140px]">
+                  TGRN-2026-001
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 items-center">
@@ -273,7 +275,7 @@ export function TrimsGrnForm() {
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Trims PO <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-slate-600">Trims PO</Label>
                   <Select value={po} onValueChange={(val) => { setPo(val); handleLoadPo(val); }}>
                     <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select PO" />
@@ -487,7 +489,7 @@ export function TrimsGrnForm() {
                     <FileText className="w-3.5 h-3.5 mr-1.5" />
                     Load PO Items <kbd className="ml-2 px-1 bg-white border border-blue-200 rounded text-[9px] text-blue-500">Alt+L</kbd>
                   </Button>
-                  <Button onClick={handleOpenManualEntry} disabled={!poLoaded} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
+                  <Button onClick={handleOpenManualEntry} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Manual Entry <kbd className="ml-2 px-1 bg-white border border-[#00A86B]/30 rounded text-[9px] text-[#00A86B]">Alt+M</kbd>
                   </Button>
@@ -510,13 +512,13 @@ export function TrimsGrnForm() {
                     </TableRow>
                   </TableHeader>
                   <TableBody className="text-sm">
-                    {!poLoaded ? (
+                    {!poLoaded && entries.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
-                          Please load a Trims PO first to enter items.
+                          Load a Trims PO or click "Manual Entry" to add items.
                         </TableCell>
                       </TableRow>
-                    ) : entries.length === 0 ? (
+                    ) : poLoaded && entries.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8 text-slate-400 font-medium">
                           No items added yet. Use "Load PO Items" to enter quantities.
@@ -824,6 +826,18 @@ export function TrimsGrnForm() {
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
+            {editingEntryId && entries.find(e => e.id === editingEntryId)?.orderedQty ? (
+              <div className="col-span-2 flex items-center justify-between bg-blue-50/50 border border-blue-100 p-3 rounded-lg mb-1">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Ordered Qty</span>
+                  <span className="text-base font-black text-[#0453B8]">{entries.find(e => e.id === editingEntryId)?.orderedQty?.toLocaleString()} Pcs</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">PO Rate</span>
+                  <span className="text-base font-black text-slate-800">₹ {entries.find(e => e.id === editingEntryId)?.rate.toFixed(2)}</span>
+                </div>
+              </div>
+            ) : null}
             
             <div className="col-span-2 flex items-center gap-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
               <div className="w-16 h-16 rounded-md bg-white border border-slate-300 flex items-center justify-center overflow-hidden shrink-0">

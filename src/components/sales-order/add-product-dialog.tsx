@@ -208,6 +208,23 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
       setCustomProductName(selectedProduct.name);
       // Remove Default Rate as requested: setCustomRate("") instead of selectedProduct.rate
       setCustomRate("");
+      
+      // Auto-set size system based on product type
+      const lowerWearCategories = ["trouser", "pant", "shorts", "skirt", "jogger", "legging", "jeans"];
+      const isLowerWear = lowerWearCategories.some(cat => selectedProduct.subcategory.toLowerCase().includes(cat) || selectedProduct.type.toLowerCase().includes(cat));
+      
+      if (isLowerWear) {
+        setSizeSystem("pants");
+        setQuantities({});
+        setRatios({});
+        setAdjustmentSize(DEFAULT_PANT_SIZES[DEFAULT_PANT_SIZES.length - 1]);
+      } else {
+        setSizeSystem("shirts");
+        setQuantities({});
+        setRatios({});
+        setAdjustmentSize(DEFAULT_SHIRT_SIZES[DEFAULT_SHIRT_SIZES.length - 1]);
+      }
+
       setTimeout(() => {
         sqNumberInputRef.current?.focus();
         sqNumberInputRef.current?.select();
@@ -396,8 +413,21 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                         return (
                           <>
                             <div
+                              id="product-image-box"
+                              tabIndex={0}
+                              autoFocus
                               onClick={() => document.getElementById('config-product-image-input')?.click()}
-                              className="relative w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 transition-all group overflow-hidden"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  document.getElementById('config-product-image-input')?.click();
+                                }
+                                if (e.key === 'Tab' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  document.getElementById('buyer-design-no')?.focus();
+                                }
+                              }}
+                              className="relative w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:border-[#0453B8] hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0453B8] focus-visible:ring-offset-2 transition-all group overflow-hidden"
                             >
                               {customImage || imageSrc ? (
                                 <>
@@ -452,87 +482,29 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       {/* Product Dropdown */}
                       <div className="flex flex-col gap-2 md:col-span-2">
                         <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Product *</Label>
-                        <Popover open={isProductDropdownOpen} onOpenChange={setIsProductDropdownOpen}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" role="combobox" aria-expanded={isProductDropdownOpen} className="h-[40px] w-full justify-between bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 px-3 whitespace-normal text-left overflow-hidden">
-                              <span className="truncate">{selectedProduct ? selectedProduct.name : "Select Product"}</span>
-                              <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[600px] p-0" align="start">
-                            <div className="flex flex-col">
-                              <div className="flex items-center border-b px-3">
-                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
-                                <Input
-                                  placeholder="Search by product name, code, category..."
-                                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none border-0 focus-visible:ring-0 shadow-none placeholder:text-slate-500 font-medium px-0"
-                                  value={searchQuery}
-                                  onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                              </div>
-                              <div className="max-h-[50vh] overflow-y-auto p-2">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-2">
-                                  {["Mens", "Womens", "Kids"].map(category => {
-                                    const items = catalogItems.filter(p => p.category === category && (!searchQuery || 
-                                      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                      p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                      p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())
-                                    ));
-                                    if (items.length === 0) return null;
-                                    return (
-                                      <div key={category} className="mb-2">
-                                        <div className="font-extrabold text-[#0453B8] text-[11px] uppercase tracking-wider bg-white sticky top-0 z-10 py-1">{category}</div>
-                                        <div className="flex flex-col gap-1">
-                                          {items.map(p => {
-                                            let imageSrc = "/men casual half shirt.jpg";
-                                            const nameLower = p.name.toLowerCase();
-                                            if (nameLower.includes("formal") || p.code.startsWith("MS")) {
-                                              imageSrc = p.type.toLowerCase().includes("full") ? "/mens casual full sleeve shirt.jpg" : "/men regualr fit shirt.jpeg";
-                                            }
-                                            if (nameLower.includes("t-shirt") || p.code.startsWith("MT")) {
-                                              imageSrc = "/men casual tshirt.jpeg";
-                                            }
-                                            return (
-                                              <button
-                                                key={p.id}
-                                                className="w-full text-left flex items-center gap-3 py-1.5 px-2 hover:bg-slate-50 rounded-md transition-colors"
-                                                onClick={() => {
-                                                  setSelectedProductId(p.id);
-                                                  setIsProductDropdownOpen(false);
-                                                }}
-                                              >
-                                                <div className="w-8 h-8 rounded bg-[#F5F6F8] overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-100">
-                                                  <img src={imageSrc} alt={p.name} className="w-full h-full object-cover mix-blend-multiply" />
-                                                </div>
-                                                <div className="flex flex-col overflow-hidden">
-                                                  <span className="font-bold text-slate-800 text-xs truncate">{p.name}</span>
-                                                  <span className="text-[10px] text-slate-500 font-semibold truncate">{p.code} • {p.subcategory}</span>
-                                                </div>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                {catalogItems.filter(p => !searchQuery || 
-                                  p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                  p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())
-                                ).length === 0 && (
-                                  <div className="text-center py-6 text-slate-500 text-sm font-medium">No products found matching "{searchQuery}"</div>
-                                )}
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
+                        <Select 
+                          value={selectedProductId || ""} 
+                          onValueChange={setSelectedProductId}
+                          disabled={!!editProduct}
+                        >
+                          <SelectTrigger className="h-[40px] w-full bg-white border-slate-200 shadow-sm rounded-lg text-sm font-semibold text-slate-800 px-3">
+                            <SelectValue placeholder="Select Product" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {catalogItems.map(p => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.code} - {p.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* 1) Buyer Design No */}
                       <div className="flex flex-col gap-2">
                         <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Buyer Design No</Label>
                         <Input
+                          id="buyer-design-no"
                           ref={sqNumberInputRef}
                           value={sqNumber}
                           onChange={(e) => setSqNumber(e.target.value)}
@@ -577,9 +549,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                               {brand}
                             </button>
                           ))}
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-[#0453B8] hover:bg-blue-100 ml-auto" onClick={() => setIsBrandDialogOpen(true)} title="Add New Brand">
-                            <Plus className="w-3 h-3" />
-                          </Button>
                         </div>
                       </div>
 
@@ -723,34 +692,6 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex gap-1 bg-slate-100 p-0.5 rounded-full mr-2">
-                          <Button
-                            variant={sizeSystem === "shirts" ? "default" : "ghost"}
-                            size="sm"
-                            className={`h-6 text-[11px] px-3 rounded-full ${sizeSystem === "shirts" ? 'bg-[#0453B8] text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
-                            onClick={() => {
-                              setSizeSystem("shirts");
-                              setQuantities({});
-                              setRatios({});
-                              setAdjustmentSize(DEFAULT_SHIRT_SIZES[DEFAULT_SHIRT_SIZES.length - 1]);
-                            }}
-                          >
-                            Shirt Sizes
-                          </Button>
-                          <Button
-                            variant={sizeSystem === "pants" ? "default" : "ghost"}
-                            size="sm"
-                            className={`h-6 text-[11px] px-3 rounded-full ${sizeSystem === "pants" ? 'bg-[#0453B8] text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
-                            onClick={() => {
-                              setSizeSystem("pants");
-                              setQuantities({});
-                              setRatios({});
-                              setAdjustmentSize(DEFAULT_PANT_SIZES[DEFAULT_PANT_SIZES.length - 1]);
-                            }}
-                          >
-                            Pant Sizes
-                          </Button>
-                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -810,7 +751,21 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
                                 placeholder="Pcs"
                                 className="h-full w-full text-center px-2 rounded-none border-0 shadow-none focus-visible:ring-1 focus-visible:ring-[#0453B8] focus-visible:z-10 font-black bg-white transition-colors duration-300 text-sm text-[#0453B8]"
                                 value={quantities[size] || ""}
-                                onChange={(e) => setQuantities({ ...quantities, [size]: parseInt(e.target.value) || 0 })}
+                                onChange={(e) => {
+                                  let newVal = parseInt(e.target.value) || 0;
+                                  const oldVal = quantities[size] || 0;
+                                  const targetTotal = parseInt(totalOrderQty) || 0;
+                                  
+                                  // If a Total Qty is specified, prevent exceeding it
+                                  if (targetTotal > 0) {
+                                    const otherTotal = currentTotalQty - oldVal;
+                                    if (otherTotal + newVal > targetTotal) {
+                                      newVal = Math.max(0, targetTotal - otherTotal);
+                                    }
+                                  }
+                                  
+                                  setQuantities({ ...quantities, [size]: newVal });
+                                }}
                                 onFocus={(e) => e.target.select()}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {

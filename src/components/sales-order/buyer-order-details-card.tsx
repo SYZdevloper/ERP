@@ -11,7 +11,7 @@ import { format, differenceInDays } from "date-fns";
 import { useState, useRef, useEffect } from "react";
 import { MasterDialog } from "@/components/masters/master-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 export function BuyerOrderDetailsCard({ 
   isReadOnly = false, 
   isEditMode = false,
@@ -39,9 +39,14 @@ export function BuyerOrderDetailsCard({
   let diffDays = "";
   if (poDate && deliveryDate) {
     const diff = differenceInDays(new Date(deliveryDate), new Date(poDate));
-    if ([15, 30, 45, 60, 90].includes(diff)) {
-      diffDays = String(diff);
-    }
+    diffDays = String(diff);
+  }
+
+  const defaultDays = ["15", "30", "45", "60", "90"];
+  const selectDaysOptions = [...defaultDays];
+  if (diffDays && !defaultDays.includes(diffDays) && !isNaN(parseInt(diffDays))) {
+    selectDaysOptions.push(diffDays);
+    selectDaysOptions.sort((a, b) => parseInt(a) - parseInt(b));
   }
 
   const effectivelyReadOnly = isReadOnly;
@@ -72,7 +77,7 @@ export function BuyerOrderDetailsCard({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="flex flex-col gap-2 md:col-span-4 min-w-0 w-full">
+        <div className="flex flex-col gap-2 md:col-span-3 min-w-0 w-full">
           <Label htmlFor="buyerId" className="text-xs text-slate-500 font-medium">Buyer {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
           {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{selectedBuyer?.name || "-"}</div>
@@ -175,15 +180,10 @@ export function BuyerOrderDetailsCard({
               }}
             />
           )}
-          {selectedBuyer && !effectivelyReadOnly && (
-            <div className="flex items-center gap-4 mt-1 text-xs">
-              <span className="text-green-600">Credit Limit: ₹ {(selectedBuyer.creditLimit / 100000).toFixed(2)} L</span>
-              <span className="text-green-600">Balance: ₹ {(selectedBuyer.balance / 100000).toFixed(2)} L</span>
-            </div>
-          )}
+
         </div>
 
-        <div className="flex flex-col gap-2 md:col-span-3 w-full">
+        <div className="flex flex-col gap-2 md:col-span-2 w-full">
           <Label htmlFor="buyerPoNo" className="text-xs text-slate-500 font-medium">Buyer PO No. {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
           {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{watch("buyerPoNo") || "-"}</div>
@@ -203,41 +203,48 @@ export function BuyerOrderDetailsCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 md:col-span-3 w-full">
-          <Label htmlFor="deliveryDate" className="text-xs text-slate-500 font-medium">Delivery Date {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
-          {effectivelyReadOnly ? (
-            <div className="text-sm font-semibold text-slate-900 mt-1">
-              {deliveryDate ? format(new Date(deliveryDate), "dd MMM yyyy") : "-"}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 w-full">
-              <Select value={diffDays || undefined} onValueChange={(val) => {
-                const days = parseInt(val);
-                const currentPoDate = getValues("poDate");
-                if (currentPoDate) {
-                  const newDate = new Date(currentPoDate);
-                  newDate.setDate(newDate.getDate() + days);
-                  setValue("deliveryDate", newDate, { shouldValidate: true, shouldDirty: true });
-                }
-              }}>
-                <SelectTrigger className="h-[42px] w-[100px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 Days</SelectItem>
-                  <SelectItem value="30">30 Days</SelectItem>
-                  <SelectItem value="45">45 Days</SelectItem>
-                  <SelectItem value="60">60 Days</SelectItem>
-                  <SelectItem value="90">90 Days</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input id="deliveryDate" type="date" className="h-[42px] text-sm flex-1" value={deliveryDate ? format(new Date(deliveryDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("deliveryDate", new Date(e.target.value))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("fob")?.focus(); } }} />
-            </div>
-          )}
+        <div className="flex flex-row gap-2 md:col-span-3 w-full">
+          <div className="flex flex-col gap-2 w-[40%]">
+            <Label className="text-xs text-slate-500 font-medium whitespace-nowrap">No of Days</Label>
+            {effectivelyReadOnly ? (
+              <div className="text-sm font-semibold text-slate-900 mt-1">{diffDays ? `${diffDays} Days` : "-"}</div>
+            ) : (
+              <div className="flex items-center border border-slate-200 rounded-md bg-white h-[42px] focus-within:ring-2 focus-within:ring-[#0453B8]/50 focus-within:border-[#0453B8] overflow-hidden transition-all">
+                <input 
+                  type="number"
+                  value={diffDays || ""}
+                  onChange={(e) => {
+                    const days = parseInt(e.target.value);
+                    const currentPoDate = getValues("poDate");
+                    if (currentPoDate && !isNaN(days)) {
+                      const newDate = new Date(currentPoDate);
+                      newDate.setDate(newDate.getDate() + days);
+                      setValue("deliveryDate", newDate, { shouldValidate: true, shouldDirty: true });
+                    } else if (isNaN(days)) {
+                      // If empty, we can just let them clear it
+                    }
+                  }}
+                  className="w-full h-full px-3 text-sm focus:outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="text-xs text-slate-500 font-medium pr-3 select-none">Days</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex flex-col gap-2 w-[60%]">
+            <Label htmlFor="deliveryDate" className="text-xs text-slate-500 font-medium whitespace-nowrap">Delivery Date {!effectivelyReadOnly && <span className="text-red-500">*</span>}</Label>
+            {effectivelyReadOnly ? (
+              <div className="text-sm font-semibold text-slate-900 mt-1">
+                {deliveryDate ? format(new Date(deliveryDate), "dd MMM yyyy") : "-"}
+              </div>
+            ) : (
+              <Input id="deliveryDate" type="date" className="h-[42px] text-sm w-full" value={deliveryDate ? format(new Date(deliveryDate), "yyyy-MM-dd") : ''} onChange={(e) => setValue("deliveryDate", new Date(e.target.value))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("fob")?.focus(); } }} />
+            )}
+          </div>
         </div>
 
-        {/* Second Row */}
-        <div className="flex flex-col gap-2 md:col-start-5 md:col-span-3 w-full">
+        {/* FOB */}
+        <div className="flex flex-col gap-2 md:col-span-2 w-full">
           <Label htmlFor="fob" className="text-xs text-slate-500 font-medium">FOB</Label>
           {effectivelyReadOnly ? (
             <div className="text-sm font-semibold text-slate-900 mt-1">{watch("fob") || "-"}</div>
@@ -247,7 +254,21 @@ export function BuyerOrderDetailsCard({
               name="fob"
               render={({ field }) => (
                 <Select value={field.value || undefined} onValueChange={field.onChange}>
-                  <SelectTrigger id="fob" className="w-full h-[42px]">
+                  <SelectTrigger 
+                    id="fob" 
+                    className="w-full h-[42px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab' && !e.shiftKey) {
+                        e.preventDefault();
+                        const el = document.getElementById("product-quick-add");
+                        if (el) {
+                          // Scroll into view if needed and focus
+                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          setTimeout(() => el.focus(), 100);
+                        }
+                      }
+                    }}
+                  >
                     <SelectValue placeholder="Select terms" />
                   </SelectTrigger>
                   <SelectContent>
@@ -271,9 +292,81 @@ export function BuyerOrderDetailsCard({
           { name: "companyName", label: "Company Name", type: "text", required: true, placeholder: "Enter full company name" },
           { name: "gstNumber", label: "GST Number", type: "text", required: true, placeholder: "e.g. 22AAAAA0000A1Z5" },
           { name: "logo", label: "Buyer Logo", type: "image", gridCols: 2 },
-          { name: "accountDeptNo", label: "Account Dept Number", type: "text" },
-          { name: "warehouseDeptNo", label: "Warehouse Dept Number", type: "text" },
-          { name: "transport", label: "Transport", type: "text", placeholder: "Preferred transport service" },
+          { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN", gridCols: 1 },
+          { 
+            name: "shippingAddresses", 
+            label: "Shipping Address", 
+            type: "custom", 
+            gridCols: 1,
+            render: (formData, handleChange) => {
+              const addresses = formData.shippingAddresses || [""];
+              return (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-slate-600">Shipping Addresses</Label>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-xs text-[#0453B8] px-2 py-0"
+                      onClick={() => handleChange("shippingAddresses", [...addresses, ""])}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Add New
+                    </Button>
+                  </div>
+                  {addresses.map((addr: string, idx: number) => (
+                    <div key={idx} className="relative">
+                      <textarea 
+                        placeholder={`Shipping Address ${idx + 1}`}
+                        value={addr}
+                        onChange={(e) => {
+                          const newAddrs = [...addresses];
+                          newAddrs[idx] = e.target.value;
+                          handleChange("shippingAddresses", newAddrs);
+                        }}
+                        className="w-full min-h-[100px] text-sm font-medium border-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0453B8] text-slate-900 bg-white resize-none rounded-md border p-3" 
+                      />
+                      {addresses.length > 1 && (
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newAddrs = addresses.filter((_: any, i: number) => i !== idx);
+                            handleChange("shippingAddresses", newAddrs);
+                          }}
+                          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 rounded"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+          },
+          { 
+            name: "defaultBrand", 
+            label: "Default Brand", 
+            type: "custom", 
+            gridCols: 2,
+            render: (formData, handleChange) => (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-slate-600">Default Brand</Label>
+                  <Button type="button" variant="ghost" size="sm" className="h-6 text-xs text-[#0453B8] px-2 py-0">
+                    <Plus className="w-3 h-3 mr-1" /> Add New Brand
+                  </Button>
+                </div>
+                <Input 
+                  type="text"
+                  placeholder="e.g. Zara"
+                  value={formData.defaultBrand || ""}
+                  onChange={(e) => handleChange("defaultBrand", e.target.value)}
+                  className="h-10 text-sm font-medium border-slate-200 focus-visible:ring-[#0453B8] text-slate-900 bg-blue-50/30 border-blue-200" 
+                />
+              </div>
+            )
+          },
           { 
             name: "paymentTerms", 
             label: "Payment Terms", 
@@ -317,10 +410,7 @@ export function BuyerOrderDetailsCard({
               </div>
             )
           },
-          { name: "defaultAgent", label: "Agent by Default", type: "text" },
-          { name: "defaultBrand", label: "Default Brand", type: "text", placeholder: "e.g. Zara" },
-          { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN" },
-          { name: "shippingAddress", label: "Shipping Address", type: "textarea", placeholder: "Street, City, State PIN" },
+          { name: "transport", label: "Preferred Transport", type: "text", placeholder: "Preferred transport service" },
           { name: "notes", label: "Notes", type: "textarea", placeholder: "Additional notes" },
         ]}
         onSave={(data) => {

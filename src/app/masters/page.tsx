@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
-import { FileText, ArrowRight, Scissors, Tag, Droplet, LayoutTemplate, Briefcase, Truck } from "lucide-react";
+import { FileText, ArrowRight, Scissors, Tag, Droplet, LayoutTemplate, Briefcase, Truck, Package, Ruler } from "lucide-react";
 
 export default function MastersPage() {
   return (
@@ -118,6 +118,35 @@ export default function MastersPage() {
                   <h3 className="text-lg font-bold text-slate-800">Suppliers</h3>
                   <p className="text-sm text-slate-500 mt-2 flex-1">
                     Manage fabric and trim vendors, performance metrics, and terms.
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/products" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Package className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Product Master</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage the master list of all products, variations, and catalog details.
+                  </p>
+                </div>
+              </Link>
+              <Link href="/masters/size" className="group block">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-[#0453B8] hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0453B8] flex items-center justify-center">
+                      <Ruler className="w-6 h-6" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0453B8] transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">Sizes</h3>
+                  <p className="text-sm text-slate-500 mt-2 flex-1">
+                    Manage size systems (e.g., S/M/L, 28/30/32) and groupings used across products.
                   </p>
                 </div>
               </Link>

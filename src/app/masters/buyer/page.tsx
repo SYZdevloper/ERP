@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MasterCard } from "@/components/masters/master-card";
 import { MasterDialog, DialogField } from "@/components/masters/master-dialog";
@@ -27,9 +27,79 @@ export default function BuyerMasterPage() {
     { name: "companyName", label: "Company Name", type: "text", required: true, placeholder: "Enter full company name" },
     { name: "gstNumber", label: "GST Number", type: "text", required: true, placeholder: "e.g. 22AAAAA0000A1Z5" },
     { name: "logo", label: "Buyer Logo", type: "image", gridCols: 2 },
-    { name: "accountDeptNo", label: "Account Dept Number", type: "text" },
-    { name: "warehouseDeptNo", label: "Warehouse Dept Number", type: "text" },
-    { name: "transport", label: "Transport", type: "text", placeholder: "Preferred transport service" },
+    { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN", gridCols: 1 },
+    { 
+      name: "shippingAddresses", 
+      label: "Shipping Address", 
+      type: "custom", 
+      gridCols: 1,
+      render: (formData, handleChange) => {
+        const addresses = formData.shippingAddresses || [""];
+        return (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600">Shipping Addresses</span>
+              <button 
+                type="button" 
+                className="flex items-center text-xs text-[#0453B8] hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                onClick={() => handleChange("shippingAddresses", [...addresses, ""])}
+              >
+                <span className="text-lg leading-none mr-1">+</span> Add New
+              </button>
+            </div>
+            {addresses.map((addr: string, idx: number) => (
+              <div key={idx} className="relative">
+                <textarea 
+                  placeholder={`Shipping Address ${idx + 1}`}
+                  value={addr}
+                  onChange={(e) => {
+                    const newAddrs = [...addresses];
+                    newAddrs[idx] = e.target.value;
+                    handleChange("shippingAddresses", newAddrs);
+                  }}
+                  className="w-full min-h-[100px] text-sm font-medium border-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0453B8] text-slate-900 bg-white resize-none rounded-md border p-3" 
+                />
+                {addresses.length > 1 && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newAddrs = addresses.filter((_: any, i: number) => i !== idx);
+                      handleChange("shippingAddresses", newAddrs);
+                    }}
+                    className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      }
+    },
+    { 
+      name: "defaultBrand", 
+      label: "Default Brand", 
+      type: "custom", 
+      gridCols: 2,
+      render: (formData, handleChange) => (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">Default Brand</span>
+            <button type="button" className="flex items-center text-xs text-[#0453B8] hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+              <span className="text-lg leading-none mr-1">+</span> Add New Brand
+            </button>
+          </div>
+          <input 
+            type="text"
+            placeholder="e.g. Zara"
+            value={formData.defaultBrand || ""}
+            onChange={(e) => handleChange("defaultBrand", e.target.value)}
+            className="h-10 px-3 text-sm font-medium border border-blue-200 rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0453B8] text-slate-900 bg-blue-50/30" 
+          />
+        </div>
+      )
+    },
     { 
       name: "paymentTerms", 
       label: "Payment Terms", 
@@ -73,10 +143,7 @@ export default function BuyerMasterPage() {
         </div>
       )
     },
-    { name: "defaultAgent", label: "Agent by Default", type: "text" },
-    { name: "defaultBrand", label: "Default Brand", type: "text", placeholder: "e.g. Zara" },
-    { name: "billingAddress", label: "Billing Address", type: "textarea", placeholder: "Street, City, State PIN" },
-    { name: "shippingAddress", label: "Shipping Address", type: "textarea", placeholder: "Street, City, State PIN" },
+    { name: "transport", label: "Preferred Transport", type: "text", placeholder: "Preferred transport service" },
     { name: "notes", label: "Notes", type: "textarea", placeholder: "Additional notes" },
   ];
 

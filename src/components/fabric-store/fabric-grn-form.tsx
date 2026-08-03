@@ -226,18 +226,19 @@ export function FabricGrnForm() {
   };
 
   const handleSaveManualEntry = () => {
-    const mtrQty = Number(manualFormData.mtrQty) || 0;
     const rate = Number(manualFormData.rate) || 0;
     const gst = Number(manualFormData.gst) || 5;
+
+    let addedRow: RollEntry | null = null;
 
     if (editingEntryId) {
       setEntries(entries.map(e => e.id === editingEntryId ? {
         ...e,
         ...manualFormData,
-        mtrQty,
+        mtrQty: e.mtrQty, // Keep existing qty when editing basic details
         rate,
         gst,
-        amount: mtrQty * rate,
+        amount: e.mtrQty * rate,
         image: manualFormData.image
       } : e));
     } else {
@@ -245,21 +246,26 @@ export function FabricGrnForm() {
         id: Math.random().toString(),
         srNo: entries.length + 1,
         description: manualFormData.description,
-        rollNo: manualFormData.rollNo,
+        rollNo: "",
         width: manualFormData.width,
         gsm: manualFormData.gsm,
         color: manualFormData.color,
         fabricType: manualFormData.fabricType,
-        mtrQty,
+        mtrQty: 0,
         hsn: manualFormData.hsn,
         rate,
         gst,
-        amount: mtrQty * rate,
+        amount: 0,
         image: manualFormData.image,
       };
       setEntries([...entries, row]);
+      addedRow = row;
     }
     setIsManualEntryOpen(false);
+    
+    if (addedRow) {
+      setTimeout(() => handleOpenRollDetails(addedRow as RollEntry), 100);
+    }
   };
 
   const handleAddSelectedPoItems = () => {
@@ -370,8 +376,8 @@ export function FabricGrnForm() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GRN Number</Label>
-                <div className="flex items-center border border-slate-200 rounded-md bg-slate-50 px-3 h-9 text-sm font-medium text-slate-400 italic min-w-[140px]">
-                  Auto-Generated
+                <div className="flex items-center border border-slate-200 rounded-md bg-white px-3 h-9 text-sm font-bold text-slate-800 min-w-[140px]">
+                  FGRN-2026-001
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 items-center">
@@ -393,6 +399,7 @@ export function FabricGrnForm() {
               <h2 className="text-sm font-bold text-[#0453B8] mb-5">1. Supplier & Document Details</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+                {/* Row 1 */}
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
                   <Select value={supplier} onValueChange={setSupplier}>
@@ -407,7 +414,20 @@ export function FabricGrnForm() {
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Fabric PO <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-slate-600">Invoice No.</Label>
+                  <Input placeholder="Enter Invoice No." className="h-10 text-sm bg-white border-slate-200" />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Delivery Challan No.</Label>
+                  <Input placeholder="Enter Challan No." className="h-10 text-sm bg-white border-slate-200" />
+                </div>
+                
+                <div className="hidden md:block"></div>
+                
+                {/* Row 2 */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Fabric PO</Label>
                   <Select value={po} onValueChange={(val) => { setPo(val); handleLoadPo(val); }}>
                     <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium">
                       <SelectValue placeholder="Select PO" />
@@ -419,22 +439,12 @@ export function FabricGrnForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Delivery Challan No.</Label>
-                  <Input placeholder="Enter Challan No." className="h-10 text-sm bg-white border-slate-200" />
+                  <Label className="text-xs font-bold text-slate-600">Invoice Date</Label>
+                  <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
                 </div>
                 
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Challan Date</Label>
-                  <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Invoice No.</Label>
-                  <Input placeholder="Enter Invoice No." className="h-10 text-sm bg-white border-slate-200" />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Invoice Date</Label>
                   <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
                 </div>
                 
@@ -634,7 +644,7 @@ export function FabricGrnForm() {
                   <h2 className="text-sm font-bold text-[#0453B8]">2. Fabric Receiving Entry</h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button onClick={handleOpenManualEntry} disabled={!poLoaded} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
+                  <Button onClick={handleOpenManualEntry} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Manual Fabric
                   </Button>
@@ -657,16 +667,10 @@ export function FabricGrnForm() {
                     </TableRow>
                   </TableHeader>
                   <TableBody className="text-sm">
-                    {!poLoaded ? (
+                    {entries.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
-                          Please load a Fabric PO first to enter rolls.
-                        </TableCell>
-                      </TableRow>
-                    ) : entries.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-slate-400 font-medium">
-                          No rolls added yet. Use the quick add row below to enter rolls.
+                          {!poLoaded ? "Please load a Fabric PO or add manual fabric to enter rolls." : "No rolls added yet. Use the manual fabric button to enter rolls."}
                         </TableCell>
                       </TableRow>
                     ) : null}
@@ -1063,15 +1067,7 @@ export function FabricGrnForm() {
               />
             </div>
             
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-bold text-slate-700">Roll/Bale No</Label>
-              <Input 
-                value={manualFormData.rollNo} 
-                onChange={(e) => setManualFormData({...manualFormData, rollNo: e.target.value})} 
-                placeholder="Enter roll no"
-                className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8]"
-              />
-            </div>
+
             
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-bold text-slate-700">Fabric Type</Label>
@@ -1123,19 +1119,7 @@ export function FabricGrnForm() {
               />
             </div>
             
-            <div className="flex flex-col gap-1.5 relative">
-              <Label className="text-xs font-bold text-slate-700">Mtr Qty <span className="text-red-500">*</span></Label>
-              <div className="relative">
-                <Input 
-                  type="number"
-                  value={manualFormData.mtrQty} 
-                  onChange={(e) => setManualFormData({...manualFormData, mtrQty: e.target.value})} 
-                  placeholder="Enter qty"
-                  className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-[#0453B8] pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Mtr</span>
-              </div>
-            </div>
+
             
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-bold text-slate-700">Rate (₹/Mtr) <span className="text-red-500">*</span></Label>
@@ -1190,7 +1174,7 @@ export function FabricGrnForm() {
 
               return (
                 <div className="mb-5 flex items-start gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-lg shrink-0">
-                  <div className="flex-1 grid grid-cols-3 divide-x divide-slate-100">
+                  <div className="flex-1 grid grid-cols-4 divide-x divide-slate-100">
                     {/* Quantity Section */}
                     <div className="flex flex-col gap-4 px-4">
                       <div className="flex flex-col gap-1">
@@ -1254,6 +1238,40 @@ export function FabricGrnForm() {
                             onChange={(e) => setActiveHeaderReceivedWidth(e.target.value)}
                             placeholder='e.g. 62"'
                             className="h-10 w-32 text-base font-bold border-blue-200 bg-blue-50/30 focus-visible:ring-[#0453B8] transition-colors"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* No of Rolls Section */}
+                    <div className="flex flex-col gap-4 px-4 justify-end">
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] font-bold text-red-500 uppercase tracking-wider flex items-center gap-1">
+                          No of Rolls
+                        </Label>
+                        <div className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={activeRollDetails.length || ""}
+                            onChange={(e) => {
+                              const num = parseInt(e.target.value) || 0;
+                              if (num > activeRollDetails.length) {
+                                const toAdd = num - activeRollDetails.length;
+                                const newRolls = Array.from({ length: toAdd }).map((_, idx) => ({
+                                  id: Math.random().toString(),
+                                  rollNo: `R-${(activeRollDetails.length + idx + 1).toString().padStart(2, '0')}`,
+                                  width: activeHeaderReceivedWidth || "",
+                                  billedQty: "",
+                                  actualQty: "",
+                                  color: ""
+                                }));
+                                setActiveRollDetails([...activeRollDetails, ...newRolls]);
+                              } else if (num >= 0 && num < activeRollDetails.length) {
+                                setActiveRollDetails(activeRollDetails.slice(0, num));
+                              }
+                            }}
+                            placeholder="e.g. 5"
+                            className="h-10 w-24 text-base font-bold border-red-500 focus-visible:ring-red-500 transition-colors text-center"
                           />
                         </div>
                       </div>

@@ -7,6 +7,7 @@ interface SupplierAddressCardProps {
     line1: string;
     line2: string;
     gstin: string;
+    agent?: string;
   } | null;
 }
 
@@ -29,6 +30,7 @@ export function SupplierAddressCard({ selectedSupplier, supplierAddressInfo }: S
           <p>{supplierAddressInfo.line1}</p>
           <p>{supplierAddressInfo.line2}</p>
           <p className="text-slate-500 mt-2">GSTIN: {supplierAddressInfo.gstin}</p>
+          {supplierAddressInfo.agent && <p className="text-emerald-600 font-semibold mt-1">Agent: {supplierAddressInfo.agent}</p>}
         </div>
       ) : (
         <div className="text-sm text-slate-400 pl-11 flex-1 flex items-center mt-2">

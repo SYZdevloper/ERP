@@ -14,4 +14,5 @@ export interface Supplier {
   creditDays?: number;
   advancePercentage?: number;
   billingAddress?: string;
+  agent?: string;
 }

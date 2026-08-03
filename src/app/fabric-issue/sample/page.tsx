@@ -12,19 +12,18 @@ import { ListPageHeader } from "@/components/ui/list-page-header";
 
 // Mock Data for Available Rolls
 const MOCK_ROLLS = [
-  { id: "ROLL-001", name: "Roll 1 - Basic Cotton", item: "Basic Cotton", lot: "L-2026-A", availableQty: 100 },
-  { id: "ROLL-002", name: "Roll 2 - Denim Blue", item: "Denim Blue", lot: "L-2026-B", availableQty: 50.5 },
-  { id: "ROLL-003", name: "Roll 3 - Winter Fleece", item: "Winter Fleece", lot: "L-2026-C", availableQty: 15.25 },
+  { id: "ROLL-001", name: "Roll 1", supplier: "ABC Supplier", item: "Basic Cotton", lot: "L-2026-A", availableQty: 100 },
+  { id: "ROLL-002", name: "Roll 2", supplier: "XYZ Fabrics", item: "Denim Blue", lot: "L-2026-B", availableQty: 50.5 },
+  { id: "ROLL-003", name: "Roll 3", supplier: "Global Textiles", item: "Winter Fleece", lot: "L-2026-C", availableQty: 15.25 },
 ];
 
 export default function SampleFabricIssuePage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [styleName, setStyleName] = useState("");
   const [selectedRollId, setSelectedRollId] = useState("");
   const [issueQuantity, setIssueQuantity] = useState("");
   const [issuedTo, setIssuedTo] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [returnStatus, setReturnStatus] = useState("Pending Return");
+  const [techpackNo, setTechpackNo] = useState("");
   const [remarks, setRemarks] = useState("");
 
   const selectedRoll = MOCK_ROLLS.find(r => r.id === selectedRollId);
@@ -36,7 +35,7 @@ export default function SampleFabricIssuePage() {
 
   const handleSave = () => {
     // In a real app, this would submit to API
-    alert(`Successfully issued ${issueQtyNum} m of fabric for sample ${styleName}. Remaining roll stock: ${remainingQty} m.`);
+    alert(`Successfully issued ${issueQtyNum} m of fabric. Remaining roll stock: ${remainingQty} m.`);
     window.location.href = "/fabric-issue";
   };
 
@@ -63,8 +62,10 @@ export default function SampleFabricIssuePage() {
           <p className="text-[13px] text-slate-500 mt-1">Provide details for the sample you are creating.</p>
         </div>
         
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
+        <div className="p-6 grid grid-cols-1 gap-6">
+          
+          {/* Row 1: Issue Date */}
+          <div className="space-y-2 lg:w-1/4">
             <Label className="text-[13px] font-medium text-slate-700">Issue Date <span className="text-red-500">*</span></Label>
             <Input 
               type="date" 
@@ -74,59 +75,8 @@ export default function SampleFabricIssuePage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-[13px] font-medium text-slate-700">Style / Sample Name <span className="text-red-500">*</span></Label>
-            <Input 
-              placeholder="e.g. Winter Parka Prototype" 
-              value={styleName} 
-              onChange={(e) => setStyleName(e.target.value)} 
-              className="h-9"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[13px] font-medium text-slate-700">Issued To <span className="text-red-500">*</span></Label>
-            <Input 
-              placeholder="e.g. Ramesh (Production Manager)" 
-              value={issuedTo} 
-              onChange={(e) => setIssuedTo(e.target.value)} 
-              className="h-9"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[13px] font-medium text-slate-700">Purpose of Issue <span className="text-red-500">*</span></Label>
-            <Input 
-              placeholder="e.g. Buyer Sample, Testing, R&D" 
-              value={purpose} 
-              onChange={(e) => setPurpose(e.target.value)} 
-              className="h-9"
-            />
-          </div>
-          
-          <div className="space-y-2 lg:col-span-2">
-            <Label className="text-[13px] font-medium text-slate-700">Return Tracking <span className="text-red-500">*</span></Label>
-            <Select value={returnStatus} onValueChange={setReturnStatus}>
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue placeholder="Select tracking status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pending Return">Pending Return (Follow Up Required)</SelectItem>
-                <SelectItem value="Received Back">Received Back</SelectItem>
-                <SelectItem value="Non-Returnable">Non-Returnable (Consumed/Dispatched)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-slate-100">
-          <h2 className="text-[15px] font-semibold text-slate-800 flex items-center mb-1">
-            <Factory className="h-4 w-4 mr-2 text-[#0453B8]" />
-            Fabric Roll Selection & Issue
-          </h2>
-          <p className="text-[13px] text-slate-500 mb-6">Select a roll from stock and specify how much fabric is required.</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+          {/* Row 2: Roll Selection, Available, Issue Qty */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div className="space-y-2 lg:col-span-2">
               <Label className="text-[13px] font-medium text-slate-700">Select Roll <span className="text-red-500">*</span></Label>
               <Select value={selectedRollId} onValueChange={setSelectedRollId}>
@@ -136,7 +86,7 @@ export default function SampleFabricIssuePage() {
                 <SelectContent>
                   {MOCK_ROLLS.map(roll => (
                     <SelectItem key={roll.id} value={roll.id}>
-                      {roll.name} (Lot: {roll.lot}) - {roll.availableQty} m
+                      {roll.name} ({roll.supplier}) - {roll.availableQty} m
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -164,26 +114,59 @@ export default function SampleFabricIssuePage() {
               />
             </div>
           </div>
-          
-          {isOverIssue && (
-            <div className="mt-2 text-[12px] font-medium text-red-600 flex items-center">
-              <AlertCircle className="w-3.5 h-3.5 mr-1" />
-              Cannot issue more than available roll quantity.
-            </div>
-          )}
 
-          {selectedRollId && !isOverIssue && issueQtyNum > 0 && (
-            <div className="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-between">
-              <div>
-                <div className="text-[13px] font-semibold text-emerald-800">Remaining Roll Stock</div>
-                <div className="text-[12px] text-emerald-600 mt-0.5">Calculated actual fabric left in stock after issue</div>
-              </div>
-              <div className="text-2xl font-bold text-emerald-700">
-                {remainingQty.toFixed(2)} <span className="text-sm font-semibold">m</span>
-              </div>
+          {/* Row 3: Issued To, Purpose, Techpack No */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium text-slate-700">Issued To <span className="text-red-500">*</span></Label>
+              <Input 
+                placeholder="e.g. Ramesh" 
+                value={issuedTo} 
+                onChange={(e) => setIssuedTo(e.target.value)} 
+                className="h-9"
+              />
             </div>
-          )}
+
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium text-slate-700">Purpose <span className="text-red-500">*</span></Label>
+              <Input 
+                placeholder="e.g. Buyer Sample" 
+                value={purpose} 
+                onChange={(e) => setPurpose(e.target.value)} 
+                className="h-9"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium text-slate-700">Techpack No <span className="text-red-500">*</span></Label>
+              <Input 
+                placeholder="e.g. TP-2026-01" 
+                value={techpackNo} 
+                onChange={(e) => setTechpackNo(e.target.value)} 
+                className="h-9"
+              />
+            </div>
+          </div>
         </div>
+          
+        {isOverIssue && (
+          <div className="px-6 pb-2 text-[12px] font-medium text-red-600 flex items-center">
+            <AlertCircle className="w-3.5 h-3.5 mr-1" />
+            Cannot issue more than available roll quantity.
+          </div>
+        )}
+
+        {selectedRollId && !isOverIssue && issueQtyNum > 0 && (
+          <div className="mx-6 mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-between">
+            <div>
+              <div className="text-[13px] font-semibold text-emerald-800">Remaining Roll Stock</div>
+              <div className="text-[12px] text-emerald-600 mt-0.5">Calculated actual fabric left in stock after issue</div>
+            </div>
+            <div className="text-2xl font-bold text-emerald-700">
+              {remainingQty.toFixed(2)} <span className="text-sm font-semibold">m</span>
+            </div>
+          </div>
+        )}
 
         <div className="p-6 border-t border-slate-100">
           <div className="space-y-2">
@@ -205,7 +188,7 @@ export default function SampleFabricIssuePage() {
           </Link>
           <Button 
             className="h-9 px-6 bg-[#0453B8] hover:bg-blue-700 text-white font-semibold text-[13px] shadow-sm"
-            disabled={!selectedRollId || !issueQuantity || isOverIssue || !styleName || !date}
+            disabled={!selectedRollId || !issueQuantity || isOverIssue || !date}
             onClick={handleSave}
           >
             <Save className="w-4 h-4 mr-2" />

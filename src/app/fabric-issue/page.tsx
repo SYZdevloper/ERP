@@ -106,7 +106,7 @@ export default function FabricIssueListPage() {
               <Link href="/fabric-issue/sample">
                 <Button className="h-9 px-4 font-semibold shadow-md text-[13px] bg-slate-800 hover:bg-slate-700 text-white">
                   <Scissors className="w-4 h-4 mr-2" />
-                  New Sample Issue
+                  New Fabric Issue
                 </Button>
               </Link>
 

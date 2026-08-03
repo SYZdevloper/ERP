@@ -107,6 +107,7 @@ export function PurchaseOrderForm({
   const [availableWidths, setAvailableWidths] = useState(['44"', '54"', '58"']);
   const [isWidthDropdownOpen, setIsWidthDropdownOpen] = useState(false);
   const [newWidthText, setNewWidthText] = useState("");
+  const [keepModalOpen, setKeepModalOpen] = useState(false);
 
   useEffect(() => {
     if (poItems.length > 0) setShowAddress(false);
@@ -273,23 +274,42 @@ export function PurchaseOrderForm({
     setSelectedSoItemContext(item);
     setEditingItem(null);
     const isFabric = type === "Fabric";
-    const reqQty = isFabric ? item.requiredQtyMtr : Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0);
+    
+    let avg = "1.80";
+    let unit = "Meter";
+    const nameLower = (item.name || "").toLowerCase();
+    
+    if (nameLower.includes("t-shirt") || nameLower.includes("tshirt")) {
+      avg = "0.25";
+      unit = "Kg";
+    } else if (nameLower.includes("shirt")) {
+      if (nameLower.includes("half")) {
+        avg = "1.15";
+      } else {
+        avg = "1.35";
+      }
+      unit = "Meter";
+    }
+
+    const soQty = Object.values(item.sizeBreakdown || {}).reduce((a: any, b: any) => a + b, 0) as number;
+    const reqQty = isFabric ? soQty * Number(avg) : soQty;
+
     setManualFormData({
       type: isFabric ? item.fabricBom?.type || "Cotton Fabric" : selectedTrimItem,
       description: "",
       gsm: isFabric ? item.fabricBom?.gsm || "180" : "",
       width: isFabric ? item.fabricBom?.width || "44" : "",
       color: isFabric ? item.fabricBom?.color || item.color : item.color,
-      qty: reqQty?.toString() || "0",
+      qty: reqQty?.toFixed(1) || "0",
       rate: "0",
       gst: "5",
       image: "",
       soImage: "",
-      avg: "1.80",
+      avg: avg,
       supplierSortNo: "",
       deliveryDate: "",
       deliveryDays: "",
-      unit: "Meter"
+      unit: unit
     });
     setIsManualEntryOpen(true);
   };
@@ -535,7 +555,7 @@ export function PurchaseOrderForm({
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
                 </div>
                 
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 mb-6`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 mb-6`}>
                   {/* Supplier */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
@@ -594,11 +614,7 @@ export function PurchaseOrderForm({
                     )}
                   </div>
 
-                  {/* Agent / Broker */}
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600 uppercase">Agent / Broker</Label>
-                    <Input defaultValue="Nitin Bhai" className="h-10 text-sm bg-white" disabled={isViewMode} />
-                  </div>
+
                 </div>
 
                 <div className="mt-4 overflow-hidden relative">
@@ -1078,16 +1094,11 @@ export function PurchaseOrderForm({
                   {selectedSoItemContext && (
                     <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm mb-2">
                       <div className="flex flex-col gap-1">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase">SO Qty</div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">Order Qty</div>
                         <div className="font-extrabold text-slate-800 text-lg flex items-baseline gap-1">
                           {(Object.values(selectedSoItemContext.sizeBreakdown || {}) as number[]).reduce((a, b) => a + b, 0)} 
                           <span className="text-xs font-semibold text-slate-500">Pcs</span>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-col gap-1">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase">Buyer Design No.</div>
-                        <div className="font-bold text-slate-800 text-sm">{selectedSoItemContext.sqNumber || "N/A"}</div>
                       </div>
 
                       <div className="flex flex-col gap-1">
@@ -1105,78 +1116,10 @@ export function PurchaseOrderForm({
                         />
                       </div>
 
-                      <div className="flex flex-col gap-1 items-end">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-bold text-red-600 uppercase">Order Qty</span>
-                          <Popover open={isUnitDropdownOpen} onOpenChange={setIsUnitDropdownOpen}>
-                            <PopoverTrigger asChild>
-                              <button className="flex items-center gap-1 text-[10px] font-bold text-red-600 uppercase hover:bg-red-50 px-1 rounded transition-colors">
-                                {manualFormData.unit} <ChevronDown className="w-3 h-3" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-48 p-2" align="end">
-                              <div className="flex flex-col gap-1">
-                                {availableUnits.map(u => (
-                                  <button 
-                                    key={u} 
-                                    className="text-left px-2 py-1.5 text-sm rounded hover:bg-slate-100 font-medium text-slate-700"
-                                    onClick={() => {
-                                      setManualFormData({...manualFormData, unit: u});
-                                      setIsUnitDropdownOpen(false);
-                                    }}
-                                  >
-                                    {u}
-                                  </button>
-                                ))}
-                                <div className="border-t border-slate-100 my-1"></div>
-                                <div className="flex gap-2 items-center px-1">
-                                  <Input 
-                                    placeholder="Add unit..." 
-                                    className="h-7 text-xs" 
-                                    value={newUnitText}
-                                    onChange={(e) => setNewUnitText(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter' && newUnitText.trim()) {
-                                        const newUnit = newUnitText.trim();
-                                        if (!availableUnits.includes(newUnit)) {
-                                          setAvailableUnits([...availableUnits, newUnit]);
-                                        }
-                                        setManualFormData({...manualFormData, unit: newUnit});
-                                        setNewUnitText("");
-                                        setIsUnitDropdownOpen(false);
-                                      }
-                                    }}
-                                  />
-                                  <Button 
-                                    size="sm" 
-                                    className="h-7 px-2"
-                                    onClick={() => {
-                                      if (newUnitText.trim()) {
-                                        const newUnit = newUnitText.trim();
-                                        if (!availableUnits.includes(newUnit)) {
-                                          setAvailableUnits([...availableUnits, newUnit]);
-                                        }
-                                        setManualFormData({...manualFormData, unit: newUnit});
-                                        setNewUnitText("");
-                                        setIsUnitDropdownOpen(false);
-                                      }
-                                    }}
-                                  >
-                                    Add
-                                  </Button>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          <span className="text-red-500">*</span>
-                        </div>
-                        <div className="mt-1">
-                          <Input 
-                            type="number"
-                            value={manualFormData.qty}
-                            onChange={(e) => setManualFormData({...manualFormData, qty: e.target.value})}
-                            className="h-8 text-lg font-black bg-white w-24 text-right border border-slate-300 rounded-lg focus:ring-[#0453B8] text-red-600 px-2"
-                          />
+                      <div className="flex flex-col gap-1 items-end justify-center">
+                        <div className="text-[10px] font-bold text-red-600 uppercase">{manualFormData.unit === "Meter" ? "METER" : manualFormData.unit.toUpperCase()}</div>
+                        <div className="text-sm font-bold text-red-600 mt-1">
+                          {manualFormData.qty} {manualFormData.unit === "Meter" ? "Mtr" : manualFormData.unit}
                         </div>
                       </div>
                     </div>
@@ -1208,184 +1151,185 @@ export function PurchaseOrderForm({
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-xs font-bold text-slate-600">Supplier Sort No</Label>
-                    <Input 
-                      value={manualFormData.supplierSortNo}
-                      onChange={(e) => setManualFormData({...manualFormData, supplierSortNo: e.target.value})}
-                      placeholder="Enter Sort No" 
-                      className="h-10 text-sm bg-white" 
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Content</Label>
-                      <Input 
-                        value={manualFormData.type}
-                        onChange={(e) => setManualFormData({...manualFormData, type: e.target.value})}
-                        placeholder="e.g. Cotton Fabric" 
-                        className="h-10 text-sm bg-white" 
-                      />
+                  <div className="flex flex-col gap-5">
+                    {/* Row 1: Supplier Sort No, Rate, Amount */}
+                    <div className="grid grid-cols-3 gap-5">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Supplier Sort No</Label>
+                        <Input 
+                          value={manualFormData.supplierSortNo}
+                          onChange={(e) => setManualFormData({...manualFormData, supplierSortNo: e.target.value})}
+                          placeholder="Enter Sort No" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
+                        <Input 
+                          type="number"
+                          value={manualFormData.rate}
+                          onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
+                          placeholder="0.00" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Amount (₹)</Label>
+                        <Input 
+                          disabled 
+                          value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          className="h-10 text-sm bg-slate-50 font-semibold text-[#0453B8]" 
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Color / Shade</Label>
-                      <Input 
-                        value={manualFormData.color}
-                        onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
-                        placeholder="Beige" 
-                        className="h-10 text-sm bg-white" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2 relative">
-                      <Label className="text-xs font-bold text-slate-600">Width</Label>
-                      <Popover open={isWidthDropdownOpen} onOpenChange={setIsWidthDropdownOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full h-10 border-slate-200 justify-between bg-white font-medium px-3 text-slate-700 font-normal">
-                            {manualFormData.width || "Select width"}
-                            <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
-                          <div className="flex flex-col gap-1">
-                            {availableWidths.map(w => (
-                              <button 
-                                key={w} 
-                                className="text-left px-2 py-1.5 text-sm rounded hover:bg-slate-100 font-medium text-slate-700"
-                                onClick={() => {
-                                  setManualFormData({...manualFormData, width: w});
-                                  setIsWidthDropdownOpen(false);
-                                }}
-                              >
-                                {w}
-                              </button>
-                            ))}
-                            <div className="border-t border-slate-100 my-1"></div>
-                            <div className="flex gap-2 items-center px-1">
-                              <Input 
-                                placeholder="Custom width..." 
-                                className="h-8 text-xs flex-1" 
-                                value={newWidthText}
-                                onChange={(e) => setNewWidthText(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && newWidthText.trim()) {
-                                    const newW = newWidthText.trim();
-                                    if (!availableWidths.includes(newW)) {
-                                      setAvailableWidths([...availableWidths, newW]);
-                                    }
-                                    setManualFormData({...manualFormData, width: newW});
-                                    setNewWidthText("");
+                    {/* Row 2: Content, GSM, Width, Color */}
+                    <div className="grid grid-cols-4 gap-5">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Content</Label>
+                        <Input 
+                          value={manualFormData.type}
+                          onChange={(e) => setManualFormData({...manualFormData, type: e.target.value})}
+                          placeholder="e.g. Cotton" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">GSM</Label>
+                        <Input 
+                          value={manualFormData.gsm}
+                          onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
+                          placeholder="e.g. 150" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 relative">
+                        <Label className="text-xs font-bold text-slate-600">Width</Label>
+                        <Popover open={isWidthDropdownOpen} onOpenChange={setIsWidthDropdownOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full h-10 border-slate-200 justify-between bg-white font-medium px-3 text-slate-700 font-normal">
+                              {manualFormData.width || "Select"}
+                              <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                            <div className="flex flex-col gap-1">
+                              {availableWidths.map(w => (
+                                <button 
+                                  key={w} 
+                                  className="text-left px-2 py-1.5 text-sm rounded hover:bg-slate-100 font-medium text-slate-700"
+                                  onClick={() => {
+                                    setManualFormData({...manualFormData, width: w});
                                     setIsWidthDropdownOpen(false);
-                                  }
-                                }}
-                              />
-                              <Button 
-                                size="sm" 
-                                className="h-8 px-3"
-                                onClick={() => {
-                                  if (newWidthText.trim()) {
-                                    const newW = newWidthText.trim();
-                                    if (!availableWidths.includes(newW)) {
-                                      setAvailableWidths([...availableWidths, newW]);
+                                  }}
+                                >
+                                  {w}
+                                </button>
+                              ))}
+                              <div className="border-t border-slate-100 my-1"></div>
+                              <div className="flex gap-2 items-center px-1">
+                                <Input 
+                                  placeholder="Custom..." 
+                                  className="h-8 text-xs flex-1" 
+                                  value={newWidthText}
+                                  onChange={(e) => setNewWidthText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && newWidthText.trim()) {
+                                      const newW = newWidthText.trim();
+                                      if (!availableWidths.includes(newW)) {
+                                        setAvailableWidths([...availableWidths, newW]);
+                                      }
+                                      setManualFormData({...manualFormData, width: newW});
+                                      setNewWidthText("");
+                                      setIsWidthDropdownOpen(false);
                                     }
-                                    setManualFormData({...manualFormData, width: newW});
-                                    setNewWidthText("");
-                                    setIsWidthDropdownOpen(false);
-                                  }
-                                }}
-                              >
-                                Add
-                              </Button>
+                                  }}
+                                />
+                                <Button 
+                                  size="sm" 
+                                  className="h-8 px-3"
+                                  onClick={() => {
+                                    if (newWidthText.trim()) {
+                                      const newW = newWidthText.trim();
+                                      if (!availableWidths.includes(newW)) {
+                                        setAvailableWidths([...availableWidths, newW]);
+                                      }
+                                      setManualFormData({...manualFormData, width: newW});
+                                      setNewWidthText("");
+                                      setIsWidthDropdownOpen(false);
+                                    }
+                                  }}
+                                >
+                                  Add
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Colour</Label>
+                        <Input 
+                          value={manualFormData.color}
+                          onChange={(e) => setManualFormData({...manualFormData, color: e.target.value})}
+                          placeholder="e.g. Blue" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">GSM</Label>
-                      <Input 
-                        value={manualFormData.gsm}
-                        onChange={(e) => setManualFormData({...manualFormData, gsm: e.target.value})}
-                        placeholder="e.g. 150 GSM" 
-                        className="h-10 text-sm bg-white" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Rate (₹)</Label>
-                      <Input 
-                        type="number"
-                        value={manualFormData.rate}
-                        onChange={(e) => setManualFormData({...manualFormData, rate: e.target.value})}
-                        placeholder="130.00" 
-                        className="h-10 text-sm bg-white" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">GST %</Label>
-                      <Select value={manualFormData.gst} onValueChange={(val) => setManualFormData({...manualFormData, gst: val})}>
-                        <SelectTrigger className="w-full h-10 border-slate-200 focus:ring-[#0453B8] bg-white font-medium">
-                          <SelectValue placeholder="Select GST" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">0%</SelectItem>
-                          <SelectItem value="5">5%</SelectItem>
-                          <SelectItem value="12">12%</SelectItem>
-                          <SelectItem value="18">18%</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Amount (₹)</Label>
-                      <Input 
-                        disabled 
-                        value={((Number(manualFormData.rate) || 0) * (Number(manualFormData.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        className="h-10 text-sm bg-slate-50 font-semibold text-[#0453B8]" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">No. of Days</Label>
-                      <Input 
-                        type="number"
-                        value={manualFormData.deliveryDays || ""}
-                        onChange={(e) => {
-                          const days = e.target.value;
-                          let newDeliveryDate = manualFormData.deliveryDate;
-                          if (days && !isNaN(Number(days))) {
-                            const date = new Date();
-                            date.setDate(date.getDate() + Number(days));
-                            newDeliveryDate = date.toISOString().split('T')[0];
-                          }
-                          setManualFormData({...manualFormData, deliveryDays: days, deliveryDate: newDeliveryDate});
-                        }}
-                        placeholder="e.g. 15" 
-                        className="h-10 text-sm bg-white" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs font-bold text-slate-600">Delivery Date</Label>
-                      <Input 
-                        type="date"
-                        value={manualFormData.deliveryDate}
-                        onChange={(e) => setManualFormData({...manualFormData, deliveryDate: e.target.value})}
-                        className="h-10 text-sm bg-white" 
-                      />
+                    {/* Row 3: Days, Delivery Date */}
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">No. of Days</Label>
+                        <Input 
+                          type="number"
+                          value={manualFormData.deliveryDays || ""}
+                          onChange={(e) => {
+                            const days = e.target.value;
+                            let newDeliveryDate = manualFormData.deliveryDate;
+                            if (days && !isNaN(Number(days))) {
+                              const date = new Date();
+                              date.setDate(date.getDate() + Number(days));
+                              newDeliveryDate = date.toISOString().split('T')[0];
+                            }
+                            setManualFormData({...manualFormData, deliveryDays: days, deliveryDate: newDeliveryDate});
+                          }}
+                          placeholder="e.g. 15" 
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Delivery Date</Label>
+                        <Input 
+                          type="date"
+                          value={manualFormData.deliveryDate}
+                          onChange={(e) => setManualFormData({...manualFormData, deliveryDate: e.target.value})}
+                          className="h-10 text-sm bg-white" 
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3 shrink-0">
-              <Button type="button" variant="outline" onClick={() => { setIsManualEntryOpen(false); setEditingItem(null); }} className="font-bold">Cancel</Button>
-              <Button type="button" onClick={() => {
+            <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2 px-2">
+                <input 
+                  type="checkbox" 
+                  id="keepPoOpen" 
+                  checked={keepModalOpen}
+                  onChange={(e) => setKeepModalOpen(e.target.checked)}
+                  className="w-4 h-4 text-[#0453B8] border-slate-300 rounded focus:ring-[#0453B8]" 
+                />
+                <label htmlFor="keepPoOpen" className="text-sm font-semibold text-red-500 cursor-pointer select-none">
+                  Do you want to keep PO Open
+                </label>
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="outline" onClick={() => { setIsManualEntryOpen(false); setEditingItem(null); }} className="font-bold">Cancel</Button>
+                <Button type="button" onClick={() => {
                 if (editingItem) {
                   setPoItems(prev => prev.map(item => {
                     if (item.id === editingItem.id) {
@@ -1436,7 +1380,9 @@ export function PurchaseOrderForm({
                   setPoItems(prev => [newItem, ...prev]);
                 }
                 
-                setIsManualEntryOpen(false);
+                if (!keepModalOpen) {
+                  setIsManualEntryOpen(false);
+                }
                 setEditingItem(null);
                 setManualFormData({
                   type: "", description: "", gsm: "", width: "", color: "", qty: "0", rate: "0", gst: "0", image: "", soImage: "", avg: "1.80", supplierSortNo: "", deliveryDate: "", deliveryDays: "", unit: "Meter"
@@ -1446,9 +1392,10 @@ export function PurchaseOrderForm({
               </Button>
             </div>
           </div>
-          </div>
-        )}
+        </div>
       </div>
-    </FormProvider>
+    )}
+    </div>
+  </FormProvider>
   );
 }
