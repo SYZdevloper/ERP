@@ -549,7 +549,7 @@ export function PurchaseOrderForm({
             <div className="flex-1 min-w-0 flex flex-col gap-5">
               
               {/* 1. Supplier & PO Details */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <div className={`bg-white border border-slate-200 rounded-xl p-5 shadow-sm ${type === 'Trims' ? 'order-2' : 'order-1'}`}>
                 <div className="flex items-center gap-3 mb-5 border-b border-slate-100 pb-3">
                   <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#0453B8] text-white text-xs font-bold">1</div>
                   <h2 className="text-sm font-bold text-slate-900">Supplier & PO Details</h2>
@@ -633,7 +633,7 @@ export function PurchaseOrderForm({
                       </div>
                     )}
                     <div className="flex gap-2">
-                      {selectedBuyerId && !isViewMode && (
+                      {selectedBuyerId && !isViewMode && type !== "Trims" && (
                         <Button 
                           type="button"
                           variant="outline" 
@@ -674,7 +674,7 @@ export function PurchaseOrderForm({
                     </div>
 
                     {/* Designs Table View */}
-                    <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
+                    <div className={`transition-all duration-500 ease-in-out ${!isViewMode && viewMode === 'so-table' && type !== 'Trims' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
                       <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-slate-50/50 shadow-sm max-h-[400px] p-4">
                         {(() => {
                           const soIdsForBuyer = selectedBuyerId === "All Buyers"
@@ -764,7 +764,8 @@ export function PurchaseOrderForm({
               </div>
 
               {/* 2. Items Table (REUSED COMPONENT) */}
-              <POItemsTable
+              <div className={type === 'Trims' ? 'order-1' : 'order-2'}>
+                <POItemsTable
                 items={filteredPoItems}
                 isReadOnly={isViewMode}
                 onEditClick={handleEditClick}
@@ -773,24 +774,28 @@ export function PurchaseOrderForm({
                 onOpenManualEntry={() => {
                   setSelectedSoItemContext(null);
                   setEditingItem(null);
-                  setManualFormData({
-                    type: type === "Fabric" ? "Cotton Fabric" : selectedTrimItem,
-                    description: "",
-                    gsm: "",
-                    width: "",
-                    color: "",
-                    qty: "0",
-                    rate: "0",
-                    gst: "5",
-                    image: "",
-                    soImage: "",
-                    avg: "1.80",
-                    supplierSortNo: "",
-                    deliveryDate: "",
-                    deliveryDays: "",
-                    unit: "Meter"
-                  });
-                  setIsManualEntryOpen(true);
+                  if (type === "Trims") {
+                    setActiveSoForLines({ id: selectedBuyerId || "All Buyers" });
+                  } else {
+                    setManualFormData({
+                      type: "Cotton Fabric",
+                      description: "",
+                      gsm: "",
+                      width: "",
+                      color: "",
+                      qty: "0",
+                      rate: "0",
+                      gst: "5",
+                      image: "",
+                      soImage: "",
+                      avg: "1.80",
+                      supplierSortNo: "",
+                      deliveryDate: "",
+                      deliveryDays: "",
+                      unit: "Meter"
+                    });
+                    setIsManualEntryOpen(true);
+                  }
                 }}
                 onQtyChange={handleQtyChange}
                 onRateChange={handleRateChange}
@@ -805,9 +810,14 @@ export function PurchaseOrderForm({
                 specLabel={specLabel}
                 type={type}
               />
+              </div>
 
-              <AttachmentsModal isReadOnly={isViewMode} />
-              <NotesPanel isReadOnly={isViewMode} />
+              <div className="order-3">
+                <AttachmentsModal isReadOnly={isViewMode} />
+              </div>
+              <div className="order-4">
+                <NotesPanel isReadOnly={isViewMode} />
+              </div>
             </div>
 
             {/* Right Column (Sidebar) */}

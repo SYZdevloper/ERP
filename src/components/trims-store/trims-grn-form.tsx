@@ -60,7 +60,6 @@ export function TrimsGrnForm() {
   const handleLoadPo = (selectedPo: string) => {
     if (selectedPo) {
       setPoLoaded(true);
-      setViewMode("po-table");
     }
   };
   
@@ -70,30 +69,25 @@ export function TrimsGrnForm() {
   const [entries, setEntries] = useState<TrimEntry[]>([]);
 
   // Popup States
-  const [isLoadPoItemsOpen, setIsLoadPoItemsOpen] = useState(false);
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+  const [isLoadPoItemsOpen, setIsLoadPoItemsOpen] = useState(false);
+  const [selectedPoItems, setSelectedPoItems] = useState<Record<string, boolean>>({});
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [manualFormData, setManualFormData] = useState({
     itemType: "", description: "", qty: "", rate: "", gst: "5", image: ""
   });
 
-  const [selectedPoItems, setSelectedPoItems] = useState<Record<string, boolean>>({});
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Escape to close dialogs
       if (e.key === 'Escape') {
-        setIsLoadPoItemsOpen(false);
         setIsManualEntryOpen(false);
       }
       
       // Alt shortcuts
       if (e.altKey) {
-        if (e.key.toLowerCase() === 'l' && poLoaded) {
-          e.preventDefault();
-          setIsLoadPoItemsOpen(true);
-        } else if (e.key.toLowerCase() === 'm' && poLoaded) {
+        if (e.key.toLowerCase() === 'm' && poLoaded) {
           e.preventDefault();
           handleOpenManualEntry();
         } else if (e.key.toLowerCase() === 's') {
@@ -108,16 +102,39 @@ export function TrimsGrnForm() {
         if (isManualEntryOpen && manualFormData.itemType && manualFormData.description && manualFormData.qty && manualFormData.rate) {
           e.preventDefault();
           handleSaveManualEntry();
-        } else if (isLoadPoItemsOpen) {
-          e.preventDefault();
-          handleAddSelectedPoItems();
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [poLoaded, isManualEntryOpen, isLoadPoItemsOpen, manualFormData, selectedPoItems]);
+  }, [poLoaded, isManualEntryOpen, manualFormData]);
+
+  const handleAddSelectedPoItems = () => {
+    const selectedItemIds = Object.keys(selectedPoItems).filter(id => selectedPoItems[id]);
+    const selectedItems = selectedItemIds.map(id => poItems.find(i => i.id === id)).filter(Boolean) as typeof poItems;
+
+    if (selectedItems.length === 0) return;
+
+    const newRows = selectedItems.map((item, index) => {
+      const qty = item.balanceQty || 0;
+      return {
+        id: Math.random().toString(),
+        srNo: entries.length + index + 1,
+        itemType: item.itemType,
+        description: item.description,
+        qty: qty,
+        rate: item.rate,
+        gst: item.gst,
+        amount: qty * item.rate,
+        poItemIds: [item.id],
+        image: item.image,
+      };
+    });
+    setEntries([...entries, ...newRows]);
+    setIsLoadPoItemsOpen(false);
+    setSelectedPoItems({});
+  };
 
   const handleOpenManualEntry = () => {
     setEditingEntryId(null);
@@ -170,34 +187,6 @@ export function TrimsGrnForm() {
       setEntries([...entries, row]);
     }
     setIsManualEntryOpen(false);
-  };
-
-  const handleAddSelectedPoItems = () => {
-    const selectedItemIds = Object.keys(selectedPoItems).filter(id => selectedPoItems[id]);
-    const selectedItems = selectedItemIds.map(id => poItems.find(i => i.id === id)).filter(Boolean) as typeof poItems;
-
-    if (selectedItems.length === 0) return;
-
-    const newRows = selectedItems.map((item, index) => {
-      const qty = item.balanceQty || 0;
-      return {
-        id: Math.random().toString(),
-        srNo: entries.length + index + 1,
-        itemType: item.itemType,
-        description: item.description,
-        qty: qty,
-        rate: item.rate,
-        gst: item.gst,
-        amount: qty * item.rate,
-        poItemIds: [item.id],
-        image: item.image,
-        orderedQty: item.orderedQty,
-      };
-    });
-    setEntries([...entries, ...newRows]);
-    
-    setIsLoadPoItemsOpen(false);
-    setSelectedPoItems({});
   };
 
   const removeEntry = (id: string) => {
@@ -260,7 +249,7 @@ export function TrimsGrnForm() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
               <h2 className="text-sm font-bold text-[#0453B8] mb-5">1. Supplier & Document Details</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Supplier <span className="text-red-500">*</span></Label>
                   <Select value={supplier} onValueChange={setSupplier}>
@@ -275,6 +264,16 @@ export function TrimsGrnForm() {
                 </div>
                 
                 <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Invoice No.</Label>
+                  <Input placeholder="Enter Invoice No." className="h-10 text-sm bg-white border-slate-200" />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-bold text-slate-600">Delivery Challan No.</Label>
+                  <Input placeholder="Enter Challan No." className="h-10 text-sm bg-white border-slate-200" />
+                </div>
+
+                <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Trims PO</Label>
                   <Select value={po} onValueChange={(val) => { setPo(val); handleLoadPo(val); }}>
                     <SelectTrigger className="w-full h-10 border-slate-200 text-sm focus:ring-[#0453B8] bg-white font-medium">
@@ -287,71 +286,38 @@ export function TrimsGrnForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Delivery Challan No.</Label>
-                  <Input placeholder="Enter Challan No." className="h-10 text-sm bg-white border-slate-200" />
+                  <Label className="text-xs font-bold text-slate-600">Invoice Date</Label>
+                  <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
                 </div>
-                
+
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs font-bold text-slate-600">Challan Date</Label>
                   <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
                 </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Invoice No.</Label>
-                  <Input placeholder="Enter Invoice No." className="h-10 text-sm bg-white border-slate-200" />
-                </div>
-                
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-bold text-slate-600">Invoice Date</Label>
-                  <Input type="date" className="h-10 text-sm bg-white border-slate-200" />
-                </div>
               </div>
 
-              {/* Address Block & Designs View */}
+              {/* Address Block */}
               <div className="mt-4 overflow-hidden relative">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-slate-800">
-                    {viewMode === "address" ? "Supplier Address" : `Available Designs for TPO-8006`}
+                    Supplier Address
                   </h3>
-                  {!poLoaded === false && viewMode === "po-table" && (
-                    <div className="flex-1 max-w-sm ml-4">
-                      <Input 
-                        placeholder="Filter by PO..." 
-                        value={poFilter}
-                        onChange={(e) => setPoFilter(e.target.value)}
-                        className="h-8 text-xs bg-white"
-                      />
-                    </div>
-                  )}
                   <div className="flex gap-2">
-                    {poLoaded && (
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setViewMode(viewMode === "address" ? "po-table" : "address")}
-                        className="h-8 text-xs font-medium border-slate-200"
-                      >
-                        {viewMode === "address" ? "Show Designs" : "Show Address"}
-                      </Button>
-                    )}
-                    {viewMode === "address" && (
-                      <Button 
-                        type="button"
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setShowAddress(!showAddress)}
-                        className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
-                      >
-                        {showAddress ? "Hide Address" : "Unhide Address"}
-                      </Button>
-                    )}
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowAddress(!showAddress)}
+                      className="text-[#0453B8] font-bold h-8 text-xs hover:bg-blue-50"
+                    >
+                      {showAddress ? "Hide Address" : "Unhide Address"}
+                    </Button>
                   </div>
                 </div>
 
                 <div className="relative">
                   {/* Address View */}
-                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'address' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 -translate-y-4 absolute inset-0 pointer-events-none'}`}>
+                  <div className={`transition-all duration-500 ease-in-out`}>
                     <div className={`grid transition-all duration-300 ease-in-out ${showAddress ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                       <div className="overflow-hidden">
                         <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#F8FAFC]">
@@ -375,104 +341,6 @@ export function TrimsGrnForm() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Designs Table View */}
-                  <div className={`transition-all duration-500 ease-in-out ${viewMode === 'po-table' ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 translate-y-4 absolute inset-0 pointer-events-none hidden'}`}>
-                    <div className="border border-slate-200 rounded-lg overflow-y-auto custom-scrollbar bg-white shadow-sm max-h-[300px]">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
-                        {poItems.filter(i => i.description.toLowerCase().includes(poFilter.toLowerCase())).map((item: any, idx: number) => {
-                          const isAdded = new Set(entries.flatMap(e => e.poItemIds || [])).has(item.id);
-                          return (
-                            <div 
-                              key={item.id}
-                              onDoubleClick={() => {
-                                if (!isAdded) {
-                                  const newEntry: TrimEntry = {
-                                    id: Math.random().toString(),
-                                    srNo: entries.length + 1,
-                                    itemType: item.itemType,
-                                    description: item.description,
-                                    qty: item.balanceQty, 
-                                    rate: item.rate,
-                                    gst: item.gst,
-                                    amount: item.balanceQty * item.rate,
-                                    image: item.image,
-                                    poItemIds: [item.id],
-                                  };
-                                  const updatedEntries = [...entries, newEntry];
-                                  setEntries(updatedEntries);
-                                }
-                              }}
-                              className={`relative flex flex-col p-3 rounded-xl border transition-all ${
-                                isAdded 
-                                  ? 'border-emerald-500 bg-emerald-50/50 cursor-default' 
-                                  : 'border-slate-200 bg-white hover:border-[#0453B8] hover:shadow-md cursor-pointer'
-                              }`}
-                            >
-                              {isAdded && (
-                                <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-sm">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                </div>
-                              )}
-                              <div className="w-full aspect-[3/4] flex items-center justify-center overflow-hidden rounded-lg bg-slate-100 mb-3">
-                                <img src={item.image || "/buttons .jpeg"} alt={item.description} className="w-full h-full object-contain mix-blend-multiply" />
-                              </div>
-                              <div className="flex flex-col flex-1">
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                  <span className="text-xs font-bold text-[#0453B8] truncate">TPO-8006</span>
-                                  <span className="text-[10px] font-semibold text-slate-500 shrink-0">L-{String(idx + 1).padStart(2, '0')}</span>
-                                </div>
-                                <div className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-1" title={item.itemType}>{item.itemType}</div>
-                                <div className="text-[10px] text-slate-600 line-clamp-2">{item.description}</div>
-                                
-                                <div className="flex items-center justify-between mt-auto pt-2">
-                                  <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.brandName || "Zara"}</span>
-                                  <span className="text-[10px] font-bold text-slate-700">Qty: {item.orderedQty}</span>
-                                </div>
-                                
-                                {!isAdded && (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const newEntry: TrimEntry = {
-                                        id: Math.random().toString(),
-                                        srNo: entries.length + 1,
-                                        itemType: item.itemType,
-                                        description: item.description,
-                                        qty: item.balanceQty, 
-                                        rate: item.rate,
-                                        gst: item.gst,
-                                        amount: item.balanceQty * item.rate,
-                                        image: item.image,
-                                        poItemIds: [item.id],
-                                      };
-                                      const updatedEntries = [...entries, newEntry];
-                                      setEntries(updatedEntries);
-                                    }}
-                                    className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50"
-                                  >
-                                    Select
-                                  </Button>
-                                )}
-                                {isAdded && (
-                                  <div className="w-full mt-3 h-7 flex items-center justify-center text-[10px] font-bold text-emerald-600 bg-emerald-100/50 rounded-md">
-                                    Added
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {poItems.filter(i => i.description.toLowerCase().includes(poFilter.toLowerCase())).length === 0 && (
-                          <div className="col-span-full py-8 text-center text-slate-500">
-                            No available designs found.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -485,10 +353,12 @@ export function TrimsGrnForm() {
                   <h2 className="text-sm font-bold text-[#0453B8]">2. Trims Receiving Entry</h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button onClick={() => setIsLoadPoItemsOpen(true)} disabled={!poLoaded} variant="outline" className="h-8 px-3 text-[#0453B8] border-blue-200 hover:bg-blue-50 font-semibold text-xs bg-white shadow-sm">
-                    <FileText className="w-3.5 h-3.5 mr-1.5" />
-                    Load PO Items <kbd className="ml-2 px-1 bg-white border border-blue-200 rounded text-[9px] text-blue-500">Alt+L</kbd>
-                  </Button>
+                  {poLoaded && (
+                    <Button onClick={() => setIsLoadPoItemsOpen(true)} className="h-8 px-3 text-[#0453B8] border-[#0453B8]/30 hover:bg-[#0453B8]/10 font-semibold text-xs bg-white shadow-sm border">
+                      <FileText className="w-3.5 h-3.5 mr-1.5" />
+                      Load PO Items <kbd className="ml-2 px-1 bg-white border border-[#0453B8]/30 rounded text-[9px] text-[#0453B8]">Alt+L</kbd>
+                    </Button>
+                  )}
                   <Button onClick={handleOpenManualEntry} className="h-8 px-3 text-[#00A86B] border-[#00A86B]/30 hover:bg-[#00A86B]/10 font-semibold text-xs bg-white shadow-sm border">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Manual Entry <kbd className="ml-2 px-1 bg-white border border-[#00A86B]/30 rounded text-[9px] text-[#00A86B]">Alt+M</kbd>
@@ -521,7 +391,7 @@ export function TrimsGrnForm() {
                     ) : poLoaded && entries.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8 text-slate-400 font-medium">
-                          No items added yet. Use "Load PO Items" to enter quantities.
+                          No items added yet. Select items from the designs above to add them.
                         </TableCell>
                       </TableRow>
                     ) : null}
@@ -704,6 +574,8 @@ export function TrimsGrnForm() {
         </Button>
       </div>
     </div>
+      
+
       {/* Load PO Items Dialog */}
       <Dialog open={isLoadPoItemsOpen} onOpenChange={setIsLoadPoItemsOpen}>
         <DialogContent className="sm:max-w-4xl max-w-[95vw] w-full bg-white p-0 overflow-hidden">
@@ -711,7 +583,7 @@ export function TrimsGrnForm() {
             <DialogTitle className="text-base font-bold text-slate-800">Load PO Items</DialogTitle>
           </DialogHeader>
           <div className="px-5 py-3 overflow-y-auto flex-1">
-            <p className="text-sm font-medium text-slate-600 mb-4">Select Items from PO: TPO-8006 (13/06/2026)</p>
+            <p className="text-sm font-medium text-slate-600 mb-4">Select Items from PO: {po || "TPO-8006 (13/06/2026)"}</p>
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
               <Table>
                 <TableHeader className="bg-slate-50">
@@ -736,10 +608,10 @@ export function TrimsGrnForm() {
                       />
                     </TableHead>
                     <TableHead className="py-3 font-bold text-slate-700 text-xs text-center w-16">Image</TableHead>
-                    <TableHead className="py-3 font-bold text-slate-700 text-xs w-48">Item Type</TableHead>
+                    <TableHead className="py-3 font-bold text-slate-700 text-xs">Item Type</TableHead>
                     <TableHead className="py-3 font-bold text-slate-700 text-xs">Description</TableHead>
-                    <TableHead className="py-3 font-bold text-slate-700 text-xs text-right">Ordered (Pcs)</TableHead>
-                    <TableHead className="py-3 font-bold text-slate-700 text-xs text-right">Balance (Pcs)</TableHead>
+                    <TableHead className="py-3 font-bold text-slate-700 text-xs text-right">Ordered Qty</TableHead>
+                    <TableHead className="py-3 font-bold text-slate-700 text-xs text-right">Balance Qty</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -767,7 +639,7 @@ export function TrimsGrnForm() {
                           </div>
                         ) : (
                           <div className="w-16 h-16 rounded bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center mx-auto">
-                            <ImageIcon className="w-6 h-6 text-slate-300" />
+                            <ImageIcon className="w-5 h-5 text-slate-300" />
                           </div>
                         )}
                       </TableCell>
@@ -781,16 +653,16 @@ export function TrimsGrnForm() {
                         {item.description}
                       </TableCell>
                       <TableCell className="py-3 text-xs font-semibold text-slate-700 text-right">
-                        {item.orderedQty?.toLocaleString()}
+                        {item.orderedQty?.toLocaleString('en-IN')}
                       </TableCell>
                       <TableCell className="py-3 text-xs font-semibold text-slate-700 text-right">
-                        {item.balanceQty?.toLocaleString()}
+                        {item.balanceQty?.toLocaleString('en-IN')}
                       </TableCell>
                     </TableRow>
                   )})}
                   {poItems.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-400">No items available</TableCell>
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-400">No items available</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

@@ -1,6 +1,9 @@
 "use client";
 
 import { PurchaseOrderListPage } from "@/components/purchase-orders/po-list-page";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PendingFabricPOs } from "./pending-fabric-pos";
+import { ListPageHeader } from "@/components/ui/list-page-header";
 
 const MOCK_FABRIC_POS = [
   { 
@@ -247,13 +250,41 @@ const MOCK_FABRIC_POS = [
 
 export default function FabricPurchasesPage() {
   return (
-    <PurchaseOrderListPage 
-      title="Fabric POs"
-      description="Manage all your fabric purchase orders"
-      itemNameLabel="Supplier Sort Number"
-      newItemHref="/fabric-purchases/create"
-      editItemHrefPrefix="/fabric-purchases"
-      mockData={MOCK_FABRIC_POS}
-    />
+    <div className="flex flex-col h-full bg-slate-50/50">
+      <div className="px-6 pt-6 pb-2 shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Fabric POs</h1>
+            <p className="text-sm text-slate-500 mt-1">Manage all your fabric purchase orders and pending requirements</p>
+          </div>
+        </div>
+        
+        <Tabs defaultValue="raised" className="w-full">
+          <TabsList className="bg-slate-200/50 p-1 border border-slate-200">
+            <TabsTrigger value="raised" className="data-[state=active]:bg-white data-[state=active]:text-[#0453B8] data-[state=active]:shadow-sm font-bold px-6">
+              Raised POs
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:text-[#0453B8] data-[state=active]:shadow-sm font-bold px-6">
+              Pending PO Raising
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="raised" className="mt-0 h-[calc(100vh-170px)]">
+            <PurchaseOrderListPage 
+              title=""
+              description=""
+              itemNameLabel="Supplier Sort Number"
+              newItemHref="/fabric-purchases/create"
+              editItemHrefPrefix="/fabric-purchases"
+              mockData={MOCK_FABRIC_POS}
+              hideHeader={true}
+            />
+          </TabsContent>
+          <TabsContent value="pending" className="mt-4 h-[calc(100vh-186px)]">
+            <PendingFabricPOs />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }

@@ -23,6 +23,7 @@ export interface SparePartInventoryItem {
   category: string;
   quantity: number;
   min_quantity: number;
+  image_url?: string;
 }
 
 interface SparePartsContextType {
@@ -64,8 +65,8 @@ const initialIssues: SparePartIssue[] = [
 ];
 
 const initialInventory: SparePartInventoryItem[] = [
-  { id: "INV-001", name: "Juki DDL-8700 Hook Assembly", category: "Mechanical", quantity: 10, min_quantity: 2 },
-  { id: "INV-002", name: "Brother Bobbin Case", category: "Mechanical", quantity: 25, min_quantity: 5 },
+  { id: "INV-001", name: "Juki DDL-8700 Hook Assembly", category: "Mechanical", quantity: 10, min_quantity: 2, image_url: "https://images.unsplash.com/photo-1590725140246-2007e03ebcd4?q=80&w=200&auto=format&fit=crop" },
+  { id: "INV-002", name: "Brother Bobbin Case", category: "Mechanical", quantity: 25, min_quantity: 5, image_url: "https://images.unsplash.com/photo-1628186107311-64539121a50a?w=100&q=80" },
   { id: "INV-003", name: "Needle Plate Set", category: "Mechanical", quantity: 15, min_quantity: 5 },
   { id: "INV-004", name: "Sewing Machine Motor Belt", category: "Electrical", quantity: 8, min_quantity: 3 },
 ];

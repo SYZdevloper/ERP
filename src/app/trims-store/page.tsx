@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PendingTrimsGRNs } from "./pending-trims-grns";
 import { Download, Plus, MoreHorizontal, Eye, Edit2, FileText, IndianRupee, PackageCheck, ClipboardCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -81,7 +83,18 @@ export default function TrimsGrnListPage() {
         />
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col flex-1 overflow-hidden">
+      <Tabs defaultValue="received" className="w-full flex-1 flex flex-col min-h-0">
+        <TabsList className="bg-slate-200/50 p-1 border border-slate-200 mb-4 w-fit">
+          <TabsTrigger value="received" className="data-[state=active]:bg-white data-[state=active]:text-[#0453B8] data-[state=active]:shadow-sm font-bold px-6">
+            Received GRNs
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:text-[#0453B8] data-[state=active]:shadow-sm font-bold px-6">
+            Pending GRN Entry
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="received" className="flex-1 min-h-0 m-0 data-[state=active]:flex data-[state=active]:flex-col">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col flex-1 overflow-hidden">
         <DataTableToolbar 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -193,6 +206,11 @@ export default function TrimsGrnListPage() {
           </div>
         </div>
       </div>
+        </TabsContent>
+        <TabsContent value="pending" className="flex-1 min-h-0 m-0 data-[state=active]:flex data-[state=active]:flex-col">
+          <PendingTrimsGRNs />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

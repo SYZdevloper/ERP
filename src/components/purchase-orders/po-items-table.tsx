@@ -65,7 +65,7 @@ export function POItemsTable({
         {!isReadOnly && (
           <div className="flex items-center gap-2">
             <Button onClick={() => onOpenManualEntry && onOpenManualEntry()} size="sm" className="bg-[#10B981] hover:bg-emerald-600 text-white font-bold h-8 text-xs border-0">
-              <Plus className="w-4 h-4 mr-1.5" /> Manual Fabric
+              <Plus className="w-4 h-4 mr-1.5" /> {type === "Trims" ? "Add Trim" : "Manual Fabric"}
             </Button>
           </div>
         )}

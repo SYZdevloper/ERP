@@ -24,7 +24,7 @@ export default function SparePartsPage() {
   const [activeTab, setActiveTab] = useState<'inventory' | 'issues'>('issues');
   const [showAddInventoryForm, setShowAddInventoryForm] = useState(false);
   const [inventoryForm, setInventoryForm] = useState({
-    name: "", category: "Mechanical", quantity: 1, min_quantity: 2
+    name: "", category: "Mechanical", quantity: 1, min_quantity: 2, image_url: ""
   });
   
   const [formData, setFormData] = useState({
@@ -78,10 +78,11 @@ export default function SparePartsPage() {
       name: inventoryForm.name,
       category: inventoryForm.category,
       quantity: inventoryForm.quantity,
-      min_quantity: inventoryForm.min_quantity
+      min_quantity: inventoryForm.min_quantity,
+      image_url: inventoryForm.image_url
     });
     setShowAddInventoryForm(false);
-    setInventoryForm({ name: "", category: "Mechanical", quantity: 1, min_quantity: 2 });
+    setInventoryForm({ name: "", category: "Mechanical", quantity: 1, min_quantity: 2, image_url: "" });
   }
 
   function handleDelete(id: string) {
@@ -326,6 +327,30 @@ export default function SparePartsPage() {
             <DialogTitle>Add Spare Part to Stock</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddInventorySubmit} className="space-y-4 pt-4">
+            <div className="flex flex-col items-center justify-center mb-2">
+              <div className="w-24 h-24 rounded-lg bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer">
+                {inventoryForm.image_url ? (
+                  <img src={inventoryForm.image_url} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Camera className="w-6 h-6 text-slate-400 mb-1 group-hover:text-blue-500 transition-colors" />
+                    <span className="text-[10px] text-slate-400 font-medium group-hover:text-blue-500 transition-colors">Photo</span>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setInventoryForm({ ...inventoryForm, image_url: URL.createObjectURL(file) });
+                    }
+                  }} 
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Part Name <span className="text-red-500">*</span></Label>
               <Input required placeholder="E.g. Juki Hook Assembly" value={inventoryForm.name} onChange={e => setInventoryForm({ ...inventoryForm, name: e.target.value })} />
@@ -461,7 +486,18 @@ export default function SparePartsPage() {
               {filteredInventory.map((i) => (
                 <TableRow key={i.id}>
                   <TableCell className="font-semibold text-slate-500">{i.id}</TableCell>
-                  <TableCell className="font-bold text-slate-900">{i.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden relative">
+                        {i.image_url ? (
+                          <img src={i.image_url} alt={i.name} className="object-cover w-full h-full" />
+                        ) : (
+                          <Settings className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="font-bold text-slate-900">{i.name}</div>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 inline-block">
                       {i.category}

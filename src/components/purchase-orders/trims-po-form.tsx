@@ -51,6 +51,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
   const [activeSoForLines, setActiveSoForLines] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"address" | "so-table">("address");
   const [soFilter, setSoFilter] = useState("");
+  const [selectedDesignTrimType, setSelectedDesignTrimType] = useState("Main Label");
 
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(initialPo?.buyer || "");
 
@@ -90,7 +91,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
   };
 
   const handleSoItemNext = (selectedSoItems: any[], trimItem?: string) => {
-    const type = trimItem || "Main Label";
+    const type = trimItem || selectedDesignTrimType;
     
     // Rule definitions
     const combineTypes = ["Main Label", "Placket Label", "Care Label", "Hang Tag"];
@@ -287,7 +288,19 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                         {viewMode === "address" ? "Supplier Address" : `Available Designs for ${selectedBuyerId}`}
                       </h3>
                       {!isViewMode && viewMode === "so-table" && (
-                        <div className="flex-1 max-w-sm ml-4">
+                        <div className="flex-1 max-w-sm ml-4 flex gap-2">
+                          <Select value={selectedDesignTrimType} onValueChange={setSelectedDesignTrimType}>
+                            <SelectTrigger className="w-[160px] h-8 text-xs bg-white border-slate-200 shadow-sm font-bold text-[#0453B8]">
+                              <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Main Label">Main Label</SelectItem>
+                              <SelectItem value="Care Label">Care Label</SelectItem>
+                              <SelectItem value="Hang Tag">Hang Tag</SelectItem>
+                              <SelectItem value="Button">Button</SelectItem>
+                              <SelectItem value="Size Label">Size Label</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <Input 
                             placeholder="Filter by SO..." 
                             value={soFilter}
@@ -302,7 +315,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                             type="button"
                             variant="default" 
                             size="sm" 
-                            onClick={() => handleSoItemNext(availableDesigns)}
+                            onClick={() => handleSoItemNext(availableDesigns, selectedDesignTrimType)}
                             className="h-8 text-xs font-bold bg-[#0453B8] hover:bg-blue-700 text-white shadow-sm px-4"
                           >
                             Select All
@@ -363,7 +376,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                             return (
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                                 {availableDesigns.map((item: any) => {
-                                  const isAdded = trimItems.some(trimItem => trimItem.linkedLines.some(line => line.id === item.id));
+                                  const isAdded = trimItems.some(trimItem => trimItem.itemType === selectedDesignTrimType && trimItem.linkedLines.some(line => line.id === item.id));
                                   const imgUrl = item.name.includes("T-Shirt") ? "/men casual tshirt.jpeg" : 
                                                  item.name.includes("Shirt") ? "/men casual half shirt.jpg" :
                                                  item.name.includes("Jacket") ? "/mens casual full sleeve shirt.jpg" : 
@@ -373,7 +386,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                                     <div 
                                       key={item.id}
                                       onDoubleClick={() => {
-                                        if (!isAdded) handleSoItemNext([item]);
+                                        if (!isAdded) handleSoItemNext([item], selectedDesignTrimType);
                                       }}
                                       className={`relative flex flex-col p-3 rounded-xl border transition-all ${
                                         isAdded 
@@ -409,7 +422,7 @@ export function TrimsPurchaseOrderForm({ initialPo, isEditMode = false, isViewMo
                                             size="sm"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleSoItemNext([item]);
+                                              handleSoItemNext([item], selectedDesignTrimType);
                                             }}
                                             className="w-full mt-3 h-7 text-[10px] border-[#0453B8] text-[#0453B8] hover:bg-blue-50 bg-white"
                                           >

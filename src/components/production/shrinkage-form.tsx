@@ -12,6 +12,7 @@ import Link from "next/link";
 interface ShrinkageEntry {
   id: string;
   rollNo: string;
+  mtr: string;
   widthShrinkage: string;
   lengthShrinkage: string;
   inDetail: string;
@@ -33,10 +34,10 @@ export function ShrinkageForm() {
       setTotalMeters(200);
       setMetersPerRoll(50);
       setEntries([
-        { id: "1", rollNo: "Roll 1", widthShrinkage: "1", lengthShrinkage: "2", inDetail: "50*50 Fabric" },
-        { id: "2", rollNo: "Roll 2", widthShrinkage: "4", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
-        { id: "3", rollNo: "Roll 3", widthShrinkage: "10", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
-        { id: "4", rollNo: "Roll 4", widthShrinkage: "0", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
+        { id: "1", rollNo: "Roll 1", mtr: "50", widthShrinkage: "1", lengthShrinkage: "2", inDetail: "50*50 Fabric" },
+        { id: "2", rollNo: "Roll 2", mtr: "50", widthShrinkage: "4", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
+        { id: "3", rollNo: "Roll 3", mtr: "50", widthShrinkage: "10", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
+        { id: "4", rollNo: "Roll 4", mtr: "50", widthShrinkage: "0", lengthShrinkage: "0", inDetail: "50*50 Fabric" },
       ]);
     }
   };
@@ -118,6 +119,7 @@ export function ShrinkageForm() {
                 <TableHeader className="bg-slate-50">
                   <TableRow>
                     <TableHead className="text-slate-700 text-[11px] font-bold py-3 px-4 w-32 border-r border-slate-200">Roll No</TableHead>
+                    <TableHead className="text-slate-700 text-[11px] font-bold py-3 px-4 w-32 border-r border-slate-200 text-center">Mtr</TableHead>
                     <TableHead colSpan={2} className="text-slate-700 text-[11px] font-bold py-1 px-0 text-center border-r border-slate-200 bg-slate-100/50">
                       <div className="border-b border-slate-200 py-1.5 bg-slate-100">Shrinkage %</div>
                       <div className="flex divide-x divide-slate-200">
@@ -133,6 +135,14 @@ export function ShrinkageForm() {
                     <TableRow key={entry.id} className="hover:bg-slate-50/50 group">
                       <TableCell className="py-3 px-4 font-bold text-slate-700 border-r border-slate-200 bg-slate-50/30">
                         {entry.rollNo}
+                      </TableCell>
+                      <TableCell className="py-2 px-2 text-center w-32 border-r border-slate-200">
+                        <Input 
+                          type="number"
+                          value={entry.mtr}
+                          onChange={(e) => updateEntry(entry.id, "mtr", e.target.value)}
+                          className="h-9 text-center font-bold text-slate-800 focus-visible:ring-1 focus-visible:ring-[#0453B8] border-slate-200 bg-white"
+                        />
                       </TableCell>
                       <TableCell className="py-2 px-2 text-center w-40">
                         <div className="relative w-24 mx-auto">
@@ -168,7 +178,7 @@ export function ShrinkageForm() {
                   ))}
                   {entries.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
+                      <TableCell colSpan={5} className="text-center py-12 text-slate-400 font-medium bg-slate-50/50">
                         Select a GRN to load rolls.
                       </TableCell>
                     </TableRow>

@@ -21,9 +21,9 @@ interface PurchaseOrderListPageProps {
   title: string;
   description: string;
   itemNameLabel: string; // e.g. "Material" or "Trim Item"
-  newItemHref: string;   // e.g. "/fabric-purchases/create"
   editItemHrefPrefix: string; // e.g. "/fabric-purchases" (so edit is /fabric-purchases/[id]/edit)
   mockData: any[];
+  hideHeader?: boolean;
 }
 
 export function PurchaseOrderListPage({
@@ -32,7 +32,8 @@ export function PurchaseOrderListPage({
   itemNameLabel,
   newItemHref,
   editItemHrefPrefix,
-  mockData
+  mockData,
+  hideHeader
 }: PurchaseOrderListPageProps) {
   const router = useRouter();
   const [poList, setPoList] = useState(mockData);
@@ -87,12 +88,14 @@ export function PurchaseOrderListPage({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 p-6">
+    <div className={`flex flex-col h-full bg-slate-50/50 ${hideHeader ? 'p-0' : 'p-6'}`}>
       {/* Header */}
-      <ListPageHeader 
-        title={title} 
-        description={description} 
-      />
+      {!hideHeader && (
+        <ListPageHeader 
+          title={title} 
+          description={description} 
+        />
+      )}
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
