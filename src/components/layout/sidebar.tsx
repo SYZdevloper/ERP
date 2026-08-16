@@ -40,7 +40,7 @@ export function Sidebar() {
   }, [router]);
 
   const isSalesActive = pathname.startsWith("/sales-orders");
-  const isSampleMakingActive = pathname.startsWith("/sample-making");
+  const isSampleTrackingActive = pathname.startsWith("/samples");
   const isFabricActive = pathname.startsWith("/fabric-purchases");
   const isStoreActive = pathname.startsWith("/fabric-store");
   const isTrimsActive = pathname.startsWith("/trims-purchases");
@@ -328,21 +328,21 @@ export function Sidebar() {
               Facilities & Admin
             </div>
 
-          {/* Sample Making Link */}
+          {/* Sample Tracking Link */}
           <div className="relative mt-1">
-            {isSampleMakingActive && (
+            {isSampleTrackingActive && (
               <div className={`absolute ${isExpanded ? "left-[-16px]" : "left-[-8px]"} top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-300 rounded-r-md shadow-[0_0_12px_rgba(147,197,253,0.8)]`} />
             )}
             <Link
-              href="/sample-making"
+              href="/samples"
               className={`flex items-center ${isExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2.5 text-sm font-medium rounded-md transition-colors ${
-                isSampleMakingActive
+                isSampleTrackingActive
                   ? "text-white bg-white/10"
                   : "text-white/80 hover:text-white hover:bg-white/10"
               }`}
             >
               <Shirt className="w-5 h-5 shrink-0" />
-              {isExpanded && <span className="truncate">Sample Pending</span>}
+              {isExpanded && <span className="truncate">Sample Tracking</span>}
             </Link>
           </div>
 

@@ -21,6 +21,7 @@ interface PurchaseOrderListPageProps {
   title: string;
   description: string;
   itemNameLabel: string; // e.g. "Material" or "Trim Item"
+  newItemHref?: string;
   editItemHrefPrefix: string; // e.g. "/fabric-purchases" (so edit is /fabric-purchases/[id]/edit)
   mockData: any[];
   hideHeader?: boolean;
@@ -157,12 +158,14 @@ export function PurchaseOrderListPage({
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
-              <Link href={newItemHref}>
-                <Button variant="primary" className="h-9 px-4 font-semibold shadow-md text-[13px]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New PO
-                </Button>
-              </Link>
+              {newItemHref && (
+                <Link href={newItemHref}>
+                  <Button variant="primary" className="h-9 px-4 font-semibold shadow-md text-[13px]">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New PO
+                  </Button>
+                </Link>
+              )}
             </>
           }
         />
