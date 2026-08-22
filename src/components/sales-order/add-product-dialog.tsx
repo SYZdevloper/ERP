@@ -237,7 +237,7 @@ export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct
     if (viewMode === 'create') {
       const autoName = [newProduct.category, newProduct.subcategory, newProduct.type2, newProduct.type, newProduct.description].filter(Boolean).join(" ");
       
-      const autoCodeBase = [newProduct.category, newProduct.subcategory, newProduct.type, newProduct.type2]
+      const autoCodeBase = [newProduct.category, newProduct.subcategory, newProduct.type2, newProduct.type]
         .filter(Boolean)
         .map(val => val.charAt(0).toUpperCase())
         .join("");
