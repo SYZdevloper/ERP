@@ -33,7 +33,7 @@ type AudienceFilter = typeof AUDIENCE_FILTERS[number];
 const MASTER_CATEGORIES = ["Mens", "Womens", "Kids"];
 const MASTER_SUBCATEGORIES = ["T-Shirt", "Shirt", "Hoodie", "Dress", "Trouser", "Skirt", "Top", "Shorts", "Jacket"];
 const MASTER_TYPES = ["Half Sleeves", "Full Sleeves", "Sleeveless", "Full Length", "Knee Length"];
-const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Round Neck", "V-Neck", "Polo"];
+const MASTER_TYPE2S = ["Regular Collar", "Casual Collar", "Cuban Collar", "Round Neck", "V-Neck", "Polo"];
 
 export function AddProductDialog({ open, onOpenChange, onAddProduct, editProduct, initialSearchQuery, initialViewMode = 'search' }: AddProductDialogProps) {
   const [catalogItems, setCatalogItems] = useState<CatalogProduct[]>(MOCK_CATALOG_PRODUCTS);
